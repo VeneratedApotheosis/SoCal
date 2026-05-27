@@ -1,56 +1,63 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { GooglePlaceData, GooglePlaceDetail } from 'react-native-google-places-autocomplete';
-import GooglePlacesTextInput from 'react-native-google-places-textinput';
+// client/components/eventDetailsContainer/location-container.tsx
 
-// Replace with your actual Google Places API Key
-export interface PlaceSearchBarProps {
+import React, { useState } from 'react';
+import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { usePlacesAutocomplete } from '../../hooks/usePlacesAutocomplete';
+import { useAuthContext } from '../contexts/auth-context';
+
+export interface LocationContainerProps {
   onLocationSelect: ({ name, address }: { name: string; address: string }) => void;
 }
 
-export default function PlaceSearchBar({ onLocationSelect }: PlaceSearchBarProps) {
-  const selectLocation = ({ data, details = null }: { data: GooglePlaceData; details: GooglePlaceDetail | null }) => {
-    if (details) {
-      const placeName = data.structured_formatting?.main_text || details.name;
-      const fullAddress = details.formatted_address;
+export default function LocationContainer({ onLocationSelect }: LocationContainerProps) {
+  const { jwtToken } = useAuthContext();
+const [inputValue, setInputValue] = useState('');
 
-      const customCombinedAddress = `${placeName}, ${fullAddress}`;
+// Extract token string safely or fallback to null
+const tokenString = jwtToken?.sessionToken || null;
 
-      const selectedLocation = {
-        name: placeName,
-        address: customCombinedAddress,
-      };
+const { predictions, getPredictions, selectPlace } = usePlacesAutocomplete({
+  jwtToken: tokenString,
+  onLocationSelect,
+});
+  const handleTextChange = (text: string) => {
+    setInputValue(text);
+    getPredictions(text);
+  };
 
-      onLocationSelect(selectedLocation);
+  const handleRowPress = async (item: any) => {
+    const chosenPlaceName = await selectPlace(item);
+    if (chosenPlaceName) {
+      setInputValue(chosenPlaceName);
     }
   };
 
-  const handlePlaceSelect = (place: any) => {
-    console.log('Selected place:', place);
-  };
-
-  console.log(process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY);
-
   return (
     <View style={styles.container}>
-      <GooglePlacesTextInput apiKey={process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || ''} onPlaceSelect={handlePlaceSelect} />
-      {/* <GooglePlacesAutocomplete
-        placeholder="Search for event location..."
-        fetchDetails={true} // Setting this to true gives you coordinates (lat/lng)
-        onPress={(data, details = null) => selectLocation({ data, details })}
-        query={{
-          key: process.env.GOOGLE_PLACES_API_KEY,
-          language: 'en',
-          types: 'geocode',
-        }}
-        styles={{
-          textInputContainer: styles.textInputContainer,
-          textInput: styles.textInput,
-          listView: styles.listView,
-          row: styles.row,
-        }}
-        debounce={400}
-      /> */}
+      <View style={styles.textInputContainer}>
+        <TextInput
+          style={styles.textInput}
+          value={inputValue}
+          onChangeText={handleTextChange}
+          placeholder="Search for a location..."
+          placeholderTextColor="#888"
+        />
+      </View>
+      {predictions.length > 0 && (
+        <FlatList
+          data={predictions}
+          keyExtractor={(item) => item.place_id}
+          style={styles.listView}
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.row} onPress={() => handleRowPress(item)}>
+              <Text numberOfLines={1} style={{ color: '#333', fontSize: 14 }}>
+                {item.description}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
+      )}
     </View>
   );
 }
@@ -59,7 +66,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
-    zIndex: 1, // Crucial so the dropdown floats over other UI elements
+    zIndex: 1, 
   },
   textInputContainer: {
     backgroundColor: 'transparent',
@@ -83,15 +90,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#eee',
     borderRadius: 8,
-    elevation: 3, // Shadow for Android
-    shadowColor: '#000', // Shadow for iOS
+    elevation: 3, 
+    shadowColor: '#000', 
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    position: 'absolute',
+    top: 52,
+    left: 0,
+    right: 0,
+    maxHeight: 220,
   },
   row: {
     padding: 13,
     height: 44,
     flexDirection: 'row',
+    alignItems: 'center',
   },
 });

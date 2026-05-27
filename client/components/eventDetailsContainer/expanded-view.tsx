@@ -76,13 +76,12 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, modalInde
       <HorizontalBar />
       <PlaceSearchBar onLocationSelect={() => {}} />
 
-      {/* PROPERTIES BLOCK — card style */}
-      <View style={styles.card}>
-        {/* Location */}
-        <View style={styles.cardRow}>
+      {/* PROPERTIES BLOCK — flat rows */}
+      <View style={styles.listBlock}>
+        <View style={styles.listRow}>
           <Text style={styles.icon}>📍</Text>
           <TextInput
-            style={styles.cardInput}
+            style={styles.listInput}
             value={event.location}
             onChangeText={(text) => updateField('location', text)}
             placeholder="Add location"
@@ -90,22 +89,20 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, modalInde
           />
         </View>
 
-        <View style={styles.cardDivider} />
+        <View style={styles.listDivider} />
 
-        {/* Calendar / organizer */}
-        <View style={styles.cardRow}>
+        <View style={styles.listRow}>
           <View style={[styles.calDot, { backgroundColor: event.calendar?.calendarCustomColor || '#3B82F6' }]} />
-          <Text style={styles.cardText} numberOfLines={1}>
+          <Text style={styles.listText} numberOfLines={1}>
             {event.organizer}
           </Text>
         </View>
 
-        <View style={styles.cardDivider} />
+        <View style={styles.listDivider} />
 
-        {/* Reminders */}
-        <View style={styles.cardRow}>
+        <View style={styles.listRow}>
           <Text style={styles.icon}>🔔</Text>
-          <Text style={styles.cardTextMuted}>
+          <Text style={styles.listTextMuted}>
             {event.reminders.useDefault
               ? 'Default reminders'
               : `${event.reminders.overrides?.length || 0} custom reminder${event.reminders.overrides?.length === 1 ? '' : 's'}`}
@@ -177,35 +174,15 @@ const styles = StyleSheet.create({
     // no fixed height — grows/shrinks via onContentSizeChange
   },
 
-  // Properties card
-  card: {
-    backgroundColor: '#f7f7f5',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-    marginVertical: 4,
-  },
-  cardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 11,
-  },
-  cardDivider: {
-    height: 1,
-    backgroundColor: '#ebebea',
-    marginLeft: 28, // indent past icon
-  },
+  // Properties list
+  listBlock: { marginVertical: 4 },
+  listRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 11 },
+  listDivider: { height: 1, backgroundColor: '#f0f0ee' },
   icon: { fontSize: 16, width: 20, textAlign: 'center' },
   calDot: { width: 13, height: 13, borderRadius: 3, marginLeft: 2, marginRight: 1 },
-  cardInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#37352f',
-    padding: 0,
-  },
-  cardText: { flex: 1, fontSize: 15, color: '#37352f' },
-  cardTextMuted: { flex: 1, fontSize: 15, color: '#9b9b97' },
+  listInput: { flex: 1, fontSize: 15, color: '#37352f', padding: 0 },
+  listText: { flex: 1, fontSize: 15, color: '#37352f' },
+  listTextMuted: { flex: 1, fontSize: 15, color: '#9b9b97' },
 
   // Description
   descriptionInput: {

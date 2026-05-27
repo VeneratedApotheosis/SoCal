@@ -32,10 +32,10 @@ export const convertToGoogleEvent = (eventObj: EventObj) => {
     eventType: eventObj.eventType !== 'default' ? eventObj.eventType : undefined,
     start: eventObj.allDay
       ? { date: formatAllDay(eventObj.startDate), dateTime: null }
-      : { date: null, dateTime: eventObj.startDate.toISOString() },
+      : { date: null, dateTime: new Date(eventObj.startDate).toISOString() },
     end: eventObj.allDay
       ? { date: formatAllDay(eventObj.endDate), dateTime: null }
-      : { date: null, dateTime: eventObj.endDate.toISOString() },
+      : { date: null, dateTime: new Date(eventObj.startDate).toISOString() },
     ...(eventObj.recurrence && { recurrence: eventObj.recurrence }),
     sequence: eventObj.sequence,
     reminders: eventObj.reminders,
@@ -166,13 +166,16 @@ export const getEventLayout = (
 
   const pixelsPerMinute = hourHeight / 60;
   const minutesFromMidnight = startHour * 60 + startMin;
+
+  const minimumHeight = pixelsPerMinute*30;
+
   let left = ((dayWidth - EVENT_GAP) / (maxOffset + 1)) * offset;
 
   let width = ((dayWidth - EVENT_GAP) / (maxOffset + 1)) * (maxOffset - offset + 1);
 
   return {
     top: minutesFromMidnight * pixelsPerMinute,
-    height: durationInMinutes * pixelsPerMinute,
+    height: Math.max(durationInMinutes * pixelsPerMinute, minimumHeight),
     left: left,
     width: width,
   };

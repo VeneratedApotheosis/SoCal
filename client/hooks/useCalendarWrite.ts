@@ -5,8 +5,8 @@ import { useState } from "react";
 import { addEventToGoogleCalendar, deleteEventToGoogleCalendar, editEventToGoogleCalendar } from "../services/api";
 
 export function useCalendarWrite(jwtToken: string | null) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isWriting, setLoading] = useState(false);
+  const [writeError, setError] = useState<string | null>(null);
 
   const executeMutation = async (apiFunc: Function, event: EventObj) => {
     if (!jwtToken) throw new Error("No token");
@@ -22,9 +22,9 @@ export function useCalendarWrite(jwtToken: string | null) {
   };
 
   return {
-    createEvent: (e: EventObj) => executeMutation(addEventToGoogleCalendar, e),
-    editEvent: (e: EventObj) => executeMutation(editEventToGoogleCalendar, e),
-    deleteEvent: (e: EventObj) => executeMutation(deleteEventToGoogleCalendar, e),
-    loading, error
+    apiCreateEvent: (e: EventObj) => executeMutation(addEventToGoogleCalendar, e),
+    apiEditEvent: (e: EventObj) => executeMutation(editEventToGoogleCalendar, e),
+    apiDeleteEvent: (e: EventObj) => executeMutation(deleteEventToGoogleCalendar, e),
+    isWriting, writeError
   };
 }

@@ -120,5 +120,5 @@ export function useCalendar(jwtToken: string | null, days: {date: Date}[]) {
 
   useEffect(() => { fetchUserEvents(); }, [fetchUserEvents]);
 
-  return { calendars, newCalendarIds: calendarIds, isLoading, error, uniqueCalendars, refetch: fetchUserEvents };
+  return { calendars, setCalendars, newCalendarIds: calendarIds, isLoading, error, uniqueCalendars, refetch: fetchUserEvents };
 }

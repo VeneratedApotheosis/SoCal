@@ -50,3 +50,11 @@ app-example
 /ios
 /android
 /client/ios
+
+#claude setup
+CLAUDE.md
+litellm_config.yaml
+*.yaml
+
+#python
+.venv/

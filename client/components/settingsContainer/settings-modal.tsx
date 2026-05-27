@@ -6,8 +6,8 @@ import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 import { getSettingRootStyles } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { useUIContext } from '../contexts/ui-context';
-import AppearanceContainer from './appearance/appearance-container';
-import Login from './login';
+import AppearanceContainer from './appearance-container';
+import Login from './login-container';
 
 interface Props {
   isVisible: boolean;

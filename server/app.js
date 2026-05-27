@@ -192,6 +192,40 @@ app.delete('/api/unsuscribe-calendar', authenticate, handleRoute('Internal serve
 }));
 
 // ===========================================================
+// GOOGLE PLACES PROXY ROUTES
+// ===========================================================
+
+app.get('/api/places/autocomplete', authenticate, handleRoute('Autocomplete failed', async (req, res) => {
+  const { input } = req.query;
+  if (!input) return res.status(400).json({ error: 'Input parameter required' });
+
+  const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${process.env.GOOGLE_PLACES_API_KEY}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  console.log("aC:",data.predictions);
+
+  if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+    return res.status(400).json({ error: data.error_message || data.status });
+  }
+  res.json(data.predictions || []);
+}));
+
+app.get('/api/places/details', authenticate, handleRoute('Details failed', async (req, res) => {
+  const { placeId } = req.query;
+  if (!placeId) return res.status(400).json({ error: 'PlaceId parameter required' });
+
+  const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address&key=${process.env.GOOGLE_PLACES_API_KEY}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  console.log("DET:",data);
+
+  if (data.status !== 'OK') {
+    return res.status(400).json({ error: data.error_message || data.status });
+  }
+  res.json(data.result || {});
+}));
+
+// ===========================================================
 // DEBUG ROUTES
 // ===========================================================
 

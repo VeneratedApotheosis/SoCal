@@ -126,6 +126,28 @@ function formatTo12Hour(date: Date | undefined): string {
   return `${hours}:${minutes.toString().padStart(2, '0')} ${meridiem}`;
 }
 
+// ─── Date display helper ──────────────────────────────────────────────────────
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function formatShortDate(date: Date): string {
+  return `${DAY_NAMES[date.getDay()]} ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`;
+}
+
+function getDateDisplay(event: EventObj): string {
+  const start = event.startDate ? new Date(event.startDate) : null;
+  const end = event.endDate ? new Date(event.endDate) : null;
+  if (!start) return '';
+
+  // Same calendar day → show just the one date
+  if (!end || (start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth() && start.getDate() === end.getDate())) {
+    return formatShortDate(start);
+  }
+
+  return `${formatShortDate(start)} – ${formatShortDate(end)}`;
+}
+
 // ─── Web time input ───────────────────────────────────────────────────────────
 
 interface WebTimeInputProps {
@@ -250,27 +272,28 @@ export const EventTimeDatePicker = ({ event, onUpdate }: EventTimeDatePickerProp
           </View>
         </View>
 
-        {/* All-day + Recurrence card */}
-        <View style={styles.toggleCard}>
-          <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>All-day</Text>
-            <Switch
-              value={event.allDay}
-              onValueChange={(val) => onUpdate('allDay', val)}
-              trackColor={{ false: '#e1e1de', true: '#2383e2' }}
-              thumbColor="#FFFFFF"
-              ios_backgroundColor="#e1e1de"
-            />
-          </View>
+        {/* Date display */}
+        <Text style={styles.dateDisplay}>{getDateDisplay(event)}</Text>
 
-          <View style={styles.cardDivider} />
-
-          <Pressable style={styles.toggleRow} onPress={() => setRecurrencePickerVisible(true)}>
-            <Text style={styles.icon}>🔁</Text>
-            <Text style={[styles.toggleLabel, { flex: 1, marginLeft: 8 }]}>{getRecurrenceLabel(event.recurrence)}</Text>
-            <Text style={styles.chevron}>›</Text>
-          </Pressable>
+        {/* All-day + Recurrence */}
+        <View style={styles.toggleRow}>
+          <Text style={styles.toggleLabel}>All-day</Text>
+          <Switch
+            value={event.allDay}
+            onValueChange={(val) => onUpdate('allDay', val)}
+            trackColor={{ false: '#e1e1de', true: '#2383e2' }}
+            thumbColor="#FFFFFF"
+            ios_backgroundColor="#e1e1de"
+          />
         </View>
+
+        <View style={styles.rowDivider} />
+
+        <Pressable style={styles.toggleRow} onPress={() => setRecurrencePickerVisible(true)}>
+          <Text style={styles.icon}>🔁</Text>
+          <Text style={[styles.toggleLabel, { flex: 1, marginLeft: 8 }]}>{getRecurrenceLabel(event.recurrence)}</Text>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
       </View>
 
       {/* Recurrence picker modal */}
@@ -333,16 +356,18 @@ const styles = StyleSheet.create({
   },
   pillInputMuted: { color: '#787774', fontWeight: '500' },
 
-  // All-day + recurrence card
-  toggleCard: {
-    backgroundColor: '#f7f7f5',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 2,
+  dateDisplay: {
+    fontSize: 16,
+    color: '#37352f',
+    fontWeight: '500',
+    textAlign: 'left',
+    marginBottom: 12,
+    marginTop: -4,
   },
+
   toggleRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11 },
   toggleLabel: { flex: 1, fontSize: 15, color: '#37352f' },
-  cardDivider: { height: 1, backgroundColor: '#ebebea' },
+  rowDivider: { height: 1, backgroundColor: '#f0f0ee' },
   icon: { fontSize: 15 },
   chevron: { fontSize: 18, color: '#c4c4c0', fontWeight: '400', lineHeight: 20 },
 

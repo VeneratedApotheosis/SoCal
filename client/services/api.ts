@@ -29,7 +29,14 @@ export const fetchJwtToken = (code: string, codeVerifier?: string, redirectUri?:
   bReq("/google-exchange", "POST", undefined, { code, ...(codeVerifier && { codeVerifier }), ...(redirectUri && { redirectUri }) });
 
 export const fetchFamilyProfiles = (t: string) => bReq("/get-family-profiles", "POST", t);
+
 export const fetchFamilyAccessTokens = (t: string) => bReq("/get-family-access-tokens", "POST", t);
+
+export const fetchPlacesAutocomplete = (t: string, input: string) => 
+  bReq(`/places/autocomplete?input=${encodeURIComponent(input)}`, "GET", t);
+
+export const fetchPlacesDetails = (t: string, placeId: string) => 
+  bReq(`/places/details?placeId=${placeId}`, "GET", t);
 
 // =================================================
 // Google API Functions
