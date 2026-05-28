@@ -163,11 +163,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
 
-    // Shadow logic
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 }, // Negative height pushes shadow UP
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0px -2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 10,
   },
   modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 15 },

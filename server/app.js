@@ -77,6 +77,10 @@ const authenticate = (req, res, next) => {
 };
 
 const getAccessToken = async (userId, refreshToken) => {
+  if (!refreshToken) {
+    throw new Error('Missing refresh token for user ${userId}');
+  }
+
   const cachedToken = accessTokenCache.get(userId);
   if (cachedToken && cachedToken.expiryDate > (Date.now() + 60000)) return cachedToken;
 
@@ -84,11 +88,19 @@ const getAccessToken = async (userId, refreshToken) => {
   const tempClient = new OAuth2Client(process.env.CLIENT_ID, process.env.CLIENT_SECRET);
   tempClient.setCredentials({ refresh_token: refreshToken });
   
-  const { token, res } = await tempClient.getAccessToken();
-  const newToken = { accessToken: token, expiryDate: res.data.expiry_date };
-  
-  accessTokenCache.set(userId, newToken);
-  return newToken;
+  try {
+    await tempClient.getAccessToken();;
+
+    const token = tempClient.credentials.access_token;
+    const expiryDate = tempClient.credentials.expiry_date;
+    
+    const newToken = { accessToken: token, expiryDate };
+    accessTokenCache.set(userId, newToken);
+    return newToken;
+  } catch (error) {
+    console.error(`Google API Error for user ${userId}:`, error.message);
+    throw new Error(`Failed to refresh token: ${error.message}`);
+  }
 };
 
 const getJWTToken = (userId) => {
@@ -137,8 +149,8 @@ app.post('/api/get-family-profiles', authenticate, handleRoute('Failed to get fa
 
 app.post('/api/get-family-access-tokens', authenticate, handleRoute('Failed to get family tokens', async (req, res) => {
   console.log('/api/get-family-access-tokens called');
-  const parentData = db.getUserRefreshToken(req.userId);
-  const childrenData = db.getChildrenRefreshToken(req.userId);
+  const parentData = await db.getUserRefreshToken(req.userId);
+  const childrenData = await db.getChildrenRefreshToken(req.userId);
   
   res.json({
     parent: await fetchAndFormatUserToken(req.userId, parentData.refreshToken, parentData.id),

@@ -25,7 +25,7 @@ export const getValidAccessToken = async (jwtToken: string) => {
       }
     }
   }
-
+  console.log("fetching from backend for access Token");
   // 3. Token is entirely dead/missing -> Fetch fresh tokens over network
   const data = await fetchFamilyAccessTokens(jwtToken);
   

@@ -11,7 +11,7 @@ export interface Prediction {
 
 interface UsePlacesAutocompleteProps {
   jwtToken: string | null;
-  onLocationSelect: ({ name, address }: { name: string; address: string }) => void;
+  onLocationSelect: ({ address }: { address: string }) => void;
 }
 
 export function usePlacesAutocomplete({ jwtToken, onLocationSelect }: UsePlacesAutocompleteProps) {
@@ -60,12 +60,11 @@ export function usePlacesAutocomplete({ jwtToken, onLocationSelect }: UsePlacesA
       const customCombinedAddress = `${placeName}, ${fullAddress}`;
 
       onLocationSelect({
-        name: placeName,
-        address: customCombinedAddress,
+        address: customCombinedAddress
       });
 
       setPredictions([]);
-      return placeName; // Returned to clear or update the TextInput value field
+      return fullAddress; // Returned to clear or update the TextInput value field
     } catch (err: any) {
       setError(err.message || "Failed to fetch place details");
       return null;

@@ -1,14 +1,14 @@
+import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
 import { useUIContext } from '@/components/contexts/ui-context';
 import { getIconColor, getSettingCardStyles } from '@/utility/globalStyles';
 import { calendarObj } from '@/utility/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useRef, useState } from 'react';
 import { Animated, LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useCalendarEvents } from '../../contexts/calendar-events-context';
 import SuscribedCalendarIndividual from './suscribed-calendar-individual';
 
 export default function SuscribedCalendars() {
-  const { calendarObjs } = useCalendarEvents();
+  const { calendarObjs } = useCalendarObjects();
 
   const { theme: uiTheme } = useUIContext();
   const cardStyles = getSettingCardStyles(uiTheme.isDark);

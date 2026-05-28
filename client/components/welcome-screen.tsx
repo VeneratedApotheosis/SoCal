@@ -6,7 +6,7 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 
 export default function WelcomeScreen() {
   const { promptAsync, isLoading, jwtToken } = useAuth();
-return (
+  return (
     <View style={styles.homepg}>
       {/* --- calendar icon --- */}
       <View style={styles.logoContainer}>
@@ -56,15 +56,12 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 100,
     height: 100,
-    backgroundColor: '#ebf4ff', 
+    backgroundColor: '#ebf4ff',
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
     elevation: 3,
   },
   appName: {

@@ -17,31 +17,34 @@ export function useCalendar(jwtToken: string | null) {
 
   const fetchUserEvents = useCallback(async (jwtToken: string | null, fetchStart: number | null, fetchEnd: number | null) => {
     if (!jwtToken) return;
+
+    //Fetching Start and End Date Calculation
     let fetchStartDate: Date = new Date();
     let fetchEndDate: Date = new Date();
     if (fetchStart && fetchEnd) {
+      //Failed fetch
       setError("Cannot set both fetchStart and fetchEnd.");
       return;
     } else if (!fetchStart && !fetchEnd) {
+      //Starting fetch scheme
       fetchStartDate = addDays(fetchStartDate, - 20);
       fetchEndDate = addDays(fetchEndDate, 20);
       
-    console.log("FETCHING START");
     } else if (fetchStart) {
+      //fetch backward/start
       fetchStartDate = addDays(fetchStartDate, fetchStart - 10);
       fetchEndDate = addDays(fetchEndDate, fetchStart);
-      console.log("FETCHING BACKWARD");
     } else if (fetchEnd) {
+      //fetch forward/end
       fetchStartDate = addDays(fetchStartDate, fetchEnd);
       fetchEndDate = addDays(fetchEndDate, fetchEnd + 10);
-      console.log("FETCHING FORWARD");
     } 
-    setIsLoading(true); setError(null);
 
+    setIsLoading(true); setError(null);
 
     try {
       const tokens = await getValidAccessToken(jwtToken); // get access token to fetch
-
+   
       // get all calendars (required to fetch events (which calendar to fetch events from?))
       const { items: parentCalendars = [] } = await fetchCalendarList(tokens.parent.accessToken); 
 

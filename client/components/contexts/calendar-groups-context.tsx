@@ -2,7 +2,7 @@
 import { useCalendarGroup } from '@/hooks/useCalendarGroup';
 import { calendarGroup, calendarObj } from '@/utility/types';
 import { createContext, ReactNode, useContext } from 'react';
-import { useCalendarEvents } from './calendar-events-context';
+import { useCalendarObjects } from './calendar-obj-context';
 
 export interface GroupsContextType {
   calendarGroups: {
@@ -18,7 +18,7 @@ export interface GroupsContextType {
 export const GroupsContext = createContext<GroupsContextType>({} as GroupsContextType);
 
 export const GroupsProvider = ({ children }: { children: ReactNode }) => {
-  const { calendarObjs } = useCalendarEvents();
+  const { calendarObjs } = useCalendarObjects();
   const calendarGroups = useCalendarGroup(calendarObjs);
 
   return (

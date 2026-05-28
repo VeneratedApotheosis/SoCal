@@ -1,3 +1,4 @@
+import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
 import { useShareCalendar } from '@/hooks/sharingCalendars/useShareCalendar';
 import { globalStyles } from '@/utility/globalStyles';
 import { COLORS, FONT_WEIGHTS, SIZES } from '@/utility/theme';
@@ -7,7 +8,6 @@ import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView, BottomShe
 import React, { createRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useAuthContext } from '../../contexts/auth-context';
-import { useCalendarEvents } from '../../contexts/calendar-events-context';
 
 export const shareModalRef = createRef<BottomSheetModal>();
 
@@ -21,7 +21,8 @@ export default function ShareModal() {
   const SafeTextInput = Platform.OS === 'web' ? TextInput : BottomSheetTextInput;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const { familyProfiles, calendarObjs = [] } = useCalendarEvents();
+  const { familyProfiles } = useAuthContext();
+  const { calendarObjs = [] } = useCalendarObjects();
   const { share, isLoading, error, clearError } = useShareCalendar();
   const { jwtToken } = useAuthContext();
 
@@ -228,10 +229,7 @@ const styles = StyleSheet.create({
   modalBackground: {
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    boxShadow: '0px -4px 10px rgba(0, 0, 0, 0.1)',
     elevation: 5,
   },
   headerContainer: {
@@ -243,7 +241,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: SIZES.l,
     fontWeight: FONT_WEIGHTS.medium,
-    color: COLORS.text,
+    color: COLORS.text.main,
   },
   subtitle: {
     fontSize: SIZES.s,
@@ -263,7 +261,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: SIZES.l,
     fontWeight: FONT_WEIGHTS.medium,
-    color: COLORS.text,
+    color: COLORS.text.main,
     marginBottom: 12,
   },
   scrollContent: {
@@ -293,7 +291,7 @@ const styles = StyleSheet.create({
   },
   calendarText: {
     fontSize: SIZES.m,
-    color: COLORS.text,
+    color: COLORS.text.main,
     fontWeight: FONT_WEIGHTS.light,
   },
   calendarTextActive: {

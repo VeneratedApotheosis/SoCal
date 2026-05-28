@@ -65,5 +65,5 @@ export function useCalendarList(jwtToken: string | null) {
     fetchUserEvents();
   }, [fetchUserEvents]);
 
-  return { newCalendarIds: calendarIds, sharedObjs, isLoading, error, refetch: fetchUserEvents };
+  return { calendarObjs: calendarIds, setCalendarIds, sharedObjs, isLoading, error, refetch: fetchUserEvents };
 }

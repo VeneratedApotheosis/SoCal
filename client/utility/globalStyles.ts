@@ -37,7 +37,7 @@ export const globalStyles = StyleSheet.create({
   toggleButtonActiveSegement: {
     backgroundColor: 'white', 
     elevation: 3, 
-    shadowOpacity: 0.1
+    boxShadow: "0px 0px 0px rgba(0, 0, 0, 0.1)",
   },
   smallButtonText: {
     fontSize: SIZES.s,
@@ -49,10 +49,7 @@ export const globalStyles = StyleSheet.create({
     fontWeight: FONT_WEIGHTS.heavy,
   },
   bottomRightShadow: {
-    shadowColor: '#000',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: "2px 2px 4px rgba(0, 0, 0, 0.1)",
     elevation: 10,
 
   },
@@ -71,11 +68,7 @@ export const getSettingBackgroundStyles = (isDark: boolean) => StyleSheet.create
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
     color: 'blue',
-    // Shadow logic
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 }, // Negative height pushes shadow UP
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: "0px -2px 4px rgba(0, 0, 0, 0.1)",
     elevation: 10,
   },
   handleIndicator : {
@@ -84,7 +77,7 @@ export const getSettingBackgroundStyles = (isDark: boolean) => StyleSheet.create
   tabBar: {
     backgroundColor: isDark ? COLORS.background.dark : COLORS.background.light,
     elevation: 0,
-    shadowOpacity: 0,
+    boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)",
     fontSize: 12,
   },
   indicator: {
@@ -106,11 +99,7 @@ export const getSettingCardStyles = (isDark: boolean) => StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: isDark ? COLORS.background.dark : COLORS.background.light,
     marginBottom: 16,
-    // shadow-sm for light mode
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: isDark ? 0 : 0.05,
-    shadowRadius: 2,
+    boxShadow: isDark ? "0px 1px 2px rgba(0, 0, 0, 0)" : "0px 1px 2px rgba(0, 0, 0, 0.05)",
     elevation: isDark ? 0 : 2,
     
   },
@@ -276,8 +265,7 @@ export const getColorEditStyles = (isDark: boolean) => StyleSheet.create({
   selectedCircle: {
     transform: [{ scale: 1.1 }],
     // ring effect simulation
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
+    boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.5)",
     elevation: 4,
   },
   addCircle: {

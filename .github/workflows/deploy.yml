@@ -2,7 +2,8 @@ name: Deploy Expo Web to GitHub Pages
 
 on:
   push:
-    branches: [ main ] # Change to master if your default branch is master
+    branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -35,6 +36,11 @@ jobs:
         working-directory: ./client
 
       - name: Build Web App
+        env:
+          EXPO_PUBLIC_WEB_CLIENT_ID: ${{ secrets.EXPO_PUBLIC_WEB_CLIENT_ID }}
+          EXPO_PUBLIC_IOS_CLIENT_ID: ${{ secrets.EXPO_PUBLIC_IOS_CLIENT_ID }}
+          EXPO_PUBLIC_ANDROID_CLIENT_ID: ${{ secrets.EXPO_PUBLIC_ANDROID_CLIENT_ID }}
+          EXPO_PUBLIC_BACKEND_LINK: ${{ secrets.EXPO_PUBLIC_BACKEND_LINK }}
         run: npm run build
         working-directory: ./client
 

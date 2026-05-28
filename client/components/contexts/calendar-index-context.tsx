@@ -1,32 +1,19 @@
-import { FETCH_INITIAL_BUFFER, PAST_BUFFER } from '@/utility/constants';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 import { SharedValue, useSharedValue } from 'react-native-reanimated';
 
 export interface DateContextType {
   curDate: Date;
   setCurDate: (curDate: Date) => void;
-  setDayWidth: React.Dispatch<React.SetStateAction<number>>;
-  scrollX: SharedValue<number>;
-  fetchStart: number;
-  fetchEnd: number;
-  setFetchStart: React.Dispatch<React.SetStateAction<number>>;
-  setFetchEnd: React.Dispatch<React.SetStateAction<number>>;
+  currentMonthText: SharedValue<string>;
 }
 
 export const DateContext = createContext<DateContextType>({} as DateContextType);
 
 export const DateProvider = ({ children }: { children: ReactNode }) => {
   const [curDate, setCurDate] = useState<Date>(new Date());
-  const [dayWidth, setDayWidth] = useState<number>(0);
-  const scrollX = useSharedValue(PAST_BUFFER * dayWidth);
-  const [fetchStart, setFetchStart] = useState<number>(-1 * FETCH_INITIAL_BUFFER);
-  const [fetchEnd, setFetchEnd] = useState<number>(FETCH_INITIAL_BUFFER);
+  const currentMonthText = useSharedValue<string>(curDate.toLocaleString('default', { month: 'long' }));
 
-  return (
-    <DateContext.Provider value={{ curDate, setCurDate, setDayWidth, scrollX, fetchStart, fetchEnd, setFetchStart, setFetchEnd }}>
-      {children}
-    </DateContext.Provider>
-  );
+  return <DateContext.Provider value={{ curDate, setCurDate, currentMonthText }}>{children}</DateContext.Provider>;
 };
 
 export function useCalendarIndex() {

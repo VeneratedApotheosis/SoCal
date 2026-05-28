@@ -1,23 +1,31 @@
 import { HEADER_HEIGHT } from '@/utility/constants';
-import { COLORS, FONT_WEIGHTS, SIZES } from '@/utility/theme';
+import { COLORS } from '@/utility/theme';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DrawerActions } from '@react-navigation/native';
 import { useNavigation } from 'expo-router';
-import { useContext, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import Animated, { useAnimatedProps } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthContext } from './contexts/auth-context';
-import { DateContext } from './contexts/calendar-index-context';
+import { useCalendarIndex } from './contexts/calendar-index-context';
+import { useUIContext } from './contexts/ui-context';
 
-export default function CalendarHeader(props: any) {
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+
+export default function CalendarHeader() {
   const { jwtToken } = useAuthContext();
   const navigation = useNavigation();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const { curDate, setCurDate } = useContext(DateContext);
-  const handleSnapToToday = () => {
-    const today = new Date();
-    setCurDate(today);
-  };
+  const { currentMonthText } = useCalendarIndex();
+  const { now } = useUIContext();
+  const handleSnapToToday = () => {};
+  const today = new Date();
+
+  const animatedProps = useAnimatedProps(
+    () =>
+      ({
+        text: currentMonthText.value,
+      }) as any,
+  );
 
   return (
     <SafeAreaView edges={['top']}>
@@ -32,7 +40,12 @@ export default function CalendarHeader(props: any) {
 
           {/* --- Date --- */}
           <View style={{ justifyContent: 'center' }}>
-            <Text style={styles.headerDateText}>{curDate.toLocaleString('default', { month: 'long' })}</Text>
+            <AnimatedTextInput
+              style={styles.headerText}
+              editable={false}
+              animatedProps={animatedProps}
+              value={today.toLocaleString('default', { month: 'long' })} // Fallback initialization
+            />
           </View>
 
           {/* --- Extra Buttons on the Right --- */}
@@ -40,7 +53,7 @@ export default function CalendarHeader(props: any) {
           <View style={styles.headerButtonContainer}>
             <View style={{ justifyContent: 'center' }}>
               <Pressable style={styles.headerButton} onPress={handleSnapToToday}>
-                <Text style={{ fontWeight: 500, fontSize: 16 }}>{currentDate.toLocaleString('default', { day: 'numeric' })}</Text>
+                <Text style={{ fontWeight: 500, fontSize: 16 }}>{now.toLocaleString('default', { day: 'numeric' })}</Text>
               </Pressable>
             </View>
           </View>
@@ -62,9 +75,11 @@ const styles = StyleSheet.create({
   waffle: {
     alignSelf: 'flex-start',
   },
-  headerDateText: {
-    fontWeight: FONT_WEIGHTS.medium,
-    fontSize: SIZES.xl,
+  headerText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+    padding: 0,
   },
   headerButtonContainer: {
     flex: 1,
@@ -85,10 +100,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
 
     // --- iOS Shadows ---
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
 
     // --- Android Shadows ---
     elevation: 3,

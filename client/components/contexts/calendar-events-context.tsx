@@ -1,26 +1,20 @@
 // calendar-events-context.tsx
 import { useCalendar } from '@/hooks/useCalendar';
-import { useCalendarList } from '@/hooks/useCalendarList';
 import { useCalendarWrite } from '@/hooks/useCalendarWrite';
-import { useProfiles } from '@/hooks/useProfile';
 import { processEvent } from '@/utility/eventUtils';
-import { CalendarData, calendarObj, EventObj, FamilyProfileObjs, sharedObj } from '@/utility/types';
-import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useMemo, useState } from 'react';
+import { CalendarData, EventObj, sharedObj } from '@/utility/types';
+import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
 import { useAuthContext } from './auth-context';
+import { useCalendarObjects } from './calendar-obj-context';
 
 export interface EventsContextType {
-  calendarObjs: calendarObj[] | null;
-  setCalendarObj: Dispatch<SetStateAction<calendarObj[] | null>>;
   allEvents: EventObj[];
-  familyProfiles: FamilyProfileObjs | null;
   isLoading: boolean;
   deleteEvent: (event: EventObj) => Promise<any>;
   createEvent: (event: EventObj) => Promise<any>;
   editEvent: (event: EventObj) => Promise<any>;
   isWriting: boolean;
   writeError: string | null;
-  sharedCalendars: sharedObj[];
-  refetchCalendarList: () => Promise<void>;
   refetchCalendar: (jwtToken: string | null, fetchStart: number | null, fetchEnd: number | null) => Promise<void>;
   fetchForward: (fetchEnd: number) => void;
   fetchBackward: (fetchEnd: number) => void;
@@ -33,10 +27,8 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   const { jwtToken } = useAuthContext();
   const sessionTokenString = jwtToken?.sessionToken ?? null;
 
-  //PROFILE HOOK
-  const { familyProfiles } = useProfiles(sessionTokenString);
   //CALENDAR LIST TRACKING HOOK
-  const { newCalendarIds, sharedObjs, refetch: refetchCalendarList } = useCalendarList(sessionTokenString);
+  const { calendarObjs } = useCalendarObjects();
   //CALENDAR / EVENT TRACKING HOOK
   const { calendars, setCalendars, isLoading, uniqueCalendars, refetch: refetchCalendar } = useCalendar(sessionTokenString);
   //API WRITING HOOK
@@ -45,11 +37,7 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   //TRACK STATES
   const [timeZone, setTimeZone] = useState<number>(0);
   const [sharedCalendars, setSharedCalendars] = useState<sharedObj[]>([]);
-  const [calendarObjs, setCalendarObj] = useState<calendarObj[] | null>(null);
-
-  useEffect(() => {
-    if (newCalendarIds?.length) setCalendarObj(newCalendarIds);
-  }, [newCalendarIds]);
+  //const [calendarObjs, setCalendarObj] = useState<calendarObj[] | null>(null);
 
   const allEvents = useMemo(() => {
     if (!calendars || !calendarObjs) return [];
@@ -153,35 +141,6 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // -------------------------------------------
-  // shared Calendars
-  // -------------------------------------------
-  useEffect(() => {
-    if (!sharedObjs || !familyProfiles?.parent?.email) return;
-
-    const ownerEmail = familyProfiles.parent.email;
-
-    const processedCalendars = sharedObjs.map((calendar) => {
-      const filteredSharedIds = calendar.sharedIds.filter((sharedIdObj) => {
-        if (sharedIdObj.accessRole === 'freeBusyReader' || sharedIdObj.accessRole === 'freeReader') {
-          return false;
-        }
-
-        const cleanId = sharedIdObj.id;
-        if (cleanId === calendar.id) return false;
-        if (cleanId === ownerEmail) return false;
-
-        return true;
-      });
-
-      return {
-        ...calendar,
-        sharedIds: filteredSharedIds,
-      };
-    });
-    setSharedCalendars(processedCalendars);
-  }, [sharedObjs, familyProfiles]);
-
-  // -------------------------------------------
   // fetching Calendars
   // -------------------------------------------
 
@@ -198,19 +157,13 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   return (
     <EventsContext.Provider
       value={{
-        calendarObjs,
-        setCalendarObj,
         allEvents,
-        familyProfiles,
         isLoading,
         deleteEvent,
         createEvent,
         editEvent,
         isWriting,
         writeError,
-
-        sharedCalendars,
-        refetchCalendarList,
         refetchCalendar,
         fetchForward,
         fetchBackward,

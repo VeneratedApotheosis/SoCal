@@ -7,7 +7,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 //Global Contexts
 import { useAuthContext } from '../contexts/auth-context';
-import { useCalendarEvents } from '../contexts/calendar-events-context';
 import { useUIContext } from '../contexts/ui-context';
 
 import { toTitleCase } from '@/utility/drawerUtil';
@@ -15,11 +14,12 @@ import { getColorPaletteStyles, globalStyles } from '@/utility/globalStyles';
 import { COLORS, FONT_WEIGHTS, SIZES } from '@/utility/theme';
 import { Plus } from 'lucide-react-native';
 import { useCalendarGroups } from '../contexts/calendar-groups-context';
+import { useCalendarObjects } from '../contexts/calendar-obj-context';
 import DraggableCalendar from './drawer-draggable-calendar';
 
 export default function CustomDrawerContent(props: any) {
-  const { jwtToken, calendarType, setCalendarType } = useAuthContext();
-  const { familyProfiles, setCalendarObj } = useCalendarEvents();
+  const { jwtToken, calendarType, setCalendarType, familyProfiles } = useAuthContext();
+  const { setCalendarObj } = useCalendarObjects();
   const { calendarGroups } = useCalendarGroups();
   const { setLoginVisible, theme: uiTheme } = useUIContext();
   const themeStyles = getColorPaletteStyles(uiTheme.isDark);
@@ -46,8 +46,6 @@ export default function CustomDrawerContent(props: any) {
   const toggleCalendar = useCallback(
     (id: string) => {
       setCalendarObj((prev) => {
-        if (!prev) return null;
-
         const next = prev.map((cal) => (cal.calendarId === id ? { ...cal, shown: !cal.shown } : cal));
         return next;
       });

@@ -3,14 +3,13 @@ import { getSettingBackgroundStyles, getSettingCardStyles, getSettingProfileStyl
 import { Ionicons } from '@expo/vector-icons';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { useAuthContext } from '../contexts/auth-context';
-import { useCalendarEvents } from '../contexts/calendar-events-context';
 import { useUIContext } from '../contexts/ui-context';
 import SharedCalendars from './sharedCalendars/shared-calendars';
 import SuscribedCalendars from './suscribedCalendars/suscribed-calendars';
 
 export default function Login() {
   const authProps = useAuthContext();
-  const { familyProfiles } = useCalendarEvents();
+  const familyProfiles = authProps.familyProfiles;
   const { theme } = useUIContext();
   const cardStyles = getSettingCardStyles(theme.isDark);
   const rootStyles = getSettingBackgroundStyles(theme.isDark);

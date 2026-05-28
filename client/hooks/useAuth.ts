@@ -2,7 +2,6 @@ import { useAuthContext } from '@/components/contexts/auth-context';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -13,10 +12,7 @@ export const useAuth = () => {
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
-      clientId: Platform.select({
-        ios: process.env.EXPO_PUBLIC_IOS_CLIENT_ID,
-        default: process.env.EXPO_PUBLIC_WEB_CLIENT_ID,
-      })!,
+      clientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID || "",
       scopes: [
         'openid',
         'https://www.googleapis.com/auth/calendar',
@@ -26,7 +22,7 @@ export const useAuth = () => {
       responseType: 'code',
       usePKCE: true,
       extraParams: { access_type: 'offline', prompt: 'consent' },
-      redirectUri: AuthSession.makeRedirectUri(),
+      redirectUri: window.location.origin + window.location.pathname,
     },
     {
       authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',

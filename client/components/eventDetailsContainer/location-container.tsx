@@ -1,25 +1,28 @@
-// client/components/eventDetailsContainer/location-container.tsx
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { usePlacesAutocomplete } from '../../hooks/usePlacesAutocomplete';
 import { useAuthContext } from '../contexts/auth-context';
 
 export interface LocationContainerProps {
-  onLocationSelect: ({ name, address }: { name: string; address: string }) => void;
+  initialValue: string;
+  onLocationSelect: ({ address }: { address: string }) => void;
 }
 
-export default function LocationContainer({ onLocationSelect }: LocationContainerProps) {
+export default function LocationContainer({ initialValue, onLocationSelect }: LocationContainerProps) {
   const { jwtToken } = useAuthContext();
-const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState(initialValue);
 
-// Extract token string safely or fallback to null
-const tokenString = jwtToken?.sessionToken || null;
+  useEffect(() => {
+    setInputValue(initialValue);
+  }, [initialValue]);
 
-const { predictions, getPredictions, selectPlace } = usePlacesAutocomplete({
-  jwtToken: tokenString,
-  onLocationSelect,
-});
+  // Extract token string safely or fallback to null
+  const tokenString = jwtToken?.sessionToken || null;
+
+  const { predictions, getPredictions, selectPlace } = usePlacesAutocomplete({
+    jwtToken: tokenString,
+    onLocationSelect,
+  });
   const handleTextChange = (text: string) => {
     setInputValue(text);
     getPredictions(text);
@@ -28,6 +31,7 @@ const { predictions, getPredictions, selectPlace } = usePlacesAutocomplete({
   const handleRowPress = async (item: any) => {
     const chosenPlaceName = await selectPlace(item);
     if (chosenPlaceName) {
+      console.log(chosenPlaceName);
       setInputValue(chosenPlaceName);
     }
   };
@@ -66,7 +70,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
-    zIndex: 1, 
+    zIndex: 1,
   },
   textInputContainer: {
     backgroundColor: 'transparent',
@@ -78,9 +82,9 @@ const styles = StyleSheet.create({
     height: 48,
     color: '#333',
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
+    //borderWidth: 1,
+    //borderColor: '#ccc',
+    //borderRadius: 8,
     paddingHorizontal: 15,
     backgroundColor: '#fff',
   },
@@ -90,11 +94,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#eee',
     borderRadius: 8,
-    elevation: 3, 
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    elevation: 3,
+    boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.1)',
     position: 'absolute',
     top: 52,
     left: 0,

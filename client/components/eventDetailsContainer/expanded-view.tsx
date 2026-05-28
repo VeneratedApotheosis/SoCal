@@ -4,6 +4,7 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useCalendarEvents } from '../contexts/calendar-events-context';
+import CalendarObjView from './calendar-obj-view';
 import { EventTimeDatePicker } from './expanded-view-time';
 import PlaceSearchBar from './location-container';
 
@@ -55,6 +56,10 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, modalInde
     setEvent({ ...event });
   };
 
+  const handleLocationSelect = ({ address }: { address: string }) => {
+    updateField('location', address);
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
       {/* TITLE — multiline, grows downward */}
@@ -74,31 +79,13 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, modalInde
       <EventTimeDatePicker event={event} onUpdate={updateField} />
 
       <HorizontalBar />
-      <PlaceSearchBar onLocationSelect={() => {}} />
+      <PlaceSearchBar initialValue={event.location} onLocationSelect={handleLocationSelect} />
 
+      <HorizontalBar />
       {/* PROPERTIES BLOCK — flat rows */}
       <View style={styles.listBlock}>
-        <View style={styles.listRow}>
-          <Text style={styles.icon}>📍</Text>
-          <TextInput
-            style={styles.listInput}
-            value={event.location}
-            onChangeText={(text) => updateField('location', text)}
-            placeholder="Add location"
-            placeholderTextColor="#c9c8c6"
-          />
-        </View>
-
         <View style={styles.listDivider} />
-
-        <View style={styles.listRow}>
-          <View style={[styles.calDot, { backgroundColor: event.calendar?.calendarCustomColor || '#3B82F6' }]} />
-          <Text style={styles.listText} numberOfLines={1}>
-            {event.organizer}
-          </Text>
-        </View>
-
-        <View style={styles.listDivider} />
+        <CalendarObjView calendar={event.calendar} />
 
         <View style={styles.listRow}>
           <Text style={styles.icon}>🔔</Text>

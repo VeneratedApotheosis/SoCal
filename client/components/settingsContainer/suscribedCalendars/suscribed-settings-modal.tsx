@@ -1,10 +1,10 @@
+import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
 import { useUnshareCalendar } from '@/hooks/sharingCalendars/useUnshareCalendar';
 import { unsuscribeCalendar } from '@/services/api';
 import { globalStyles } from '@/utility/globalStyles';
 import { COLORS, SIZES } from '@/utility/theme';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAuthContext } from '../../contexts/auth-context';
-import { useCalendarEvents } from '../../contexts/calendar-events-context';
 
 export const suscribedSettingsModalHeight = 50;
 export const suscribedSettingsModalWidth = 100;
@@ -18,7 +18,7 @@ export interface ShareCalendarSettingsModalProps {
 
 export default function SuscribedSettingsModal({ isVisible, setVisible, top, left, calId }: ShareCalendarSettingsModalProps) {
   const { unshare, isLoading } = useUnshareCalendar();
-  const { refetchCalendarList } = useCalendarEvents();
+  const { refetchCalendarList } = useCalendarObjects();
   const { jwtToken } = useAuthContext();
 
   const handleUnshare = async () => {
@@ -39,6 +39,7 @@ export default function SuscribedSettingsModal({ isVisible, setVisible, top, lef
       animationType="fade"
       onRequestClose={() => {
         setVisible(false);
+        Keyboard.dismiss();
       }}
     >
       {/* --- BACKDROP BUTTON --- */}
@@ -65,11 +66,7 @@ const styles = StyleSheet.create({
     minWidth: suscribedSettingsModalWidth,
     height: suscribedSettingsModalHeight,
     justifyContent: 'center',
-
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
+    boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)',
 
     elevation: 10,
   },
@@ -80,6 +77,6 @@ const styles = StyleSheet.create({
   },
   menuText: {
     fontSize: SIZES.m,
-    color: COLORS.text,
+    color: COLORS.text.main,
   },
 });

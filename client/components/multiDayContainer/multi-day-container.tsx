@@ -4,6 +4,7 @@ import {
   ALL_DAY_HEIGHT,
   BUFFER_INCREMENT,
   DATE_HEADER_HEIGHT,
+  FETCH_INITIAL_BUFFER,
   GRID_COLOR,
   GRID_WIDTH,
   HEADER_HEIGHT,
@@ -29,35 +30,42 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
-import { useCalendarIndex } from '../contexts/calendar-index-context';
 
 import EventDetails from '../eventDetailsContainer/event-details';
 import DayContainer from './day-container';
 import HourGuide from './hour-guide';
 
 import { useCalendarEvents } from '../contexts/calendar-events-context';
+import { useCalendarIndex } from '../contexts/calendar-index-context';
 import { useCalendarRange } from '../contexts/calendar-range-context';
 
 const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
 const EMPTY_EVENTS: EventWithOffset[] = [];
 const EMPTY_ALL_DAY: EventObj[] = [];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export default function MultiDayContainer({ calendarType, events }: { calendarType: CalendarView; events: EventObj[] }) {
+  // -------------------------------------------
+  // Display Dimensions
+  // -------------------------------------------
   const dividers = parseInt(calendarType) || 3;
   const dayWidth = Math.round(GRID_WIDTH / dividers);
   const { hourHeight, pinchGesture } = usePinchZoom();
+  const { days, pastDaysCount } = useCalendarRange(); //NOTE: pastDaysCount is a const
+  const { currentMonthText } = useCalendarIndex();
 
-  // calendarIndex
   const listRef = useAnimatedRef<FlashListRef<any>>();
-  const { setDayWidth, fetchStart, fetchEnd } = useCalendarIndex();
   useLayoutEffect(() => {
-    setDayWidth(dayWidth);
     updateAllDayHeaderHeight(scrollX.value / dayWidth);
-  }, [dayWidth, setDayWidth]);
+  }, [dayWidth]);
 
-  //Events
+  // -------------------------------------------
+  // Events, Displayed Events, Grouped Events
+  // -------------------------------------------
   const [displayedEvents, setDisplayedEvents] = useState<EventObj[]>(events);
   const pendingEventsRef = useRef<EventObj[]>(events);
+
+  //Store new events to load only after scroll
   useEffect(() => {
     pendingEventsRef.current = events;
     if (!isScrolling.value) {
@@ -67,15 +75,14 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
   const flushPendingEvents = () => {
     setDisplayedEvents(pendingEventsRef.current);
   };
+
   const { groupedTimedEvents, groupedAllDayEvents } = useEventGrouping(displayedEvents);
   const groupedAllDayEventsRef = useRef(groupedAllDayEvents);
   groupedAllDayEventsRef.current = groupedAllDayEvents;
 
-  //other stuff?
-  const { fetchForward, fetchBackward } = useCalendarEvents();
-  const { days, pastDaysCount } = useCalendarRange();
-  const [maxAllDayEvents, setMaxAllDayEvents] = useState(1);
-
+  // -------------------------------------------
+  // Event Details Modal
+  // -------------------------------------------
   const [selectedEvent, setSelectedEvent] = useState<EventObj | null>(null);
   const [eventDetailsVisible, setEventDetailsVisible] = useState(false);
 
@@ -91,30 +98,18 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
     }
   };
 
-  const scrollX = useSharedValue<number>(0);
-  const contextX = useSharedValue<number>(0);
-  const contextY = useSharedValue<number>(0);
-  const scrollY = useSharedValue<number>(0);
-  const startX = useSharedValue<number>(0);
-  const startY = useSharedValue<number>(0);
+  // -------------------------------------------
+  // Fetching
+  // -------------------------------------------
+  const { fetchForward, fetchBackward } = useCalendarEvents();
+  const localFetchStart = useSharedValue(-1 * FETCH_INITIAL_BUFFER);
+  const localFetchEnd = useSharedValue(FETCH_INITIAL_BUFFER);
+
+  // -------------------------------------------
+  // All Day Header Height
+  // -------------------------------------------
+  const [maxAllDayEvents, setMaxAllDayEvents] = useState(1);
   const allDayHeight = useSharedValue<number>(1 * ALL_DAY_HEIGHT);
-  const nativeRef = useRef(Gesture.Native());
-  const prevIndex = useSharedValue(-1);
-  const baseOffset = useSharedValue(pastDaysCount * dayWidth);
-  const localFetchStart = useSharedValue(fetchStart);
-  const localFetchEnd = useSharedValue(fetchEnd);
-  const isScrolling = useSharedValue<boolean>(false);
-
-  useLayoutEffect(() => {
-    baseOffset.value = pastDaysCount * dayWidth;
-  }, [pastDaysCount, dayWidth, baseOffset]);
-
-  const isLoading = useSharedValue(false);
-
-  // Reset the lock whenever the days array length changes
-  useLayoutEffect(() => {
-    isLoading.value = false;
-  }, [days.length]);
 
   const updateAllDayHeaderHeight = (rawIndex: number): void => {
     const currentIndex = Math.round(rawIndex);
@@ -133,26 +128,39 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
       }
     }
     setMaxAllDayEvents((prevCurrentMax) => {
-      if (prevCurrentMax !== maxEvents) {
-        return maxEvents;
-      }
+      if (prevCurrentMax !== maxEvents) return maxEvents;
       return prevCurrentMax;
     });
 
     const newAllDayHeight = maxEvents * ALL_DAY_HEIGHT;
     allDayHeight.value = newAllDayHeight;
-
-    const minScroll = -newAllDayHeight;
-    const maxScroll = hourHeight * 24 - SCREEN_HEIGHT + HEADER_HEIGHT + DATE_HEADER_HEIGHT + newAllDayHeight;
-
-    // If the header shrank and left a gap at the top, smoothly close the gap!
-    if (scrollY.value < minScroll) {
-      scrollY.value = withTiming(minScroll, { duration: 250 });
-    } else if (scrollY.value > maxScroll) {
-      scrollY.value = withTiming(maxScroll, { duration: 250 });
-    }
   };
 
+  // -------------------------------------------
+  // Scrolling Variables
+  // -------------------------------------------
+  const scrollX = useSharedValue<number>(0);
+  const contextX = useSharedValue<number>(0);
+  const contextY = useSharedValue<number>(0);
+  const scrollY = useSharedValue<number>(0);
+  const startX = useSharedValue<number>(0);
+  const startY = useSharedValue<number>(0);
+
+  const nativeRef = useRef(Gesture.Native());
+  const baseOffset = useSharedValue(pastDaysCount * dayWidth);
+
+  const isScrolling = useSharedValue<boolean>(false);
+  const isLoading = useSharedValue(false);
+
+  useLayoutEffect(() => {
+    baseOffset.value = pastDaysCount * dayWidth;
+  }, [pastDaysCount, dayWidth, baseOffset]);
+
+  const internalDayIndex = useSharedValue(-1);
+
+  // -------------------------------------------
+  // Scrolling Gesture Functions
+  // -------------------------------------------
   const verticalPan = Gesture.Pan()
     .simultaneousWithExternalGesture(nativeRef)
     .manualActivation(true)
@@ -233,17 +241,16 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
     .onUpdate((event) => {
       const nextX = contextX.value - event.translationX;
       const minScroll = -baseOffset.value;
-      scrollX.value = Math.max(minScroll, nextX); // Clamp to physical 0
+      scrollX.value = Math.max(minScroll, nextX);
     })
     .onEnd((event) => {
       scrollX.value = withDecay(
         {
           velocity: -event.velocityX,
           deceleration: 0.985,
-          reduceMotion: ReduceMotion.Never, // forces decay
+          reduceMotion: ReduceMotion.Never,
         },
         (isFinished) => {
-          // Fires when the scrolling physically stops
           if (isFinished) {
             isScrolling.value = false;
             scheduleOnRN(() => updateAllDayHeaderHeight(scrollX.value / dayWidth));
@@ -254,6 +261,9 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
 
   const combined = Gesture.Simultaneous(verticalPan, horizontalPan);
 
+  // -------------------------------------------
+  // Animated Reactions
+  // -------------------------------------------
   // Sync FlashList horizontal scrolling programmatically and handle infinite loading
   useAnimatedReaction(
     () => ({ logX: scrollX.value, base: baseOffset.value, loading: isLoading.value }),
@@ -263,8 +273,19 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
 
       if (loading) return;
 
+      //Set Month Title
       const currentIndex = Math.floor(physicalX / dayWidth - PAST_BUFFER);
+      if (currentIndex !== internalDayIndex.value) {
+        internalDayIndex.value = currentIndex;
 
+        const date = new Date();
+        date.setHours(12, 0, 0, 0);
+        date.setDate(date.getDate() + currentIndex);
+        const monthName = MONTHS[date.getMonth()];
+        currentMonthText.value = monthName;
+      }
+
+      //Cause Fetching forward and backward
       if (currentIndex > localFetchEnd.value) {
         localFetchEnd.value += BUFFER_INCREMENT;
         fetchForward(localFetchEnd.value);
@@ -278,29 +299,32 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
     },
   );
 
-  // Apply vertical scroll to the HourGuide
-  const animatedHourGuideStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: -scrollY.value }],
-  }));
-
-  const animatedAllDayStyle = useAnimatedStyle(() => {
-    const targetHeight = maxAllDayEvents * ALL_DAY_HEIGHT;
-    return { height: withTiming(targetHeight, { duration: 250 }) };
-  });
-
-  const webContainerRef = useRef<any>(null);
-
   useAnimatedReaction(
     () => isScrolling.value,
     (scrolling, wasScrolling) => {
-      // If we WERE scrolling, but now we are NOT...
       if (wasScrolling && !scrolling) {
-        // Safely call the JS function to update the React state
         scheduleOnRN(flushPendingEvents);
       }
     },
   );
 
+  // -------------------------------------------
+  // Animated Styles
+  // -------------------------------------------
+  const animatedHourGuideStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -scrollY.value }], // Hr Guide
+  }));
+
+  const animatedAllDayStyle = useAnimatedStyle(() => {
+    const targetHeight = maxAllDayEvents * ALL_DAY_HEIGHT;
+    return { height: withTiming(targetHeight, { duration: 250 }) }; //All Day Header
+  });
+
+  const webContainerRef = useRef<any>(null);
+
+  // -------------------------------------------
+  // Web Scrolling
+  // -------------------------------------------
   useEffect(() => {
     if (Platform.OS !== 'web' || !webContainerRef.current) return;
     const node = webContainerRef.current;
@@ -329,8 +353,11 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
       node.removeEventListener('wheel', handleWheel);
       clearTimeout(scrollEndTimeout);
     };
-  }, [hourHeight]); // Re-bind if hourHeight changes
+  }, [hourHeight]);
 
+  // -------------------------------------------
+  // Render Days
+  // -------------------------------------------
   const renderDay = useCallback(
     ({ item }: any) => (
       <DayContainer
@@ -357,7 +384,6 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
     <View style={styles.container}>
       <GestureDetector gesture={combined}>
         <Animated.View ref={webContainerRef} style={{ flex: 1, overflow: 'hidden', overscrollBehaviorX: 'none' }}>
-          {/* HOUR GUIDE */}
           <View style={{ flex: 1, flexDirection: 'row' }}>
             {/* HOUR GUIDE */}
             <View style={{ flexDirection: 'column' }}>
@@ -377,7 +403,6 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
               ref={listRef}
               drawDistance={dayWidth * 7}
               data={days}
-              //extraData={events}
               horizontal
               scrollEnabled={false}
               nestedScrollEnabled={true}

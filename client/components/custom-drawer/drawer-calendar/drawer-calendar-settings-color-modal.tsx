@@ -78,11 +78,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
-
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 }, // 0 offset = equal on all sides
-    shadowOpacity: 0.3,
-    shadowRadius: 10, // Higher = softer, wider spread
+    boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)',
 
     // Android Settings
     elevation: 10,

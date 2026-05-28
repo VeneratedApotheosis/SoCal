@@ -2,7 +2,7 @@ import { useColorCache } from '@/hooks/useColorCache';
 import { useTheme } from '@/hooks/useTheme';
 import { colorCache } from '@/utility/types';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { EventsContext } from './calendar-events-context';
+import { useCalendarObjects } from './calendar-obj-context';
 
 interface UIContextType {
   now: Date;
@@ -28,7 +28,7 @@ export const UIContext = createContext<UIContextType>({} as UIContextType);
 
 export const UIProvider = ({ children }: { children: ReactNode }) => {
   const [isLoginVisible, setLoginVisible] = useState(false);
-  const { calendarObjs } = useContext(EventsContext);
+  const { calendarObjs } = useCalendarObjects();
   const [now, setNow] = useState(new Date());
   const colorCache = useColorCache(calendarObjs);
   const theme = useTheme();

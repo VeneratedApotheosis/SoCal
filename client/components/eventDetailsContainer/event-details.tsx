@@ -2,7 +2,7 @@ import { EventObj } from '@/utility/types';
 
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import React, { useEffect, useMemo, useRef } from 'react';
-import { StyleSheet } from 'react-native';
+import { Keyboard, StyleSheet } from 'react-native';
 import { EventExpandedView } from './expanded-view';
 
 interface Props {
@@ -36,6 +36,7 @@ export default function EventDetails({ isVisible, event, onClose }: Props) {
       }}
       handleStyle={styles.handleContainer}
       onChange={(index) => {
+        Keyboard.dismiss();
         setCurrentIndex(index);
         if (index === -1) {
           onClose();
@@ -55,11 +56,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white', // Matches your sheet color
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
-    // Shadow logic
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 }, // Negative height pushes shadow UP
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0px -2px 4px rgba(0, 0, 0, 0.2)',
     elevation: 10,
   },
   contentContainer: {

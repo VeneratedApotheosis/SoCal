@@ -2,7 +2,7 @@ import { useCalendarGroups } from '@/components/contexts/calendar-groups-context
 import { getPositions } from '@/utility/drawerUtil';
 import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import FolderSettingsRenameModal from './drawer-folder-rename-modal';
 
 const menuHeight = 82;
@@ -31,6 +31,7 @@ export default function FolderSettingsModal({ isVisible, setVisible, calId, top,
         animationType="fade"
         onRequestClose={() => {
           setVisible(false);
+          Keyboard.dismiss();
         }}
       >
         {/* --- BACKDROP BUTTON --- */}
@@ -93,10 +94,7 @@ const styles = StyleSheet.create({
     padding: 6,
     minWidth: menuWidth,
     minHeight: menuHeight,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
+    boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)',
 
     elevation: 10,
   },

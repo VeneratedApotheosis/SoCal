@@ -1,3 +1,4 @@
+import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
 import { useUIContext } from '@/components/contexts/ui-context';
 import { getColorPaletteStyles, getIconColor, getSettingCardStyles, globalStyles } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
@@ -5,12 +6,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Plus } from 'lucide-react-native';
 import { useMemo, useRef, useState } from 'react';
 import { Animated, LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useCalendarEvents } from '../../contexts/calendar-events-context';
 import ShareModal, { shareModalRef } from './share-modal';
 import SharedCalendarIndividual from './shared-calendar-individual';
 
 export default function SharedCalendars() {
-  const { sharedCalendars = [] } = useCalendarEvents();
+  const { sharedCalendars = [] } = useCalendarObjects();
 
   // -------------------------------------------
   // Card Themes and Toggle

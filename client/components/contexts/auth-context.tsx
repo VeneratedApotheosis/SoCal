@@ -1,6 +1,7 @@
+import { useProfiles } from '@/hooks/useProfile';
 import { fetchJwtToken } from '@/services/api';
 import { storage } from '@/services/storage';
-import { CalendarView, JwtTokenObj } from '@/utility/types';
+import { CalendarView, FamilyProfileObjs, JwtTokenObj } from '@/utility/types';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 export interface AuthContextType {
@@ -10,6 +11,8 @@ export interface AuthContextType {
   calendarType: CalendarView;
   setCalendarType: (calendarType: CalendarView) => void;
 
+  familyProfiles: FamilyProfileObjs | null;
+
   loginWithCode: (code: string, codeVerifier?: string, redirectUri?: string) => Promise<JwtTokenObj | undefined>;
   logout: () => Promise<void>;
 }
@@ -18,7 +21,10 @@ export const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [jwtToken, setJwtToken] = useState<JwtTokenObj | null>(null);
-  //  const { promptAsync } = useAuth();
+  const sessionTokenString = jwtToken?.sessionToken ?? null;
+
+  //PROFILE HOOK
+  const { familyProfiles } = useProfiles(sessionTokenString);
   const [calendarType, setCalendarType] = useState<CalendarView>('3');
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -52,6 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setJwtToken,
         calendarType,
         setCalendarType,
+        familyProfiles,
         loginWithCode,
         logout,
       }}

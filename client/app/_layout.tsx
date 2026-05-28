@@ -8,6 +8,7 @@ import CustomDrawerContent from '../components/custom-drawer/drawer-container';
 import { EventsProvider } from '@/components/contexts/calendar-events-context';
 import { GroupsProvider } from '@/components/contexts/calendar-groups-context';
 import { DateProvider } from '@/components/contexts/calendar-index-context';
+import { CalendarObjectsProvider } from '@/components/contexts/calendar-obj-context';
 import { RangeProvider } from '@/components/contexts/calendar-range-context';
 import { UIProvider } from '@/components/contexts/ui-context';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -19,34 +20,36 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
         <DateProvider>
-          <EventsProvider>
-            <GroupsProvider>
-              <RangeProvider>
-                <UIProvider>
-                  <BottomSheetModalProvider>
-                    <Drawer
-                      drawerContent={(props) => <CustomDrawerContent {...props} />}
-                      screenOptions={{
-                        drawerStyle: {},
-                        swipeEnabled: false,
-                      }}
-                    >
-                      <Drawer.Screen
-                        name="index"
-                        options={{
-                          header: ({ options }) => <CalendarHeader />,
-                          headerTransparent: false,
-                          headerTitle: 'Calender',
-                          drawerLabel: 'Calendar',
-                          drawerIcon: ({ size, color }) => <Ionicons name="home-outline" size={size} color={color} />,
+          <CalendarObjectsProvider>
+            <EventsProvider>
+              <GroupsProvider>
+                <RangeProvider>
+                  <UIProvider>
+                    <BottomSheetModalProvider>
+                      <Drawer
+                        drawerContent={(props) => <CustomDrawerContent {...props} />}
+                        screenOptions={{
+                          drawerStyle: {},
+                          swipeEnabled: false,
                         }}
-                      />
-                    </Drawer>
-                  </BottomSheetModalProvider>
-                </UIProvider>
-              </RangeProvider>
-            </GroupsProvider>
-          </EventsProvider>
+                      >
+                        <Drawer.Screen
+                          name="index"
+                          options={{
+                            header: ({ options }) => <CalendarHeader />,
+                            headerTransparent: false,
+                            headerTitle: 'Calender',
+                            drawerLabel: 'Calendar',
+                            drawerIcon: ({ size, color }) => <Ionicons name="home-outline" size={size} color={color} />,
+                          }}
+                        />
+                      </Drawer>
+                    </BottomSheetModalProvider>
+                  </UIProvider>
+                </RangeProvider>
+              </GroupsProvider>
+            </EventsProvider>
+          </CalendarObjectsProvider>
         </DateProvider>
       </AuthProvider>
     </GestureHandlerRootView>

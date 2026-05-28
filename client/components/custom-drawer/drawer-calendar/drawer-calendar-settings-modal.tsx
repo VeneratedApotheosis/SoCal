@@ -105,10 +105,7 @@ const styles = StyleSheet.create({
     padding: 6,
     minWidth: menuWidth,
     minHeight: menuHeight,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
+    boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)',
 
     elevation: 10,
   },

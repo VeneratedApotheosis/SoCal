@@ -1,6 +1,6 @@
 import { useCalendarGroups } from '@/components/contexts/calendar-groups-context';
 import { useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export interface FolderSettingsRenameModalInterface {
   isVisible: boolean;
@@ -46,6 +46,7 @@ export default function FolderSettingsRenameModal({
       animationType="fade"
       onRequestClose={() => {
         setVisible(false);
+        Keyboard.dismiss();
       }} // Handles Android hardware back button><Modal/>);
     >
       {/* --- BACKDROP BUTTON --- */}
@@ -99,10 +100,7 @@ const styles = StyleSheet.create({
     padding: 16,
     width: '80%', // Takes up a nice chunk of the screen width
     maxWidth: 300,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
+    boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.25)',
     elevation: 10,
   },
   colorButton: {

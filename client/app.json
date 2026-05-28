@@ -37,8 +37,7 @@
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png",
-      "bundler": "metro",
-      "baseUrl": "/your-repository-name"
+      "bundler": "metro"
     },
     "plugins": [
       "expo-router",
@@ -66,7 +65,8 @@
     ,
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
+      "reactCompiler": true,
+      "baseUrl": "/SoCal"
     },
     "extra": {
       "router": {},

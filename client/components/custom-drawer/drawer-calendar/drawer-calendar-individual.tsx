@@ -4,9 +4,9 @@ import { lightenColor } from '@/utility/eventUtils';
 import { calendarObj } from '@/utility/types';
 
 import { Ionicons } from '@expo/vector-icons';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { UIContext } from '../../contexts/ui-context';
+import { useUIContext } from '../../contexts/ui-context';
 import CalendarSettingsModal from './drawer-calendar-settings-modal';
 
 const menuHeight = 116;
@@ -24,7 +24,7 @@ export default function CalendarDrawerList({
   const buttonRef = useRef<View>(null);
   const [opacity, setOpacity] = useState(calendarObj.shown ? 1 : 0.5);
 
-  const { colorCache } = useContext(UIContext);
+  const { colorCache } = useUIContext();
   const [color, setColor] = useState<string>();
 
   //Sync color with colorCache
@@ -112,20 +112,4 @@ const styles = StyleSheet.create({
   pressedButton: {
     transform: [{ scale: 0.96 }],
   },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  menuBox: {
-    position: 'absolute',
-    backgroundColor: '#eeeeee',
-    borderRadius: 8,
-    padding: 5,
-    elevation: 5, // Shadow for Android
-    shadowColor: '#000', // Shadow for iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    minWidth: 150,
-  },
-  menuItem: { padding: 12 },
-  divider: { height: 1, backgroundColor: '#eee', marginVertical: 4 },
 });
