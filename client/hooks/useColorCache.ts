@@ -143,8 +143,10 @@ export const useColorCache = (calendarObjs: calendarObj[] | null) => {
     const customColor = activeCache?.colorMap[calendarId];
     return customColor || '#00ffff';
   }, [activeCacheId, calendarObjs, allCaches]);
-
-  //update only current colorCache with calendarObjs
+  
+  // -------------------------------------------
+  // Update Function
+  // -------------------------------------------
   useEffect(() => {
     if (!calendarObjs?.length) return;
 

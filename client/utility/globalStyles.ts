@@ -1,5 +1,3 @@
-//padding
-//buttons
 import { StyleSheet } from 'react-native';
 import { COLORS, FONT_WEIGHTS, SIZES } from './theme';
 
@@ -63,7 +61,11 @@ export const globalStyles = StyleSheet.create({
 export const getIconColor = (isDark: boolean) => {
     return isDark ? COLORS.text.light : COLORS.text.main;
 }
-export const getSettingRootStyles = (isDark: boolean) => StyleSheet.create({
+
+// -------------------------------------------
+// Settings
+// -------------------------------------------
+export const getSettingBackgroundStyles = (isDark: boolean) => StyleSheet.create({
   handleContainer: {
     backgroundColor: isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight,
     borderTopLeftRadius: 15,
@@ -138,10 +140,9 @@ export const getSettingCardStyles = (isDark: boolean) => StyleSheet.create({
 
 export const getSettingProfileStyles = (isDark: boolean) => StyleSheet.create({
   profileContainer: {
-    flex: 1,
     flexDirection: 'column',
     gap: 15,
-    paddingHorizontal: 20,
+    padding: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -342,6 +343,9 @@ export const getColorEditStyles = (isDark: boolean) => StyleSheet.create({
   }
 });
 
+// -------------------------------------------
+// Events
+// -------------------------------------------
 export const getEventCardStyles = (isDark: boolean) => StyleSheet.create({
   eventContainer: {
     borderWidth: 1,

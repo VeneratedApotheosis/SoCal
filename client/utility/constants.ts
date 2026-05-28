@@ -17,6 +17,7 @@ export const CACHE_STORAGE_KEY = '@ui_color_caches';
 export const ACTIVE_ID_KEY = '@ui_active_cache_id';
 export const THEME_STORAGE_KEY = '@ui_theme';
 export const PROFILE_STORAGE_KEY = '@user_profiles';
+export const CALENDAR_GROUPS_KEY = '@calendar_groups'
 
 export const GRID_COLOR = '#f0f0f0';
 export const HEADER_BACKGROUND_COLOR = '#f0f0f0';
@@ -40,8 +41,9 @@ export const DEAFULT_COLORS_2 = ['#EF4444', '#F97316', '#F59E0B', '#10B981', '#3
 
 export const DRAWER_DRAGGABLE_HEIGHT = 36;
 
-export const PAST_BUFFER = 10; // ~6 years back
-export const FUTURE_BUFFER = 10; // ~6 years forward
+export const PAST_BUFFER = 2000;
+export const FUTURE_BUFFER = 2000;
+export const FETCH_INITIAL_BUFFER = 10 //in milliseconds
 export const BUFFER_INCREMENT = 10;
 export const DAYS_PADDING_THRESHOLD = 5;
 export const MAX_RESULTS = "250";

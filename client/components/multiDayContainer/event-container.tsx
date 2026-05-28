@@ -1,8 +1,8 @@
 import { EVENT_OFFSET } from '@/utility/constants';
 import { EventObj, EventWithOffset } from '@/utility/types';
-import { UIContext } from '../contexts/ui-context';
+import { useUIContext } from '../contexts/ui-context';
 
-import React, { memo, useContext, useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 
 import { lightenColor } from '@/utility/eventUtils';
 import { Text, View } from 'react-native';
@@ -20,38 +20,34 @@ export interface EventContainerProps {
   selectedEvent: EventObj | null;
 }
 
+const lightStyles = getEventCardStyles(false);
+const darkStyles = getEventCardStyles(true);
+
 //TODO: MAKE THIS LOOK PRETTY
 function EventContainer({ eventWithOffset, dayWidth, hourHeight, onSelect, isVisible, selectedEvent }: EventContainerProps) {
   const { event, offset, maxOffset } = eventWithOffset;
-  const { colorCache, theme } = useContext(UIContext);
-  const styles = getEventCardStyles(theme.isDark);
+  const { colorCache, theme } = useUIContext();
+  const styles = theme.isDark ? darkStyles : lightStyles;
+  console.log('rendering event');
 
   //position on screen
   const layout = useMemo(() => {
     return getEventLayout(event, offset, maxOffset, hourHeight, dayWidth, EVENT_OFFSET);
   }, [event, offset, hourHeight, dayWidth]);
 
-  const selectedThisEvent = useMemo(() => {
-    if (!selectedEvent || !isVisible) return false;
-    return selectedEvent.id === eventWithOffset.event.id;
-  }, [selectedEvent, isVisible]);
-
-  const totalOffset: number = useMemo(() => {
-    if (!selectedThisEvent) return offset + 100;
-    else return 200;
-  }, [selectedEvent, offset]);
+  const selectedThisEvent = !!selectedEvent && isVisible && selectedEvent.id === event.id;
+  const totalOffset = selectedThisEvent ? 200 : offset + 100;
 
   //color on screen
-  const rawColor = useMemo(() => {
-    let c = colorCache.getCalendarColor(event.calendarId);
-    return lightenColor(c, 'raw');
+  const { rawColor, borderColor, textColor } = useMemo(() => {
+    const baseColor = colorCache.getCalendarColor(event.calendarId);
+    const raw = lightenColor(baseColor, 'raw');
+    return {
+      rawColor: raw,
+      borderColor: lightenColor(raw, 'border'),
+      textColor: lightenColor(raw, 'text'),
+    };
   }, [colorCache.allCaches, colorCache.activeCacheId, event.calendarId]);
-  const borderColor = useMemo(() => {
-    return lightenColor(rawColor, 'border');
-  }, [rawColor]);
-  const textColor = useMemo(() => {
-    return lightenColor(rawColor, 'text');
-  }, [rawColor]);
 
   return (
     <Pressable

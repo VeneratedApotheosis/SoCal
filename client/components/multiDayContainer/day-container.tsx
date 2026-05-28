@@ -1,15 +1,15 @@
 import { isSameDay } from 'date-fns';
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { Extrapolation, interpolate, SharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Animated, { SharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import Svg, { Line } from 'react-native-svg';
 import DateHeader from './date-header';
 
-import { ALL_DAY_HEIGHT, GRID_COLOR, HOUR_HEIGHT, SCREEN_WIDTH } from '@/utility/constants';
+import { ALL_DAY_HEIGHT, GRID_COLOR, HOUR_HEIGHT } from '@/utility/constants';
 import { createEventObj } from '@/utility/eventUtils';
 import { COLORS } from '@/utility/theme';
 import { EventObj, EventWithOffset } from '@/utility/types';
-import AllDayChip from './allday-chip'; // <-- Import the chip
+import AllDayChip from './allday-chip';
 import EventContainer from './event-container';
 import TimeIndicator from './time-indicator';
 
@@ -64,30 +64,6 @@ export default function DayContainer({
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ translateY: -scrollY.value }],
-    };
-  });
-
-  const animatedEventStyle = useAnimatedStyle(() => {
-    // 1. Calculate where this specific day physically lives on the X axis
-    const thisDaysPosition = index * dayWidth;
-
-    // 2. Interpolate the opacity based on the scroll position!
-    const opacity = interpolate(
-      scrollX.value,
-      [
-        thisDaysPosition - SCREEN_WIDTH, // When the day is off-screen to the right
-        thisDaysPosition - SCREEN_WIDTH + dayWidth, // Fading in as it enters the screen
-        thisDaysPosition, // Fully visible
-        thisDaysPosition + dayWidth, // Fading out as it leaves the left side
-      ],
-      [0, 1, 1, 0], // The opacity values matching the array above
-      Extrapolation.CLAMP,
-    );
-
-    return {
-      opacity,
-      // Keep your vertical translation here if this is inside DayContainer
       transform: [{ translateY: -scrollY.value }],
     };
   });

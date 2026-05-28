@@ -2,6 +2,18 @@
 import { EventObj, EventWithOffset } from '@/utility/types';
 import { useMemo } from 'react';
 
+const getLocalDateKey = (dateStr: string): string => {
+  // Checks if the format is exactly YYYY-MM-DD (all-day event format)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    // Note: JavaScript months are 0-indexed (0 = January, 5 = June)
+    return new Date(year, month - 1, day).toDateString();
+  }
+  
+  // Otherwise, it's a full ISO timestamp, safe to parse normally
+  return new Date(dateStr).toDateString();
+};
+
 export const useEventGrouping = (events: EventObj[]) => {
   return useMemo(() => {
     const timed: Record<string, EventObj[]> = {};
@@ -9,9 +21,8 @@ export const useEventGrouping = (events: EventObj[]) => {
     const timedWithLayout: Record<string, EventWithOffset[]> = {};
     
     events.forEach((e) => {
-      // Opt for string splitting or lightweight parsing if startDate is ISO string
-      const dateKey = new Date(e.startDate).toDateString(); 
       const isAllDay = e.allDay === true || String(e.allDay) === 'true';
+      const dateKey = e.startDate.toDateString();
     
       if (isAllDay) {
         //all day events added to allDay Record

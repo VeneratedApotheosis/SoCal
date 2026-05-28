@@ -1,13 +1,7 @@
-//TODO:
-// 1. potentailly display multiple colorCaches and be able to select one to display
-// 2. maybe when the user saves their modifications the app automatically removes any repeats and orders them (somehow)
-// 3. when adding a new color palette, have some preset options shown
-// 4. when modifying a pallete, a user can remove and add colors
-
 import AppearanceColorPalette from '@/components/settingsContainer/appearance/appearance-color-palette';
 import AppearanceTheme from '@/components/settingsContainer/appearance/appearance-theme';
 import { lightenColor } from '@/utility/eventUtils';
-import { getSettingRootStyles, globalStyles } from '@/utility/globalStyles';
+import { getSettingBackgroundStyles, globalStyles } from '@/utility/globalStyles';
 import { colorCache } from '@/utility/types';
 import { useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -42,7 +36,7 @@ const ThemeButton = ({
 
 export default function AppearanceContainer() {
   const { theme, colorCache } = useUIContext();
-  const rootStyles = getSettingRootStyles(theme.isDark);
+  const rootStyles = getSettingBackgroundStyles(theme.isDark);
 
   // Palettes and palette ID's
   const [palettes, setPalettes] = useState(colorCache.allCaches);

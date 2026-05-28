@@ -1,37 +1,40 @@
 import { calendarObj } from '@/utility/types';
-import { useCallback, useContext, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 //Global Contexts
-import { AuthContext, useAuthContext } from '../contexts/auth-context';
-import { EventsContext } from '../contexts/calendar-events-context';
-import { UIContext } from '../contexts/ui-context';
+import { useAuthContext } from '../contexts/auth-context';
+import { useCalendarEvents } from '../contexts/calendar-events-context';
+import { useUIContext } from '../contexts/ui-context';
 
 import { toTitleCase } from '@/utility/drawerUtil';
-import { globalStyles } from '@/utility/globalStyles';
+import { getColorPaletteStyles, globalStyles } from '@/utility/globalStyles';
 import { COLORS, FONT_WEIGHTS, SIZES } from '@/utility/theme';
+import { Plus } from 'lucide-react-native';
+import { useCalendarGroups } from '../contexts/calendar-groups-context';
 import DraggableCalendar from './drawer-draggable-calendar';
 
 export default function CustomDrawerContent(props: any) {
-  const { jwtToken } = useAuthContext();
-  const { calendarType, setCalendarType } = useContext(AuthContext);
-  const { familyProfiles, setCalendarObj, groupedCalendars, updateSingleGroup, updateMultipleGroups } = useContext(EventsContext);
-  const { setLoginVisible } = useContext(UIContext);
+  const { jwtToken, calendarType, setCalendarType } = useAuthContext();
+  const { familyProfiles, setCalendarObj } = useCalendarEvents();
+  const { calendarGroups } = useCalendarGroups();
+  const { setLoginVisible, theme: uiTheme } = useUIContext();
+  const themeStyles = getColorPaletteStyles(uiTheme.isDark);
   const hoverIndex = useSharedValue<number | null>(null);
   const activeIndex = useSharedValue<number | null>(null);
 
   //Both Folders and Calendars are mapped to Draggable Flatlist in flatData
   const flatData = useMemo(() => {
-    return groupedCalendars.flatMap((group) => [
+    return calendarGroups.groupedCalendars.flatMap((group) => [
       { id: group.id, folder: true, calendar: null as calendarObj | null },
       ...group.calendars.map((cal) => {
         return { id: group.id, folder: false, calendar: cal as calendarObj | null };
       }),
     ]);
-  }, [groupedCalendars]);
+  }, [calendarGroups.groupedCalendars]);
 
   const getButtonStyle = (option: '1' | '2' | '3' | 'W' | 'M', pressed: boolean) => [
     styles.viewButton,
@@ -87,8 +90,8 @@ export default function CustomDrawerContent(props: any) {
 
     if (sourceGroupIdx === -1 || destGroupIdx === -1) return;
 
-    const sourceGroup = groupedCalendars[sourceGroupIdx];
-    const destGroup = groupedCalendars[destGroupIdx];
+    const sourceGroup = calendarGroups.groupedCalendars[sourceGroupIdx];
+    const destGroup = calendarGroups.groupedCalendars[destGroupIdx];
     if (!sourceGroup || !destGroup) return;
 
     // Remove from Source Group
@@ -118,11 +121,11 @@ export default function CustomDrawerContent(props: any) {
 
     // Update the Context
     if (sourceGroup.id === destGroup.id) {
-      updateSingleGroup(destGroup.id, updatedDestCals);
+      calendarGroups.updateSingleGroup(destGroup.id, updatedDestCals);
     } else {
-      updateMultipleGroups([
-        { groupId: sourceGroup.id, newCalendars: updatedSourceCals },
-        { groupId: destGroup.id, newCalendars: updatedDestCals },
+      calendarGroups.updateMultipleGroups([
+        { id: sourceGroup.id, calendars: updatedSourceCals },
+        { id: destGroup.id, calendars: updatedDestCals },
       ]);
     }
   };
@@ -163,7 +166,7 @@ export default function CustomDrawerContent(props: any) {
           ))}
         </View>
         {/* --- CALENDAR VISIBILITY TOGGLE --- */}
-        <View style={{ flex: 1 }}>
+        <View style={{ marginBottom: 10 }}>
           <Text style={styles.headerText}>Calendars</Text>
           {flatData.map((data, index) => (
             <DraggableCalendar
@@ -176,6 +179,14 @@ export default function CustomDrawerContent(props: any) {
               activeIndex={activeIndex}
             />
           ))}
+        </View>
+        <View style={{}}>
+          <Pressable
+            style={({ pressed }) => [themeStyles.actionButton, { paddingVertical: 8 }, pressed && themeStyles.actionButtonPressed]}
+            onPress={() => calendarGroups.addGroup(null)}
+          >
+            <Plus size={16} color={uiTheme.isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark} style={themeStyles.plusIcon} />
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>

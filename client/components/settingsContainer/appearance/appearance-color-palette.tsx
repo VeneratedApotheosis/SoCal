@@ -17,9 +17,8 @@ export default function AppearanceColorPalette() {
   // -------------------------------------------
   const [isExpanded, setIsExpanded] = useState(true);
   const themeStyles = getColorPaletteStyles(uiTheme.isDark);
-  const rootStyles = getSettingCardStyles(uiTheme.isDark);
+  const cardStyles = getSettingCardStyles(uiTheme.isDark);
   const editStyles = getColorEditStyles(uiTheme.isDark);
-  const eventCardStyles = getEventCardStyles(uiTheme.isDark);
   const animatedController = useRef(new Animated.Value(0)).current;
 
   const toggleSection = () => {
@@ -117,12 +116,12 @@ export default function AppearanceColorPalette() {
   const iconColor = getIconColor(uiTheme.isDark);
 
   return (
-    <View style={rootStyles.container}>
+    <View style={cardStyles.container}>
       {/* --- Trigger (Header) --- */}
-      <Pressable onPress={toggleSection} style={rootStyles.trigger}>
-        <View style={rootStyles.triggerLeft}>
+      <Pressable onPress={toggleSection} style={cardStyles.trigger}>
+        <View style={cardStyles.triggerLeft}>
           <Ionicons name="color-palette-outline" size={20} color={iconColor} />
-          <Text style={rootStyles.label}>Color Palette</Text>
+          <Text style={cardStyles.label}>Color Palette</Text>
         </View>
         <Animated.View style={{ transform: [{ rotate: arrowRotation }] }}>
           <Ionicons name="chevron-down-outline" size={20} color={iconColor} />
@@ -130,7 +129,7 @@ export default function AppearanceColorPalette() {
       </Pressable>
 
       {isExpanded && (
-        <View style={rootStyles.content}>
+        <View style={cardStyles.content}>
           {!isEditing ? (
             <>
               {/* Header Row: Label + Modify Button */}

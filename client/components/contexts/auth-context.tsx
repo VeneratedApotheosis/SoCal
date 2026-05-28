@@ -38,13 +38,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return newJwtToken as JwtTokenObj;
   };
 
-  // useEffect(() => {
-  //   if (jwtToken) {
-  //     const isExpired = Date.now() + 600000 > +jwtToken?.expiryDate;
-  //     if (isExpired) logout();
-  //   }
-  // }, [jwtToken]);
-
   const logout = async () => {
     await storage.clearAll();
     setJwtToken(null);

@@ -1,7 +1,9 @@
 import { getEventTimeDisplay } from '@/utility/eventUtils';
 import { EventObj } from '@/utility/types';
-import React, { useState } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import React, { useCallback, useRef, useState } from 'react';
+import { Platform, Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { getRecurrenceLabel, RecurrencePickerModal } from './recurrence-picker-modal';
 // import DatePicker from 'react-native-date-picker';
 
 interface EventTimeDatePickerProps {
@@ -9,110 +11,35 @@ interface EventTimeDatePickerProps {
   onUpdate: (field: keyof EventObj, value: any) => void;
 }
 
-// ─── Recurrence options ───────────────────────────────────────────────────────
-
-interface RecurrenceOption {
-  label: string;
-  value: string[] | null;
-  isCustom?: boolean;
-}
-
-const RECURRENCE_OPTIONS: RecurrenceOption[] = [
-  { label: 'Does not repeat', value: null },
-  { label: 'Every day', value: ['RRULE:FREQ=DAILY'] },
-  { label: 'Every week', value: ['RRULE:FREQ=WEEKLY'] },
-  { label: 'Every 2 weeks', value: ['RRULE:FREQ=WEEKLY;INTERVAL=2'] },
-  { label: 'Every month', value: ['RRULE:FREQ=MONTHLY'] },
-  { label: 'Every year', value: ['RRULE:FREQ=YEARLY'] },
-  { label: 'Custom…', value: null, isCustom: true },
-];
-
-function getRecurrenceLabel(recurrence: string[] | null | undefined): string {
-  if (!recurrence || recurrence.length === 0) return 'Does not repeat';
-  const rrule = recurrence[0];
-  const match = RECURRENCE_OPTIONS.find((o) => o.value && JSON.stringify(o.value) === JSON.stringify(recurrence));
-  if (match) return match.label;
-  // Custom / unrecognised rule — try to give a readable summary
-  if (rrule.includes('INTERVAL=2') && rrule.includes('WEEKLY')) return 'Every 2 weeks';
-  if (rrule.includes('YEARLY')) return 'Every year';
-  return 'Custom repeat';
-}
-
-function isOptionSelected(option: RecurrenceOption, current: string[] | null | undefined): boolean {
-  if (option.isCustom) return false;
-  return JSON.stringify(option.value) === JSON.stringify(current ?? null);
-}
-
-// ─── Recurrence picker modal ──────────────────────────────────────────────────
-
-interface RecurrencePickerProps {
-  visible: boolean;
-  current: string[] | null | undefined;
-  onSelect: (value: string[] | null) => void;
-  onCustom: () => void;
-  onClose: () => void;
-}
-
-const RecurrencePicker = ({ visible, current, onSelect, onCustom, onClose }: RecurrencePickerProps) => (
-  <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-    {/* Backdrop */}
-    <Pressable style={styles.backdrop} onPress={onClose}>
-      {/* Sheet — stop press propagation so tapping inside doesn't close */}
-      <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
-        <View style={styles.sheetHandle} />
-        <Text style={styles.sheetTitle}>Repeat</Text>
-
-        {RECURRENCE_OPTIONS.map((option, idx) => {
-          const selected = isOptionSelected(option, current);
-          const isLast = idx === RECURRENCE_OPTIONS.length - 1;
-
-          return (
-            <View key={option.label}>
-              <TouchableOpacity
-                style={styles.optionRow}
-                activeOpacity={0.6}
-                onPress={() => {
-                  if (option.isCustom) {
-                    onClose();
-                    onCustom();
-                  } else {
-                    onSelect(option.value);
-                    onClose();
-                  }
-                }}
-              >
-                <Text style={[styles.optionLabel, option.isCustom && styles.optionCustom]}>{option.label}</Text>
-                {selected && <Text style={styles.checkmark}>✓</Text>}
-              </TouchableOpacity>
-              {!isLast && <View style={styles.optionDivider} />}
-            </View>
-          );
-        })}
-      </Pressable>
-    </Pressable>
-  </Modal>
-);
-
-// ─── Time helpers ─────────────────────────────────────────────────────────────
+// ─── Time/date helpers ────────────────────────────────────────────────────────
 
 function applyTimeString(base: Date | undefined, timeStr: string): Date | null {
   const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)$/);
   if (!match) return null;
-
   let hours = parseInt(match[1], 10);
   const minutes = parseInt(match[2], 10);
   const meridiem = match[3].toUpperCase();
-
   if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59) return null;
-
   if (meridiem === 'AM') {
     if (hours === 12) hours = 0;
   } else {
     if (hours !== 12) hours += 12;
   }
-
   const d = new Date(base || Date.now());
   d.setHours(hours, minutes, 0, 0);
+  return d;
+}
+
+function applyDateString(base: Date | undefined, dateStr: string): Date | null {
+  const match = dateStr.trim().match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+  if (!match) return null;
+  const month = parseInt(match[1], 10) - 1;
+  const day = parseInt(match[2], 10);
+  let year = match[3] ? parseInt(match[3], 10) : new Date(base || Date.now()).getFullYear();
+  if (year < 100) year += 2000;
+  if (month < 0 || month > 11 || day < 1 || day > 31) return null;
+  const d = new Date(base || Date.now());
+  d.setFullYear(year, month, day);
   return d;
 }
 
@@ -126,26 +53,41 @@ function formatTo12Hour(date: Date | undefined): string {
   return `${hours}:${minutes.toString().padStart(2, '0')} ${meridiem}`;
 }
 
-// ─── Date display helper ──────────────────────────────────────────────────────
+function formatDateShort(date: Date | undefined): string {
+  if (!date) return '';
+  const d = new Date(date);
+  return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+}
+
+// ─── Date display ─────────────────────────────────────────────────────────────
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-function formatShortDate(date: Date): string {
+function formatDisplayDate(date: Date): string {
   return `${DAY_NAMES[date.getDay()]} ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`;
 }
 
 function getDateDisplay(event: EventObj): string {
   const start = event.startDate ? new Date(event.startDate) : null;
-  const end = event.endDate ? new Date(event.endDate) : null;
+  let end = event.endDate ? new Date(event.endDate) : null;
   if (!start) return '';
 
-  // Same calendar day → show just the one date
-  if (!end || (start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth() && start.getDate() === end.getDate())) {
-    return formatShortDate(start);
+  if (event.allDay && end) {
+    // Google all-day end dates are exclusive — subtract 1 day for display
+    const adjusted = new Date(end);
+    adjusted.setDate(adjusted.getDate() - 1);
+    if (adjusted >= start) end = adjusted;
+  } else if (end && end.getTime() <= start.getTime()) {
+    // Overnight event: end time is at or before start, so it's the next calendar day
+    const nextDay = new Date(end);
+    nextDay.setDate(nextDay.getDate() + 1);
+    end = nextDay;
   }
 
-  return `${formatShortDate(start)} – ${formatShortDate(end)}`;
+  if (!end || (start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth() && start.getDate() === end.getDate()))
+    return formatDisplayDate(start);
+  return `${formatDisplayDate(start)} – ${formatDisplayDate(end)}`;
 }
 
 // ─── Web time input ───────────────────────────────────────────────────────────
@@ -167,9 +109,7 @@ const WebTimeInput = ({ dateValue, onCommit, placeholder, label }: WebTimeInputP
       setError(false);
       onCommit(parsed);
       setText(formatTo12Hour(parsed));
-    } else {
-      setError(true);
-    }
+    } else setError(true);
   };
 
   return (
@@ -186,7 +126,6 @@ const WebTimeInput = ({ dateValue, onCommit, placeholder, label }: WebTimeInputP
           onBlur={handleBlur}
           placeholder={placeholder}
           placeholderTextColor="#c9c8c6"
-          keyboardType="default"
           selectTextOnFocus
         />
       </View>
@@ -194,15 +133,57 @@ const WebTimeInput = ({ dateValue, onCommit, placeholder, label }: WebTimeInputP
   );
 };
 
-// ─── iOS time button ──────────────────────────────────────────────────────────
+// ─── Web date input ───────────────────────────────────────────────────────────
 
-interface IOSTimeButtonProps {
+interface WebDateInputProps {
+  dateValue: Date | undefined;
+  onCommit: (date: Date) => void;
+  label: string;
+}
+
+const WebDateInput = ({ dateValue, onCommit, label }: WebDateInputProps) => {
+  const [text, setText] = useState(formatDateShort(dateValue));
+  const [error, setError] = useState(false);
+
+  const handleBlur = () => {
+    const parsed = applyDateString(dateValue, text);
+    if (parsed) {
+      setError(false);
+      onCommit(parsed);
+      setText(formatDateShort(parsed));
+    } else setError(true);
+  };
+
+  return (
+    <View style={styles.timePill}>
+      <Text style={styles.pillLabel}>{label}</Text>
+      <View style={[styles.pillInput, error && styles.pillInputError]}>
+        <TextInput
+          style={styles.pillInputText}
+          value={text}
+          onChangeText={(t) => {
+            setText(t);
+            setError(false);
+          }}
+          onBlur={handleBlur}
+          placeholder="M/D/YYYY"
+          placeholderTextColor="#c9c8c6"
+          selectTextOnFocus
+        />
+      </View>
+    </View>
+  );
+};
+
+// ─── iOS tappable button ──────────────────────────────────────────────────────
+
+interface IOSPillButtonProps {
   label: string;
   value: string;
   onPress: () => void;
 }
 
-const IOSTimeButton = ({ label, value, onPress }: IOSTimeButtonProps) => (
+const IOSPillButton = ({ label, value, onPress }: IOSPillButtonProps) => (
   <View style={styles.timePill}>
     <Text style={styles.pillLabel}>{label}</Text>
     <Pressable style={({ pressed }) => [styles.pillInput, pressed && styles.pillInputPressed]} onPress={onPress}>
@@ -214,56 +195,51 @@ const IOSTimeButton = ({ label, value, onPress }: IOSTimeButtonProps) => (
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export const EventTimeDatePicker = ({ event, onUpdate }: EventTimeDatePickerProps) => {
-  const [isTimePickerVisible, setTimePickerVisible] = useState(false);
-  const [timePickerMode, setTimePickerMode] = useState<'start' | 'end'>('start');
-  const [recurrencePickerVisible, setRecurrencePickerVisible] = useState(false);
+  const recurrenceSheetRef = useRef<BottomSheetModal>(null);
 
-  const { startTime, endTime, duration } = getEventTimeDisplay(event);
+  const [iosPickerMode, setIosPickerMode] = useState<'startTime' | 'endTime' | 'startDate' | 'endDate'>('startTime');
+  const [iosPickerOpen, setIosPickerOpen] = useState(false);
 
-  const openIOSPicker = (mode: 'start' | 'end') => {
-    setTimePickerMode(mode);
-    setTimePickerVisible(true);
+  const openIOSPicker = (mode: typeof iosPickerMode) => {
+    setIosPickerMode(mode);
+    setIosPickerOpen(true);
   };
 
   const handleIOSConfirm = (selectedDate: Date) => {
-    setTimePickerVisible(false);
-    onUpdate(timePickerMode === 'start' ? 'startDate' : 'endDate', selectedDate);
+    setIosPickerOpen(false);
+    onUpdate(iosPickerMode === 'startTime' || iosPickerMode === 'startDate' ? 'startDate' : 'endDate', selectedDate);
   };
 
-  const handleRecurrenceSelect = (value: string[] | null) => {
-    onUpdate('recurrence', value);
-  };
+  const handleCustomRecurrence = useCallback(() => {
+    console.log('Custom recurrence tapped — hook up your UI here');
+  }, []);
 
-  const handleCustomRecurrence = () => {
-    // Hook this up to your custom recurrence UI when ready
-    console.log('Custom recurrence tapped');
-  };
+  const { startTime, endTime, duration } = getEventTimeDisplay(event);
 
   const isWeb = Platform.OS === 'web';
 
   return (
     <>
       <View style={styles.section}>
-        {/* Time row: start | end | duration */}
-        <View style={styles.timeRow}>
+        {/* Time pills */}
+        <View style={styles.pillRow}>
           {isWeb ? (
             <WebTimeInput
-              label="start"
+              label="start time"
               dateValue={event.startDate}
-              onCommit={(date) => onUpdate('startDate', date)}
+              onCommit={(d) => onUpdate('startDate', d)}
               placeholder="12:00 PM"
             />
           ) : (
-            <IOSTimeButton label="start" value={startTime} onPress={() => openIOSPicker('start')} />
+            <IOSPillButton label="start time" value={startTime} onPress={() => openIOSPicker('startTime')} />
           )}
 
           {isWeb ? (
-            <WebTimeInput label="end" dateValue={event.endDate} onCommit={(date) => onUpdate('endDate', date)} placeholder="1:00 PM" />
+            <WebTimeInput label="end time" dateValue={event.endDate} onCommit={(d) => onUpdate('endDate', d)} placeholder="1:00 PM" />
           ) : (
-            <IOSTimeButton label="end" value={endTime} onPress={() => openIOSPicker('end')} />
+            <IOSPillButton label="end time" value={endTime} onPress={() => openIOSPicker('endTime')} />
           )}
 
-          {/* Duration — read-only */}
           <View style={styles.timePill}>
             <Text style={styles.pillLabel}>duration</Text>
             <View style={styles.pillInput}>
@@ -275,7 +251,7 @@ export const EventTimeDatePicker = ({ event, onUpdate }: EventTimeDatePickerProp
         {/* Date display */}
         <Text style={styles.dateDisplay}>{getDateDisplay(event)}</Text>
 
-        {/* All-day + Recurrence */}
+        {/* All-day toggle */}
         <View style={styles.toggleRow}>
           <Text style={styles.toggleLabel}>All-day</Text>
           <Switch
@@ -289,42 +265,45 @@ export const EventTimeDatePicker = ({ event, onUpdate }: EventTimeDatePickerProp
 
         <View style={styles.rowDivider} />
 
-        <Pressable style={styles.toggleRow} onPress={() => setRecurrencePickerVisible(true)}>
+        {/* Recurrence */}
+        <Pressable style={styles.toggleRow} onPress={() => recurrenceSheetRef.current?.present()}>
           <Text style={styles.icon}>🔁</Text>
           <Text style={[styles.toggleLabel, { flex: 1, marginLeft: 8 }]}>{getRecurrenceLabel(event.recurrence)}</Text>
           <Text style={styles.chevron}>›</Text>
         </Pressable>
       </View>
 
-      {/* Recurrence picker modal */}
-      <RecurrencePicker
-        visible={recurrencePickerVisible}
+      <RecurrencePickerModal
+        sheetRef={recurrenceSheetRef}
         current={event.recurrence}
-        onSelect={handleRecurrenceSelect}
+        onSelect={(val) => onUpdate('recurrence', val)}
         onCustom={handleCustomRecurrence}
-        onClose={() => setRecurrencePickerVisible(false)}
       />
 
-      {/* iOS DatePicker — uncomment when ready */}
-      {/* {!isWeb && (
-        <DatePicker
-          modal
-          mode="time"
-          open={isTimePickerVisible}
-          date={pickerDate}
-          onConfirm={handleIOSConfirm}
-          onCancel={() => setTimePickerVisible(false)}
-        />
-      )} */}
+      {/* iOS pickers — uncomment when ready
+      <DatePicker
+        modal
+        mode={iosPickerMode === 'startTime' || iosPickerMode === 'endTime' ? 'time' : 'date'}
+        open={iosPickerOpen}
+        date={
+          iosPickerMode === 'startTime' || iosPickerMode === 'startDate'
+            ? (event.startDate ?? new Date())
+            : (event.endDate ?? new Date())
+        }
+        onConfirm={handleIOSConfirm}
+        onCancel={() => setIosPickerOpen(false)}
+      />
+      */}
     </>
   );
 };
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   section: { marginTop: 12, marginBottom: 4 },
 
-  // Time pills
-  timeRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  pillRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   timePill: { flex: 1, gap: 5 },
   pillLabel: {
     fontSize: 11,
@@ -349,7 +328,7 @@ const styles = StyleSheet.create({
     borderColor: '#eb5757',
   },
   pillInputText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
     color: '#1a1a1a',
     textAlign: 'center',
@@ -361,7 +340,7 @@ const styles = StyleSheet.create({
     color: '#37352f',
     fontWeight: '500',
     textAlign: 'left',
-    marginBottom: 12,
+    marginBottom: 8,
     marginTop: -4,
   },
 
@@ -369,68 +348,5 @@ const styles = StyleSheet.create({
   toggleLabel: { flex: 1, fontSize: 15, color: '#37352f' },
   rowDivider: { height: 1, backgroundColor: '#f0f0ee' },
   icon: { fontSize: 15 },
-  chevron: { fontSize: 18, color: '#c4c4c0', fontWeight: '400', lineHeight: 20 },
-
-  // Recurrence modal
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 0,
-    paddingBottom: 36,
-    // shadow for iOS
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 16,
-  },
-  sheetHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#d8d8d6',
-    alignSelf: 'center',
-    marginTop: 10,
-    marginBottom: 6,
-  },
-  sheetTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#9b9b97',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    textAlign: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 15,
-    paddingHorizontal: 24,
-  },
-  optionDivider: {
-    height: 1,
-    backgroundColor: '#f0f0ee',
-    marginHorizontal: 24,
-  },
-  optionLabel: {
-    fontSize: 16,
-    color: '#37352f',
-  },
-  optionCustom: {
-    color: '#2383e2',
-  },
-  checkmark: {
-    fontSize: 16,
-    color: '#2383e2',
-    fontWeight: '600',
-  },
+  chevron: { fontSize: 18, color: '#c4c4c0', lineHeight: 20 },
 });

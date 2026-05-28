@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 
-import { getSettingRootStyles } from '@/utility/globalStyles';
+import { getSettingBackgroundStyles } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { useUIContext } from '../contexts/ui-context';
 import AppearanceContainer from './appearance-container';
@@ -18,7 +18,7 @@ export default function SettingsModal({ isVisible, onClose }: Props) {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['98%'], []);
   const { theme } = useUIContext();
-  const styles = getSettingRootStyles(theme.isDark);
+  const styles = getSettingBackgroundStyles(theme.isDark);
 
   useEffect(() => {
     if (isVisible) {

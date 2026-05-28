@@ -1,7 +1,10 @@
-import { globalStyles } from '@/utility/globalStyles';
+import { useUIContext } from '@/components/contexts/ui-context';
+import { getColorPaletteStyles, getIconColor, getSettingCardStyles, globalStyles } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
-import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Plus } from 'lucide-react-native';
+import { useMemo, useRef, useState } from 'react';
+import { Animated, LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useCalendarEvents } from '../../contexts/calendar-events-context';
 import ShareModal, { shareModalRef } from './share-modal';
 import SharedCalendarIndividual from './shared-calendar-individual';
@@ -9,10 +12,40 @@ import SharedCalendarIndividual from './shared-calendar-individual';
 export default function SharedCalendars() {
   const { sharedCalendars = [] } = useCalendarEvents();
 
+  // -------------------------------------------
+  // Card Themes and Toggle
+  // -------------------------------------------
+  const { theme: uiTheme } = useUIContext();
+  const cardStyles = getSettingCardStyles(uiTheme.isDark);
+  const themeStyles = getColorPaletteStyles(uiTheme.isDark);
+
+  const iconColor = getIconColor(uiTheme.isDark);
+  const [isExpanded, setIsExpanded] = useState(true);
+  const animatedController = useRef(new Animated.Value(0)).current;
+
+  const toggleSection = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
+    Animated.timing(animatedController, {
+      toValue: isExpanded ? 0 : 1,
+      duration: 100,
+      useNativeDriver: true,
+    }).start();
+
+    setIsExpanded(!isExpanded);
+  };
+
+  const arrowRotation = animatedController.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  // -------------------------------------------
+  // Calendar View Modes and Expanded View
+  // -------------------------------------------
   const [viewMode, setViewMode] = useState('calendars');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Only calendars with shared users
   const activeCalendars = useMemo(() => {
     return sharedCalendars.filter((cal) => cal.sharedIds && cal.sharedIds.length > 0);
   }, [sharedCalendars]);
@@ -43,142 +76,158 @@ export default function SharedCalendars() {
     setExpandedId((prev) => (prev === id ? null : id));
   };
 
-  // Helper to switch views (resets expanded state)
   const switchViewMode = (mode: string) => {
     setViewMode(mode);
     setExpandedId(null);
   };
 
   return (
-    <View style={styles.sharedAccessSection}>
-      <View style={globalStyles.rowHeader}>
-        <Text style={globalStyles.headerText}>Shared Access</Text>
+    <View style={cardStyles.container}>
+      {/* --- Trigger (Header) --- */}
+      <Pressable onPress={toggleSection} style={cardStyles.trigger}>
+        <View style={cardStyles.triggerLeft}>
+          <Ionicons name="person-outline" size={20} color={iconColor} />
+          <Text style={cardStyles.label}>Shared Access</Text>
+        </View>
+        <View style={cardStyles.triggerLeft}>
+          <Pressable hitSlop={10} style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => shareModalRef.current?.present()}>
+            <Plus size={16} color={uiTheme.isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark} style={[themeStyles.plusIcon]} />
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: '500',
+                color: uiTheme.isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark,
+              }}
+            >
+              Share
+            </Text>
+          </Pressable>
+          <Animated.View style={{ transform: [{ rotate: arrowRotation }] }}>
+            <Ionicons name="chevron-down-outline" size={20} color={iconColor} />
+          </Animated.View>
+        </View>
+      </Pressable>
+      {/* --- Content --- */}
+      {isExpanded && (
+        <View style={cardStyles.content}>
+          {/* Toggle Controls */}
+          <View style={globalStyles.toggleButtonContainer}>
+            <Pressable
+              style={({ pressed }) => [
+                globalStyles.toggleButtonSegment,
+                viewMode === 'calendars' && globalStyles.toggleButtonActiveSegement,
+                pressed && globalStyles.pressedButton,
+              ]}
+              onPress={() => switchViewMode('calendars')}
+            >
+              <Text style={[globalStyles.smallButtonText, viewMode === 'calendars' && globalStyles.activeSmallButtonText]}>
+                By Calendar
+              </Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                globalStyles.toggleButtonSegment,
+                viewMode === 'users' && globalStyles.toggleButtonActiveSegement,
+                ,
+                pressed && globalStyles.pressedButton,
+              ]}
+              onPress={() => switchViewMode('users')}
+            >
+              <Text style={[globalStyles.smallButtonText, viewMode === 'users' && globalStyles.activeSmallButtonText]}>By User</Text>
+            </Pressable>
+          </View>
+          {/* View Mode: Calendars */}
+          {viewMode === 'calendars' && (
+            <View style={styles.listContainer}>
+              {activeCalendars.length === 0 ? (
+                <Text style={styles.emptyText}>No shared calendars found.</Text>
+              ) : (
+                activeCalendars.map((cal) => {
+                  const isExpanded = expandedId === cal.id;
+                  return (
+                    <View key={cal.id} style={[styles.accordionContainer, globalStyles.bottomRightShadow]}>
+                      <Pressable
+                        style={({ pressed }) => [styles.accordionHeader, pressed && globalStyles.pressedButton]}
+                        onPress={() => handleToggle(cal.id)}
+                      >
+                        <Text style={styles.accordionTitle}>{cal.name}</Text>
+                        <View style={styles.badge}>
+                          <Text style={styles.badgeText}>{cal.sharedIds.length}</Text>
+                        </View>
+                      </Pressable>
 
-        <Pressable
-          style={({ pressed }) => [styles.addButton, pressed && globalStyles.pressedButton]}
-          onPress={() => shareModalRef.current?.present()}
-        >
-          <Text style={styles.addButtonText}>+ share</Text>
-        </Pressable>
-      </View>
-
-      {/* Toggle Controls */}
-      <View style={globalStyles.toggleButtonContainer}>
-        <Pressable
-          style={({ pressed }) => [
-            globalStyles.toggleButtonSegment,
-            viewMode === 'calendars' && globalStyles.toggleButtonActiveSegement,
-            pressed && globalStyles.pressedButton,
-          ]}
-          onPress={() => switchViewMode('calendars')}
-        >
-          <Text style={[globalStyles.smallButtonText, viewMode === 'calendars' && globalStyles.activeSmallButtonText]}>By Calendar</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [
-            globalStyles.toggleButtonSegment,
-            viewMode === 'users' && globalStyles.toggleButtonActiveSegement,
-            ,
-            pressed && globalStyles.pressedButton,
-          ]}
-          onPress={() => switchViewMode('users')}
-        >
-          <Text style={[globalStyles.smallButtonText, viewMode === 'users' && globalStyles.activeSmallButtonText]}>By User</Text>
-        </Pressable>
-      </View>
-      {/* View Mode: Calendars */}
-      {viewMode === 'calendars' && (
-        <View style={styles.listContainer}>
-          {activeCalendars.length === 0 ? (
-            <Text style={styles.emptyText}>No shared calendars found.</Text>
-          ) : (
-            activeCalendars.map((cal) => {
-              const isExpanded = expandedId === cal.id;
-              return (
-                <View key={cal.id} style={[styles.accordionContainer, globalStyles.bottomRightShadow]}>
-                  <Pressable
-                    style={({ pressed }) => [styles.accordionHeader, pressed && globalStyles.pressedButton]}
-                    onPress={() => handleToggle(cal.id)}
-                  >
-                    <Text style={styles.accordionTitle}>{cal.name}</Text>
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{cal.sharedIds.length}</Text>
+                      {isExpanded && (
+                        <View style={styles.accordionContent}>
+                          {cal.sharedIds.map((user, idx) => (
+                            <SharedCalendarIndividual
+                              calName={cal.name}
+                              accessRole={user.accessRole}
+                              calId={cal.id}
+                              userId={user.id}
+                              idx={idx}
+                              type="user"
+                            />
+                          ))}
+                        </View>
+                      )}
                     </View>
-                  </Pressable>
-
-                  {isExpanded && (
-                    <View style={styles.accordionContent}>
-                      {cal.sharedIds.map((user, idx) => (
-                        <SharedCalendarIndividual
-                          calName={cal.name}
-                          accessRole={user.accessRole}
-                          calId={cal.id}
-                          userId={user.id}
-                          idx={idx}
-                          type="user"
-                        />
-                      ))}
-                    </View>
-                  )}
-                </View>
-              );
-            })
+                  );
+                })
+              )}
+            </View>
           )}
+
+          {/* View Mode: Users */}
+          {viewMode === 'users' && (
+            <View style={styles.listContainer}>
+              {usersWithAccess.length === 0 ? (
+                <Text style={styles.emptyText}>No shared users found.</Text>
+              ) : (
+                usersWithAccess.map((user) => {
+                  const isExpanded = expandedId === user.id;
+                  return (
+                    <View key={user.id} style={[styles.accordionContainer, globalStyles.bottomRightShadow]}>
+                      <Pressable
+                        style={({ pressed }) => [styles.accordionHeader, pressed && { opacity: 0.7 }]}
+                        onPress={() => handleToggle(user.id)}
+                      >
+                        <Text style={styles.accordionTitle} numberOfLines={1} ellipsizeMode="middle">
+                          {user.id}
+                        </Text>
+                        <View style={styles.badge}>
+                          <Text style={styles.badgeText}>{user.calendars.length}</Text>
+                        </View>
+                      </Pressable>
+
+                      {isExpanded && (
+                        <View style={styles.accordionContent}>
+                          {user.calendars.map((cal, idx) => (
+                            <SharedCalendarIndividual
+                              calName={cal.calName}
+                              accessRole={cal.accessRole}
+                              calId={cal.calId}
+                              userId={user.id}
+                              idx={idx}
+                              type="cal"
+                            />
+                          ))}
+                        </View>
+                      )}
+                    </View>
+                  );
+                })
+              )}
+            </View>
+          )}
+
+          <ShareModal />
         </View>
       )}
-
-      {/* View Mode: Users */}
-      {viewMode === 'users' && (
-        <View style={styles.listContainer}>
-          {usersWithAccess.length === 0 ? (
-            <Text style={styles.emptyText}>No shared users found.</Text>
-          ) : (
-            usersWithAccess.map((user) => {
-              const isExpanded = expandedId === user.id;
-              return (
-                <View key={user.id} style={[styles.accordionContainer, globalStyles.bottomRightShadow]}>
-                  <Pressable
-                    style={({ pressed }) => [styles.accordionHeader, pressed && { opacity: 0.7 }]}
-                    onPress={() => handleToggle(user.id)}
-                  >
-                    <Text style={styles.accordionTitle} numberOfLines={1} ellipsizeMode="middle">
-                      {user.id}
-                    </Text>
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{user.calendars.length}</Text>
-                    </View>
-                  </Pressable>
-
-                  {isExpanded && (
-                    <View style={styles.accordionContent}>
-                      {user.calendars.map((cal, idx) => (
-                        <SharedCalendarIndividual
-                          calName={cal.calName}
-                          accessRole={cal.accessRole}
-                          calId={cal.calId}
-                          userId={user.id}
-                          idx={idx}
-                          type="cal"
-                        />
-                      ))}
-                    </View>
-                  )}
-                </View>
-              );
-            })
-          )}
-        </View>
-      )}
-
-      <ShareModal />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  sharedAccessSection: {
-    marginVertical: 10,
-  },
   listContainer: {
     gap: 12,
   },
@@ -228,31 +277,4 @@ const styles = StyleSheet.create({
     borderTopColor: '#EAEAEA',
     marginTop: 8,
   },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#CCC',
-  },
-  detailName: {
-    fontSize: 14,
-    color: COLORS.text.main,
-    flex: 1,
-    marginRight: 10,
-  },
-  detailRole: {
-    fontSize: 12,
-    color: '#888',
-    textTransform: 'capitalize',
-    backgroundColor: '#EAEAEA',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-
-  addButton: { backgroundColor: COLORS.primaryLight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
-  addButtonText: { fontSize: 12, fontWeight: '600', color: COLORS.primaryDark },
 });

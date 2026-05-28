@@ -1,13 +1,11 @@
 import { DRAWER_DRAGGABLE_HEIGHT } from '@/utility/constants';
-import { toTitleCase } from '@/utility/drawerUtil';
 import { calendarObj } from '@/utility/types';
 
-import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { SharedValue, useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
-import { runOnJS } from 'react-native-worklets';
-import CalendarDrawerList from './drawer-calendar-individual';
+import Animated, { SharedValue, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
+import CalendarDrawerList from './drawer-calendar/drawer-calendar-individual';
+import FolderIndividual from './drawer-folder/drawer-folder-individual';
 
 //Each Individual Calendar
 export default function DraggableCalendar({
@@ -45,16 +43,17 @@ export default function DraggableCalendar({
     })
     .onEnd((e) => {
       const targetIndex = hoverIndex.value !== null && hoverIndex.value >= 1 ? Math.round(hoverIndex.value) : 1;
-      runOnJS(onDrop)(thisIndex, targetIndex);
       isDragging.value = false;
       hoverIndex.value = null;
       activeIndex.value = null;
-      //offset.value = withSpring({ x: 0, y: 0 });
-      offset.value = withSequence(
-        // Stay exactly where the user let go for 200ms
-        withSpring({ x: e.translationX, y: e.translationY }, { duration: 1000 }),
-        // Then snap back to the "new" 0,0 origin
-      );
+      const yValue = (e.translationY / DRAWER_DRAGGABLE_HEIGHT) * DRAWER_DRAGGABLE_HEIGHT;
+
+      offset.value = withSpring({ x: e.translationX, y: yValue }, { stiffness: 90 }, (isFinished: boolean | undefined) => {
+        // Fires when the scrolling physically stops
+        if (isFinished) {
+          scheduleOnRN(() => onDrop(thisIndex, targetIndex));
+        }
+      });
     });
 
   //for animated view
@@ -108,17 +107,7 @@ export default function DraggableCalendar({
       {cal.calendar === null ? (
         <Animated.View style={animatedStyle}>
           {/* --- FOLDER HEADER --- */}
-          <View style={styles.folderContainer}>
-            <View style={styles.folderFront}>
-              <Ionicons name={'folder-outline'} size={16} />
-              <Text style={styles.sectionHeaderText}>{toTitleCase(cal.id)}</Text>
-            </View>
-            <View style={styles.folderFront}>
-              <Ionicons name={'ellipsis-horizontal-outline'} size={16} />
-              <Ionicons name={'caret-up-outline'} size={16} />
-              <Ionicons name={'caret-down-outline'} size={16} />
-            </View>
-          </View>
+          <FolderIndividual calId={cal.id} />
         </Animated.View>
       ) : (
         <GestureDetector gesture={gesture}>
@@ -131,22 +120,3 @@ export default function DraggableCalendar({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  folderContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-    paddingTop: 16,
-    height: DRAWER_DRAGGABLE_HEIGHT,
-  },
-  folderFront: {
-    flexDirection: 'row',
-    marginTop: 'auto',
-    gap: 8,
-  },
-  sectionHeaderText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-});

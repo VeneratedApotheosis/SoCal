@@ -75,8 +75,12 @@ export interface sharedObj {
   sharedIds: {id: string, accessRole: string}[];
 }
 
-export type shareRole =  "none" | "freeBusyReader" | "reader" | "writer" | "owner";
+export interface calendarGroup {
+    id: string;
+    calendars: calendarObj[];
+}
 
+export type shareRole =  "none" | "freeBusyReader" | "reader" | "writer" | "owner";
 
 export interface FamilyCalendarState {
   parent: CalendarData[];

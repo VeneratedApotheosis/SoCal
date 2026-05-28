@@ -1,5 +1,5 @@
 import { toTitleCase } from '@/utility/drawerUtil';
-import { getSettingCardStyles, getSettingProfileStyles, getSettingRootStyles, globalStyles } from '@/utility/globalStyles';
+import { getSettingBackgroundStyles, getSettingCardStyles, getSettingProfileStyles, globalStyles } from '@/utility/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { useAuthContext } from '../contexts/auth-context';
@@ -13,7 +13,7 @@ export default function Login() {
   const { familyProfiles } = useCalendarEvents();
   const { theme } = useUIContext();
   const cardStyles = getSettingCardStyles(theme.isDark);
-  const rootStyles = getSettingRootStyles(theme.isDark);
+  const rootStyles = getSettingBackgroundStyles(theme.isDark);
   const profileStyles = getSettingProfileStyles(theme.isDark);
 
   console.log(authProps.jwtToken);
