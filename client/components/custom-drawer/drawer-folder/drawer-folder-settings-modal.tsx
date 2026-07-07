@@ -1,8 +1,12 @@
 import { useCalendarGroups } from '@/components/contexts/calendar-groups-context';
+import { useScreenSize } from '@/components/contexts/screen-size-context';
+import { useUIContext } from '@/components/contexts/ui-context';
 import { getPositions } from '@/utility/drawerUtil';
+import { getIconColor } from '@/utility/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
-import { Keyboard, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Modal, Pressable, Text, View } from 'react-native';
+import { getFolderModal } from '../customDrawer';
 import FolderSettingsRenameModal from './drawer-folder-rename-modal';
 
 const menuHeight = 82;
@@ -21,6 +25,10 @@ export default function FolderSettingsModal({ isVisible, setVisible, calId, top,
   const [isColorsVisible, setColorsVisible] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const { calendarGroups } = useCalendarGroups();
+  const { theme } = useUIContext();
+  const styles = getFolderModal(theme.isDark, menuWidth, menuHeight);
+  const iconColor = getIconColor(theme.isDark);
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
 
   return (
     <>
@@ -52,16 +60,16 @@ export default function FolderSettingsModal({ isVisible, setVisible, calId, top,
             <Pressable
               style={({ pressed }) => [styles.menuItem, pressed && styles.pressedButton]}
               onPress={() => {
-                getPositions(buttonRef, setMenuPos, menuHeight, menuWidth);
+                getPositions(buttonRef, setMenuPos, menuHeight, menuWidth, SCREEN_WIDTH, SCREEN_HEIGHT);
                 setColorsVisible(true);
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name={'create-outline'} size={13} />
-                <Text>Rename</Text>
+                <Ionicons name={'create-outline'} size={13} color={iconColor} />
+                <Text style={styles.menuText}>Rename</Text>
               </View>
               <View>
-                <Ionicons name={'chevron-forward-outline'} size={13} />
+                <Ionicons name={'chevron-forward-outline'} size={13} color={iconColor} />
               </View>
             </Pressable>
           </View>
@@ -75,38 +83,10 @@ export default function FolderSettingsModal({ isVisible, setVisible, calId, top,
           />
 
           <Pressable style={styles.menuItem} onPress={() => calendarGroups.deleteGroup(calId)}>
-            <Text>Remove</Text>
+            <Text style={styles.menuText}>Remove</Text>
           </Pressable>
         </View>
       </Modal>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  menuBox: {
-    position: 'absolute',
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 6,
-    minWidth: menuWidth,
-    minHeight: menuHeight,
-    boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)',
-
-    elevation: 10,
-  },
-  menuItem: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    fontSize: 11,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  pressedButton: {
-    transform: [{ scale: 0.96 }],
-  },
-});

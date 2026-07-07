@@ -15,41 +15,50 @@ export interface AccessTokenObj {
 }
 export interface FamilyProfileObjs {
   parent: ProfileObj;
-  children: ProfileObj[]
+  children: ProfileObj[];
 }
 export interface FamilyAccessTokenObjs {
   parent: AccessTokenObj;
-  children: AccessTokenObj[]
+  children: AccessTokenObj[];
 }
-export type CalendarView = "M" | "W" | "3" | "2" | "1";
+export type CalendarView = {
+  type: 'D' | 'W';
+  num: number;
+};
+export type visibility = 'default' | 'transparent' | 'isolate';
+
+export type accessRole = 'none' | 'freeBusyReader' | 'reader' | 'writer' | 'owner';
 
 export interface calendarObj {
   calendarName: string;
   calendarId: string;
-  owner: boolean,
   calendarDefaultColor: string;
-  calendarCustomColor: string;
-  shown: boolean,
+  owner: boolean;
+  accessRole: accessRole;
+  shown: boolean;
+  visibility: visibility;
 }
 
-//Processed calendar data 
+//Processed calendar data
 export interface EventObj {
   //event data
-  id: string,
-  title: string,
-  description: string,
+  id: string;
+  title: string;
+  description: string;
   location: string;
-  organizer: string,
+  organizer: string;
 
-  allDay: boolean,
-  startDate: Date,
-  endDate: Date,
-  
+  allDay: boolean;
+  startDate: Date;
+  endDate: Date;
+  startTimeZone: string;
+  endTimeZone: string;
+
   eventType: string;
 
   //recurrence
   recurrence?: string[];
-  sequence: number; 
+  sequence: number;
   reminders: {
     useDefault: boolean;
     overrides?: { method: string; minutes: number }[];
@@ -58,7 +67,6 @@ export interface EventObj {
 
   //calendar data
   calendarId: string;
-  calendar: calendarObj;
 }
 
 export interface CalendarData {
@@ -71,29 +79,31 @@ export interface CalendarData {
 
 export interface sharedObj {
   id: string;
-  name: string,
-  sharedIds: {id: string, accessRole: string}[];
+  name: string;
+  sharedIds: { id: string; accessRole: string }[];
 }
 
 export interface calendarGroup {
-    id: string;
-    calendars: calendarObj[];
+  id: string;
+  calendars: calendarObj[];
 }
-
-export type shareRole =  "none" | "freeBusyReader" | "reader" | "writer" | "owner";
 
 export interface FamilyCalendarState {
   parent: CalendarData[];
   children: CalendarData[];
 }
 
-export interface EventWithOffset {
+export interface EventWithLayout {
   event: EventObj;
   offset: number;
-  maxOffset: number
+  maxOffset: number;
+  startDate: Date;
+  endDate: Date;
+  dummy: boolean;
 }
 
 export interface colorCache {
+  getCalendarColor(calendarId: string): unknown;
   paletteId: number;
   name: string;
   palette: string[];
@@ -110,5 +120,14 @@ export interface ParsedRRule {
   BYYEARDAY?: string[];
   BYHOUR?: string[];
   // Catch-all for any other rules Google might throw at you
-  [key: string]: any; 
+  [key: string]: any;
+}
+
+export interface AllDayPool {
+  isActive: boolean;
+  eventId: string;
+  name: string;
+  color: string;
+  offset: number;
+  length: number;
 }

@@ -1,11 +1,12 @@
 import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
 import { useUIContext } from '@/components/contexts/ui-context';
-import { getColorPaletteStyles, getIconColor, getSettingCardStyles, globalStyles } from '@/utility/globalStyles';
+import { getIconColor } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Plus } from 'lucide-react-native';
 import { useMemo, useRef, useState } from 'react';
-import { Animated, LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, LayoutAnimation, Pressable, Text, View } from 'react-native';
+import { getColorPaletteStyles, getSettingCardStyles, getSharedCalStyles } from '../settingsContainerStyles';
 import ShareModal, { shareModalRef } from './share-modal';
 import SharedCalendarIndividual from './shared-calendar-individual';
 
@@ -18,6 +19,7 @@ export default function SharedCalendars() {
   const { theme: uiTheme } = useUIContext();
   const cardStyles = getSettingCardStyles(uiTheme.isDark);
   const themeStyles = getColorPaletteStyles(uiTheme.isDark);
+  const styles = getSharedCalStyles(uiTheme.isDark);
 
   const iconColor = getIconColor(uiTheme.isDark);
   const [isExpanded, setIsExpanded] = useState(true);
@@ -44,7 +46,7 @@ export default function SharedCalendars() {
   // Calendar View Modes and Expanded View
   // -------------------------------------------
   const [viewMode, setViewMode] = useState('calendars');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string[]>([]);
 
   const activeCalendars = useMemo(() => {
     return sharedCalendars.filter((cal) => cal.sharedIds && cal.sharedIds.length > 0);
@@ -73,12 +75,16 @@ export default function SharedCalendars() {
 
   // Helper to toggle accordion
   const handleToggle = (id: string) => {
-    setExpandedId((prev) => (prev === id ? null : id));
+    setExpandedId((prev) => {
+      const containsId = prev.find((p) => p === id);
+      if (containsId) return prev.filter((p) => p !== id);
+      else return [...prev, id];
+    });
   };
 
   const switchViewMode = (mode: string) => {
     setViewMode(mode);
-    setExpandedId(null);
+    setExpandedId([]);
   };
 
   return (
@@ -87,7 +93,7 @@ export default function SharedCalendars() {
       <Pressable onPress={toggleSection} style={cardStyles.trigger}>
         <View style={cardStyles.triggerLeft}>
           <Ionicons name="person-outline" size={20} color={iconColor} />
-          <Text style={cardStyles.label}>Shared Access</Text>
+          <Text style={cardStyles.label}>Shared Calendars</Text>
         </View>
         <View style={cardStyles.triggerLeft}>
           <Pressable hitSlop={10} style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => shareModalRef.current?.present()}>
@@ -111,29 +117,27 @@ export default function SharedCalendars() {
       {isExpanded && (
         <View style={cardStyles.content}>
           {/* Toggle Controls */}
-          <View style={globalStyles.toggleButtonContainer}>
+          <View style={styles.toggleButtonContainer}>
             <Pressable
               style={({ pressed }) => [
-                globalStyles.toggleButtonSegment,
-                viewMode === 'calendars' && globalStyles.toggleButtonActiveSegement,
-                pressed && globalStyles.pressedButton,
-              ]}
-              onPress={() => switchViewMode('calendars')}
-            >
-              <Text style={[globalStyles.smallButtonText, viewMode === 'calendars' && globalStyles.activeSmallButtonText]}>
-                By Calendar
-              </Text>
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [
-                globalStyles.toggleButtonSegment,
-                viewMode === 'users' && globalStyles.toggleButtonActiveSegement,
+                styles.toggleButtonSegment,
+                viewMode === 'users' && styles.toggleButtonActiveSegement,
                 ,
-                pressed && globalStyles.pressedButton,
+                pressed && styles.pressedButton,
               ]}
               onPress={() => switchViewMode('users')}
             >
-              <Text style={[globalStyles.smallButtonText, viewMode === 'users' && globalStyles.activeSmallButtonText]}>By User</Text>
+              <Text style={[styles.smallButtonText, viewMode === 'users' && styles.activeSmallButtonText]}>By User</Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.toggleButtonSegment,
+                viewMode === 'calendars' && styles.toggleButtonActiveSegement,
+                pressed && styles.pressedButton,
+              ]}
+              onPress={() => switchViewMode('calendars')}
+            >
+              <Text style={[styles.smallButtonText, viewMode === 'calendars' && styles.activeSmallButtonText]}>By Calendar</Text>
             </Pressable>
           </View>
           {/* View Mode: Calendars */}
@@ -143,11 +147,11 @@ export default function SharedCalendars() {
                 <Text style={styles.emptyText}>No shared calendars found.</Text>
               ) : (
                 activeCalendars.map((cal) => {
-                  const isExpanded = expandedId === cal.id;
+                  const isExpanded = expandedId.find((p) => p === cal.id);
                   return (
-                    <View key={cal.id} style={[styles.accordionContainer, globalStyles.bottomRightShadow]}>
+                    <View key={cal.id} style={isExpanded ? styles.selectedAccordionContainer : styles.accordionContainer}>
                       <Pressable
-                        style={({ pressed }) => [styles.accordionHeader, pressed && globalStyles.pressedButton]}
+                        style={({ pressed }) => [styles.accordionHeader, pressed && styles.pressedButton]}
                         onPress={() => handleToggle(cal.id)}
                       >
                         <Text style={styles.accordionTitle}>{cal.name}</Text>
@@ -184,9 +188,9 @@ export default function SharedCalendars() {
                 <Text style={styles.emptyText}>No shared users found.</Text>
               ) : (
                 usersWithAccess.map((user) => {
-                  const isExpanded = expandedId === user.id;
+                  const isExpanded = expandedId.find((p) => p === user.id);
                   return (
-                    <View key={user.id} style={[styles.accordionContainer, globalStyles.bottomRightShadow]}>
+                    <View key={user.id} style={isExpanded ? styles.selectedAccordionContainer : styles.accordionContainer}>
                       <Pressable
                         style={({ pressed }) => [styles.accordionHeader, pressed && { opacity: 0.7 }]}
                         onPress={() => handleToggle(user.id)}
@@ -219,62 +223,9 @@ export default function SharedCalendars() {
               )}
             </View>
           )}
-
-          <ShareModal />
         </View>
       )}
+      <ShareModal />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  listContainer: {
-    gap: 12,
-  },
-  emptyText: {
-    color: '#888',
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  accordionContainer: {
-    backgroundColor: '#F9F9F9',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#EAEAEA',
-  },
-  accordionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#F9F9F9',
-  },
-  accordionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text.main,
-    marginRight: 10,
-  },
-  badge: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    minWidth: 24,
-    alignItems: 'center',
-  },
-  badgeText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  accordionContent: {
-    padding: 16,
-    paddingTop: 0,
-    backgroundColor: '#F9F9F9',
-    borderTopWidth: 1,
-    borderTopColor: '#EAEAEA',
-    marginTop: 8,
-  },
-});

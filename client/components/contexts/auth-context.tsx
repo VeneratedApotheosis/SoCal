@@ -25,23 +25,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   //PROFILE HOOK
   const { familyProfiles } = useProfiles(sessionTokenString);
-  const [calendarType, setCalendarType] = useState<CalendarView>('3');
+  const [calendarType, setCalendarType] = useState<CalendarView>({ type: 'D', num: 3 });
+
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Initial Hydration
   useEffect(() => {
-    Promise.all([
-      storage.getSecure('jwt_token').then((t) => t && setJwtToken(t)),
-      storage.get('calendar_type').then((c) => c && setCalendarType(c as CalendarView)),
-    ]).finally(() => setIsHydrated(true));
+    const hydrateAuth = async () => {
+      try {
+        const [tokenResult, calendarResult] = await Promise.all([storage.getSecure('jwt_token'), storage.get('calendar_type')]);
+
+        if (tokenResult) setJwtToken(tokenResult as JwtTokenObj);
+        if (calendarResult) setCalendarType(calendarResult as CalendarView);
+      } catch (err) {
+        console.error('AuthProvider Hydration Error:', err);
+      } finally {
+        setIsHydrated(true);
+      }
+    };
+
+    hydrateAuth();
   }, []);
 
   const loginWithCode = async (code: string, codeVerifier?: string, redirectUri?: string) => {
-    const newJwtToken = await fetchJwtToken(code, codeVerifier, redirectUri);
-    await storage.clearAll();
-    await storage.saveSecure('jwt_token', newJwtToken);
-    setJwtToken(newJwtToken as JwtTokenObj);
-    return newJwtToken as JwtTokenObj;
+    try {
+      const newJwtToken = await fetchJwtToken(code, codeVerifier, redirectUri);
+      await storage.clearAll();
+      await storage.saveSecure('jwt_token', newJwtToken);
+      setJwtToken(newJwtToken as JwtTokenObj);
+      return newJwtToken as JwtTokenObj;
+    } catch (err) {
+      console.error('loginWithCode failed:', err);
+    }
   };
 
   const logout = async () => {

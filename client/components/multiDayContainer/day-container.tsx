@@ -1,22 +1,33 @@
+import { PAST_BUFFER } from '@/utility/constants';
+import { createEventObj } from '@/utility/eventUtils';
+import { COLORS } from '@/utility/theme';
+import { AllDayPool, EventObj, EventWithLayout } from '@/utility/types';
 import { isSameDay } from 'date-fns';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { SharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import Svg, { Line } from 'react-native-svg';
-import DateHeader from './date-header';
-
-import { ALL_DAY_HEIGHT, GRID_COLOR, HOUR_HEIGHT } from '@/utility/constants';
-import { createEventObj } from '@/utility/eventUtils';
-import { COLORS } from '@/utility/theme';
-import { EventObj, EventWithOffset } from '@/utility/types';
+import { useScreenSize } from '../contexts/screen-size-context';
+import { useTimeZoneContext } from '../contexts/time-zone-context';
+import { useUIContext } from '../contexts/ui-context';
 import AllDayChip from './allday-chip';
+import DateHeader from './date-header';
 import EventContainer from './event-container';
+import { getDayContainerStyles } from './multiDayStyles';
 import TimeIndicator from './time-indicator';
 
-const HourTicks = ({ hourHeight }: { hourHeight: number }) => (
+const HourTicks = ({ hourHeight, isDark }: { hourHeight: number; isDark: boolean }) => (
   <Svg height={hourHeight * 24} width="100%" style={StyleSheet.absoluteFill}>
     {Array.from({ length: 24 }).map((_, i) => (
-      <Line key={i} x1="0" y1={(i + 1) * hourHeight} x2="100%" y2={(i + 1) * hourHeight} stroke={GRID_COLOR} strokeWidth="1" />
+      <Line
+        key={i}
+        x1="0"
+        y1={(i + 1) * hourHeight}
+        x2="100%"
+        y2={(i + 1) * hourHeight}
+        stroke={isDark ? COLORS.border.dark : COLORS.border.light}
+        strokeWidth="1"
+      />
     ))}
   </Svg>
 );
@@ -25,36 +36,54 @@ export interface DayContainerProps {
   day: Date;
   dayWidth: number;
   hourHeight: number;
-  eventsWithOffsets: EventWithOffset[];
-  allDayEvents: EventObj[]; // <-- Add type
+  eventsWithLayout: EventWithLayout[];
+  allDayEvents: EventWithLayout[];
   handlePress: (event: EventObj | null, newEvent: boolean) => void;
   scrollY: SharedValue<number>;
   scrollX: SharedValue<number>;
-  index: number;
   isVisible: boolean;
-  selectedEvent: EventObj | null;
-  maxAllDayEvents: number;
+  selectedEventId: string | null;
+  currentAllDayHeight: SharedValue<number>;
+  eventPool: SharedValue<AllDayPool[]>;
+  widthsDictionary: Record<string, number>;
 }
+
+const lightStyles = getDayContainerStyles(false);
+const darkStyles = getDayContainerStyles(true);
 
 export default function DayContainer({
   day,
   dayWidth,
   hourHeight,
-  eventsWithOffsets,
-  allDayEvents, // <-- Add to props
+  eventsWithLayout: eventsWithOffsets,
+  allDayEvents,
   handlePress,
   scrollY,
   scrollX,
-  index,
   isVisible,
-  selectedEvent,
-  maxAllDayEvents,
+  selectedEventId,
+  currentAllDayHeight,
+  eventPool,
+  widthsDictionary,
 }: DayContainerProps) {
   const isToday = useMemo(() => isSameDay(day, new Date()), [day]);
+  const isWeekend = useMemo(() => day.getDay() === 6 || day.getDay() === 0, [day]);
+  const { timeZone } = useTimeZoneContext();
+  const { theme } = useUIContext();
+  const styles = theme.isDark ? darkStyles : lightStyles;
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
 
-  const handleEventSelect = (event: EventObj) => {
-    handlePress(event, false);
-  };
+  const msPerDay = 86400000;
+  const thisDay = new Date(day).setHours(0, 0, 0, 0);
+  const today = new Date().setHours(0, 0, 0, 0);
+  const index = Math.round((today - thisDay) / msPerDay) + PAST_BUFFER;
+
+  const handleEventSelect = useCallback(
+    (event: EventObj) => {
+      handlePress(event, false);
+    },
+    [handlePress],
+  );
 
   const getYofEventPress = (event: any) => {
     const locationY = event.nativeEvent.locationY;
@@ -62,44 +91,79 @@ export default function DayContainer({
     return locationY ?? offsetY;
   };
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: -scrollY.value }],
-    };
-  });
-
-  const animatedAllDayStyle = useAnimatedStyle(() => {
-    const targetHeight = maxAllDayEvents * ALL_DAY_HEIGHT;
-    return { height: withTiming(targetHeight, { duration: 250 }) };
-  }, [maxAllDayEvents]);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -scrollY.value }],
+  }));
+  const animatedAllDayStyle = useAnimatedStyle(() => ({ height: withTiming(currentAllDayHeight.value, { duration: 250 }) }));
 
   return (
-    <View style={{ width: dayWidth }}>
-      {/* HEADER & ALL-DAY SECTION (Pinned) */}
-      <View style={{ zIndex: 4, backgroundColor: 'white' }}>
+    <View
+      style={{
+        overflow: 'hidden',
+        width: dayWidth,
+        zIndex: index,
+        backgroundColor: theme.isDark
+          ? isWeekend
+            ? COLORS.background.elevatedDark
+            : COLORS.background.dark
+          : isWeekend
+            ? COLORS.background.elevatedLight
+            : COLORS.background.light,
+      }}
+    >
+      <View style={{ overflow: 'visible', zIndex: 4 }}>
         <DateHeader key={day.toISOString()} day={day} dayWidth={dayWidth} />
-        {/* All Day Container */}
-        <Animated.View style={[styles.allDayContainer, { width: dayWidth }, animatedAllDayStyle]}>
-          {allDayEvents.map((event) => (
-            <AllDayChip
-              key={event.id}
-              event={event}
-              handlePress={handleEventSelect}
-              dayWidth={dayWidth}
-              isVisible={isVisible}
-              selectedEvent={selectedEvent}
-            />
-          ))}
+        <Animated.View
+          style={[
+            styles.allDayContainer,
+            {
+              width: dayWidth,
+              backgroundColor: theme.isDark
+                ? isWeekend
+                  ? COLORS.background.elevatedDark
+                  : COLORS.background.dark
+                : isWeekend
+                  ? COLORS.background.elevatedLight
+                  : COLORS.background.light,
+            },
+            animatedAllDayStyle,
+          ]}
+        >
+          {allDayEvents.map((event) => {
+            return (
+              <AllDayChip
+                key={event.event.id + day.toISOString}
+                event={event.event}
+                day={day}
+                layout={event}
+                handlePress={handleEventSelect}
+                dayWidth={dayWidth}
+                isVisible={isVisible}
+                selectedEventId={selectedEventId}
+                isDummy={event.dummy}
+                scrollX={scrollX}
+                eventPool={eventPool}
+                widthsDictionary={widthsDictionary}
+              />
+            );
+          })}
         </Animated.View>
       </View>
 
       {/* SCROLLABLE HOUR GRID */}
       <Animated.View
         key={day.toLocaleDateString()}
-        style={[styles.dayContainer, animatedStyle, { width: dayWidth }]}
+        style={[
+          styles.dayContainer,
+          animatedStyle,
+          {
+            width: dayWidth,
+            height: hourHeight * 24,
+          },
+        ]}
         pointerEvents="box-none"
       >
-        <HourTicks hourHeight={hourHeight} />
+        <HourTicks hourHeight={hourHeight} isDark={theme.isDark} />
         <TimeIndicator hourHeight={hourHeight} isToday={isToday} />
         {eventsWithOffsets.map((item) => (
           <EventContainer
@@ -109,45 +173,29 @@ export default function DayContainer({
             hourHeight={hourHeight}
             onSelect={handleEventSelect}
             isVisible={isVisible}
-            selectedEvent={selectedEvent}
+            selectedEventId={selectedEventId}
           />
         ))}
         <Pressable
           onPress={(event) => {
             const y = getYofEventPress(event);
             const hour = Math.floor(y / hourHeight);
-
             const clickedTime = new Date(day);
             clickedTime.setHours(hour, 0, 0, 0);
+            const draftEvent = createEventObj(
+              {
+                startDate: clickedTime,
+                endDate: new Date(clickedTime.getTime() + 60 * 60 * 1000),
+                title: '',
+              },
+              timeZone,
+            );
 
-            const draftEvent = createEventObj({
-              startDate: clickedTime,
-              endDate: new Date(clickedTime.getTime() + 60 * 60 * 1000),
-              title: 'New Event',
-            });
             handlePress(draftEvent, true);
           }}
-          style={[StyleSheet.absoluteFill, { zIndex: 0, backgroundColor: 'transparent' }]}
+          style={[StyleSheet.absoluteFill, styles.newEventButton, { height: hourHeight * 24 }]}
         />
       </Animated.View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  allDayContainer: {
-    flexDirection: 'column',
-    overflow: 'hidden',
-    borderBottomWidth: 1,
-    borderColor: GRID_COLOR,
-    paddingTop: 2,
-    backgroundColor: COLORS.white,
-    position: 'absolute',
-    top: HOUR_HEIGHT,
-  },
-  dayContainer: {
-    flex: 1,
-    position: 'relative',
-    zIndex: 3,
-  },
-});

@@ -1,8 +1,8 @@
 import { differenceInMinutes, getHours, getMinutes, parseISO } from 'date-fns';
 import { EVENT_GAP } from './constants';
-import { EventObj, calendarObj, sharedObj } from './types';
+import { EventObj, EventWithLayout, calendarObj } from './types';
 
-export function createEventObj(data: Partial<EventObj>): EventObj {
+export function createEventObj(data: Partial<EventObj>, timeZone: string): EventObj {
   return {
     id: data.id ?? '',
     title: data.title ?? '',
@@ -16,7 +16,8 @@ export function createEventObj(data: Partial<EventObj>): EventObj {
     sequence: data.sequence ?? 0,
     reminders: data.reminders ?? { useDefault: true },
     calendarId: data.calendarId ?? '',
-    calendar: data.calendar ?? ({} as calendarObj),
+    endTimeZone: data.endTimeZone ?? timeZone,
+    startTimeZone: data.startTimeZone ?? timeZone,
     ...data,
   };
 }
@@ -31,10 +32,10 @@ export const convertToGoogleEvent = (eventObj: EventObj) => {
     eventType: eventObj.eventType !== 'default' ? eventObj.eventType : undefined,
     start: eventObj.allDay
       ? { date: formatAllDay(eventObj.startDate), dateTime: null }
-      : { date: null, dateTime: new Date(eventObj.startDate).toISOString() },
+      : { date: null, dateTime: new Date(eventObj.startDate).toISOString(), timeZone: eventObj.startTimeZone },
     end: eventObj.allDay
       ? { date: formatAllDay(eventObj.endDate), dateTime: null }
-      : { date: null, dateTime: new Date(eventObj.startDate).toISOString() },
+      : { date: null, dateTime: new Date(eventObj.endDate).toISOString(), timeZone: eventObj.endTimeZone },
     ...(eventObj.recurrence && { recurrence: eventObj.recurrence }),
     sequence: eventObj.sequence,
     reminders: eventObj.reminders,
@@ -53,7 +54,7 @@ function parseDateString(dateStr: string, isAllDay: boolean): Date {
   return parseISO(dateStr);
 }
 
-export const processEvent = (item: any, owner: string, calendarObj: calendarObj, calendarId: string): EventObj | null => {
+export const processEvent = (item: any, owner: string, calendarId: string): EventObj | null => {
   try {
     if (!item || !item.organizer?.email || !item.summary) {
       return null;
@@ -81,7 +82,9 @@ export const processEvent = (item: any, owner: string, calendarObj: calendarObj,
       organizer: owner,
       allDay: isAllday,
       startDate: formattedStart,
+      startTimeZone: item.start.timeZone,
       endDate: formattedEnd,
+      endTimeZone: item.end.timeZone,
       eventType: item.eventType ?? 'default',
       recurrence: item.recurrence ?? null,
       recurringEventId: item.recurringEventId ?? null,
@@ -90,7 +93,6 @@ export const processEvent = (item: any, owner: string, calendarObj: calendarObj,
         useDefault: item.reminders?.useDefault ?? true,
         overrides: item.reminders?.overrides ?? [],
       },
-      calendar: calendarObj,
       calendarId: calendarId,
     };
   } catch (error) {
@@ -109,13 +111,9 @@ export const processCalendar = (calendar: any[], calendarId: string, owner: stri
       const status = item.status?.toLowerCase().trim();
       return status !== 'cancelled';
     })
-    .map((item: any) => processEvent(item, owner, calendarObj, calendarId))
+    .map((item: any) => processEvent(item, owner, calendarId))
     .filter((event: any): event is EventObj => event !== null)
     .sort(compareEvents);
-};
-
-export const processSharedCalendar = (item: sharedObj, userEmail: string): sharedObj => {
-  return {} as sharedObj;
 };
 
 export const compareEvents = (a: EventObj, b: EventObj): number => {
@@ -126,14 +124,7 @@ export const compareEvents = (a: EventObj, b: EventObj): number => {
   return a.id.localeCompare(b.id);
 };
 
-export const getEventLayout = (
-  event: EventObj,
-  offset: number,
-  maxOffset: number,
-  hourHeight: number,
-  dayWidth: number,
-  columnWidth: number,
-) => {
+export const getEventLayout = (event: EventWithLayout, offset: number, maxOffset: number, hourHeight: number, dayWidth: number) => {
   const startHour = getHours(event.startDate);
   const startMin = getMinutes(event.startDate);
   const durationInMinutes = differenceInMinutes(event.endDate, event.startDate);
@@ -168,40 +159,42 @@ export const getEventTimeDisplay = (event: EventObj) => {
   const start: Date = new Date(event.startDate);
   const end: Date = new Date(event.endDate);
 
+  // Helper to format date with year
+  const formatDateStr = (date: Date) => {
+    const month = date.toLocaleString('default', { month: 'short' });
+    return `${month} ${date.getDate()}, ${date.getFullYear()}`;
+  };
+
+  // Helper to format time (12-hour clock)
+  const formatTimeStr = (date: Date) => {
+    let hours = date.getHours();
+    const AMvsPM = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes} ${AMvsPM}`;
+  };
+
   if (event.allDay) {
-    const startMonth = start.toLocaleString('default', { month: 'short' });
-    startTime = `${startMonth} ${start.getDate()}`;
+    startTime = formatDateStr(start);
+    endTime = formatDateStr(end);
 
-    const endMonth = end.toLocaleString('default', { month: 'short' });
-    endTime = `${endMonth} ${end.getDate()}`;
-
-    // Google all-day end dates are exclusive (day after last day) — subtract 1 before diffing
     const msPerDay = 1000 * 60 * 60 * 24;
     const diffInDays = Math.round((end.getTime() - start.getTime()) / msPerDay);
     // diffInDays is already the correct count because end is exclusive:
     // start=May27, end=May28 → diff=1 → "1 day" ✓
     // start=May27, end=May29 → diff=2 → "2 days" ✓
     const totalDays = Math.max(diffInDays, 1);
+
     duration = `${totalDays} ${totalDays === 1 ? 'day' : 'days'}`;
   } else {
-    const formatTime = (date: Date) => {
-      let hours = date.getHours();
-      const AMvsPM = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12 || 12;
-      const minutes = date.getMinutes().toString().padStart(2, '0');
-      return `${hours}:${minutes} ${AMvsPM}`;
-    };
+    startTime = formatTimeStr(start);
+    endTime = formatTimeStr(end);
 
-    startTime = formatTime(start);
-    endTime = formatTime(end);
-
-    const startMonth = start.toLocaleString('default', { month: 'short' });
-    startDate = `${startMonth} ${start.getDate()}`;
-
-    const endMonth = end.toLocaleString('default', { month: 'short' });
-    endDate = `${endMonth} ${end.getDate()}`;
+    startDate = formatDateStr(start);
+    endDate = formatDateStr(end);
 
     let diffInMs = end.getTime() - start.getTime();
+
     if (diffInMs < 0) diffInMs += 24 * 60 * 60 * 1000; // overnight
     const totalMinutes = Math.floor(diffInMs / 60000);
     const hours = Math.floor(totalMinutes / 60);
@@ -210,122 +203,4 @@ export const getEventTimeDisplay = (event: EventObj) => {
   }
 
   return { startTime, endTime, duration, startDate, endDate };
-};
-
-// Helper: Converts Hex to HSV
-const hexToHSV = (hex: string) => {
-  let r = parseInt(hex.slice(1, 3), 16) / 255;
-  let g = parseInt(hex.slice(3, 5), 16) / 255;
-  let b = parseInt(hex.slice(5, 7), 16) / 255;
-
-  let max = Math.max(r, g, b),
-    min = Math.min(r, g, b);
-  let d = max - min;
-  let h = 0;
-  let s = max === 0 ? 0 : (d / max) * 100;
-  let v = max * 100;
-
-  if (max !== min) {
-    switch (max) {
-      case r:
-        h = (g - b) / d + (g < b ? 6 : 0);
-        break;
-      case g:
-        h = (b - r) / d + 2;
-        break;
-      case b:
-        h = (r - g) / d + 4;
-        break;
-    }
-    h /= 6;
-  }
-
-  return { h: h * 360, s, v };
-};
-
-// Helper: Converts HSV to Hex
-const hsvToHex = (h: number, s: number, v: number): string => {
-  s /= 100;
-  v /= 100;
-  const i = Math.floor(h / 60);
-  const f = h / 60 - i;
-  const p = v * (1 - s);
-  const q = v * (1 - f * s);
-  const t = v * (1 - (1 - f) * s);
-
-  let r = 0,
-    g = 0,
-    b = 0;
-  switch (i % 6) {
-    case 0:
-      r = v;
-      g = t;
-      b = p;
-      break;
-    case 1:
-      r = q;
-      g = v;
-      b = p;
-      break;
-    case 2:
-      r = p;
-      g = v;
-      b = t;
-      break;
-    case 3:
-      r = p;
-      g = q;
-      b = v;
-      break;
-    case 4:
-      r = t;
-      g = p;
-      b = v;
-      break;
-    case 5:
-      r = v;
-      g = p;
-      b = q;
-      break;
-  }
-
-  const toHex = (n: number) =>
-    Math.round(n * 255)
-      .toString(16)
-      .padStart(2, '0');
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-};
-
-export const lightenColor = (hex: string, type: string): string => {
-  let saturationPercentChange = 0;
-  let valuePercentChange = 0;
-
-  if (type === 'border') {
-    saturationPercentChange = 50;
-    valuePercentChange = 20;
-  } else if (type === 'text') {
-    saturationPercentChange = 40;
-    valuePercentChange = -50;
-  } else return hex;
-
-  let { h, s, v } = hexToHSV(hex);
-  const isGreen = h >= 80 && h <= 150;
-
-  if (isGreen && type == 'border') {
-    if (s != 0) {
-      s = Math.min(100, s + saturationPercentChange);
-      v = Math.min(100, v + valuePercentChange - 40);
-    } else {
-      v = Math.min(100, v + valuePercentChange - 40);
-    }
-  } else {
-    if (s != 0) {
-      s = Math.min(100, s + saturationPercentChange);
-      v = Math.min(100, v + valuePercentChange);
-    } else {
-      v = Math.min(100, v + valuePercentChange - 40);
-    }
-  }
-
-  return hsvToHex(h, s, v);
 };

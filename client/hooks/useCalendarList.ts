@@ -8,9 +8,10 @@ const formatCalendar = (cal: any): calendarObj => ({
   calendarName: cal.summary,
   calendarId: cal.id,
   calendarDefaultColor: cal.backgroundColor || "#4285F4",
-  calendarCustomColor: cal.backgroundColor || "#4285F4",
+  owner: cal.accessRole === 'owner',
   shown: true,
-  owner: cal.accessRole === 'owner'
+  visibility: "default",
+  accessRole: cal.accessRole
 });
 
 // 2. Abstracted async fetcher
@@ -29,21 +30,28 @@ const fetchSharingSettings = async (cal: any, token: string): Promise<sharedObj 
 };
 
 export function useCalendarList(jwtToken: string | null) {
-  const [calendarIds, setCalendarIds] = useState<calendarObj[]>([]);
+  const [calendarObjs, setCalendarObjs] = useState<calendarObj[]>([]);
   const [sharedObjs, setSharedObjs] = useState<sharedObj[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUserEvents = useCallback(async () => {
-    if (!jwtToken) return;
+  const fetchUserEvents = useCallback(async (jwtToken: string | null) => {
+    if (!jwtToken) {
+      console.log("clearing calendar object data");
+      setCalendarObjs([]);
+      setSharedObjs([]);
+      return;
+    }
     setIsLoading(true); 
     setError(null);
+    console.log("fetching calendar objects");
 
     try {
       const tokens = await getValidAccessToken(jwtToken);
       const accessToken = tokens.parent.accessToken;
       const { items: parentCalendars = [] } = await fetchCalendarList(accessToken);
       
+
       // Map synchronously without mutation
       const parentCalendarObjs = parentCalendars.map(formatCalendar);
       
@@ -52,18 +60,20 @@ export function useCalendarList(jwtToken: string | null) {
       const resolvedShared = await Promise.all(sharedPromises);
       const allSharedObjs = resolvedShared.filter((obj): obj is sharedObj => obj !== null);
 
-      setCalendarIds(parentCalendarObjs); 
+      setCalendarObjs(parentCalendarObjs); 
       setSharedObjs(allSharedObjs);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
-  }, [jwtToken]);
+  }, []);
 
   useEffect(() => { 
-    fetchUserEvents();
-  }, [fetchUserEvents]);
+    fetchUserEvents(jwtToken);
+  }, [fetchUserEvents, jwtToken]);
 
-  return { calendarObjs: calendarIds, setCalendarIds, sharedObjs, isLoading, error, refetch: fetchUserEvents };
+  //const [reference, setReference] = useState<calendarObj[]>(referenceCalendarObjects);;
+
+  return { calendarObjs, setCalendarObjs, sharedObjs, isLoading, error, refetch: fetchUserEvents };
 }

@@ -1,53 +1,41 @@
-import { EVENT_OFFSET } from '@/utility/constants';
-import { EventObj, EventWithOffset } from '@/utility/types';
-import { useUIContext } from '../contexts/ui-context';
-
+import { getEventCardStyles } from '@/components/multiDayContainer/multiDayStyles';
+import { useEventColors } from '@/hooks/useEventColor';
+import { getEventLayout } from '@/utility/eventUtils';
+import { EventObj, EventWithLayout } from '@/utility/types';
 import React, { memo, useMemo } from 'react';
-
-import { lightenColor } from '@/utility/eventUtils';
 import { Text, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-
-import { getEventLayout } from '@/utility/eventUtils';
-import { getEventCardStyles } from '@/utility/globalStyles';
+import { useUIContext } from '../contexts/ui-context';
+import { eventsAreEqual } from '../eventDetailsContainer/expanded-view';
 
 export interface EventContainerProps {
-  eventWithOffset: EventWithOffset;
+  eventWithOffset: EventWithLayout;
   dayWidth: number;
   hourHeight: number;
   onSelect: (event: EventObj) => void;
   isVisible: boolean;
-  selectedEvent: EventObj | null;
+  selectedEventId: string | null;
 }
 
 const lightStyles = getEventCardStyles(false);
 const darkStyles = getEventCardStyles(true);
 
 //TODO: MAKE THIS LOOK PRETTY
-function EventContainer({ eventWithOffset, dayWidth, hourHeight, onSelect, isVisible, selectedEvent }: EventContainerProps) {
+function EventContainer({ eventWithOffset, dayWidth, hourHeight, onSelect, isVisible, selectedEventId }: EventContainerProps) {
   const { event, offset, maxOffset } = eventWithOffset;
   const { colorCache, theme } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;
-  console.log('rendering event');
 
   //position on screen
   const layout = useMemo(() => {
-    return getEventLayout(event, offset, maxOffset, hourHeight, dayWidth, EVENT_OFFSET);
+    return getEventLayout(eventWithOffset, offset, maxOffset, hourHeight, dayWidth);
   }, [event, offset, hourHeight, dayWidth]);
 
-  const selectedThisEvent = !!selectedEvent && isVisible && selectedEvent.id === event.id;
+  const selectedThisEvent = !!selectedEventId && isVisible && selectedEventId === event.id;
   const totalOffset = selectedThisEvent ? 200 : offset + 100;
 
   //color on screen
-  const { rawColor, borderColor, textColor } = useMemo(() => {
-    const baseColor = colorCache.getCalendarColor(event.calendarId);
-    const raw = lightenColor(baseColor, 'raw');
-    return {
-      rawColor: raw,
-      borderColor: lightenColor(raw, 'border'),
-      textColor: lightenColor(raw, 'text'),
-    };
-  }, [colorCache.allCaches, colorCache.activeCacheId, event.calendarId]);
+  const { rawColor, borderColor, textColor } = useEventColors(event.calendarId);
 
   return (
     <Pressable
@@ -72,7 +60,10 @@ function EventContainer({ eventWithOffset, dayWidth, hourHeight, onSelect, isVis
         ]}
       >
         {/* --- EVENT TITLE --- */}
-        <Text style={[styles.eventText, { color: textColor }, selectedThisEvent && { color: rawColor }]} numberOfLines={1}>
+        <Text
+          style={[styles.eventText, { color: selectedThisEvent ? (theme.isDark ? textColor : rawColor) : textColor }]}
+          numberOfLines={1}
+        >
           {event.title}
         </Text>
       </View>
@@ -88,19 +79,19 @@ const areEqual = (prevProps: EventContainerProps, nextProps: EventContainerProps
   if (prevProps.isVisible !== nextProps.isVisible) return false;
 
   // Check if the event data itself changed
-  if (prevProps.eventWithOffset.event.id !== nextProps.eventWithOffset.event.id) return false;
+  if (!eventsAreEqual(prevProps.eventWithOffset.event, nextProps.eventWithOffset.event)) return false;
   if (prevProps.eventWithOffset.offset !== nextProps.eventWithOffset.offset) return false;
   if (prevProps.eventWithOffset.maxOffset !== nextProps.eventWithOffset.maxOffset) return false;
 
   // Check selection logic: Only re-render if THIS specific event's selection status changed
-  const wasSelected = prevProps.selectedEvent?.id === prevProps.eventWithOffset.event.id;
-  const isSelected = nextProps.selectedEvent?.id === nextProps.eventWithOffset.event.id;
+  const wasSelected = prevProps.selectedEventId === prevProps.eventWithOffset.event.id;
+  const isSelected = nextProps.selectedEventId === nextProps.eventWithOffset.event.id;
 
   if (wasSelected !== isSelected) return false;
 
-  // If we made it here, nothing important changed. Skip the re-render!
+  // nothing of note has changed, thus skip rerender
   return true;
 };
 
-// 3. Export the memoized component
+// Export the memoized component
 export default memo(EventContainer, areEqual);

@@ -1,8 +1,8 @@
-import { calendarObj } from '@/utility/types';
-import { useCallback, useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { calendarObj, CalendarView } from '@/utility/types';
+import { useEffect, useMemo, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import { useSharedValue } from 'react-native-reanimated';
+import { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 //Global Contexts
@@ -10,21 +10,27 @@ import { useAuthContext } from '../contexts/auth-context';
 import { useUIContext } from '../contexts/ui-context';
 
 import { toTitleCase } from '@/utility/drawerUtil';
-import { getColorPaletteStyles, globalStyles } from '@/utility/globalStyles';
-import { COLORS, FONT_WEIGHTS, SIZES } from '@/utility/theme';
+import { globalParameterStyles } from '@/utility/globalStyles';
+import { COLORS } from '@/utility/theme';
 import { Plus } from 'lucide-react-native';
 import { useCalendarGroups } from '../contexts/calendar-groups-context';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
+import { getColorPaletteStyles } from '../settingsContainer/settingsContainerStyles';
+import { getDrawerStyles } from './customDrawer';
 import DraggableCalendar from './drawer-draggable-calendar';
 
 export default function CustomDrawerContent(props: any) {
   const { jwtToken, calendarType, setCalendarType, familyProfiles } = useAuthContext();
-  const { setCalendarObj } = useCalendarObjects();
+  const { calendarObjs, toggleCalendar, viewMode, resetViewMode } = useCalendarObjects();
   const { calendarGroups } = useCalendarGroups();
   const { setLoginVisible, theme: uiTheme } = useUIContext();
-  const themeStyles = getColorPaletteStyles(uiTheme.isDark);
   const hoverIndex = useSharedValue<number | null>(null);
   const activeIndex = useSharedValue<number | null>(null);
+  const isHovering = useSharedValue<boolean>(false);
+
+  const themeStyles = getColorPaletteStyles(uiTheme.isDark);
+  const styles = getDrawerStyles(uiTheme.isDark);
+  const globalStyles = globalParameterStyles(uiTheme.isDark);
 
   //Both Folders and Calendars are mapped to Draggable Flatlist in flatData
   const flatData = useMemo(() => {
@@ -36,22 +42,12 @@ export default function CustomDrawerContent(props: any) {
     ]);
   }, [calendarGroups.groupedCalendars]);
 
-  const getButtonStyle = (option: '1' | '2' | '3' | 'W' | 'M', pressed: boolean) => [
+  const getButtonStyle = (option: CalendarView, pressed: boolean) => [
     styles.viewButton,
     calendarType === option && globalStyles.activeButton,
+    calendarType === option && { backgroundColor: uiTheme.isDark ? COLORS.background.dark : COLORS.background.light },
     pressed && globalStyles.pressedButton,
   ];
-
-  //toggle visibility of specific calendar
-  const toggleCalendar = useCallback(
-    (id: string) => {
-      setCalendarObj((prev) => {
-        const next = prev.map((cal) => (cal.calendarId === id ? { ...cal, shown: !cal.shown } : cal));
-        return next;
-      });
-    },
-    [setCalendarObj],
-  );
 
   //open up settings/login page
   const handleSettingspress = () => {
@@ -64,8 +60,7 @@ export default function CustomDrawerContent(props: any) {
     if (!movingItem || movingItem.folder || !movingItem.calendar) return;
 
     // Identify Source and Destination Folders
-    let currentGroupIdx = -1;
-    const safeNewIndex = Math.max(0, Math.min(newIndex, flatData.length - 1));
+    let safeNewIndex = Math.max(0, Math.min(newIndex, flatData.length - 1));
 
     const getGroupIndexAtFlatIndex = (targetIdx: number): number => {
       let groupIdx = -1;
@@ -104,6 +99,9 @@ export default function CustomDrawerContent(props: any) {
     // Calculate relative index within the destination folder
     let targetRelIndex = 0;
     let foundTargetFolder = false;
+    if (sourceGroupIdx < destGroupIdx) {
+      safeNewIndex++;
+    }
     for (let i = 0; i < safeNewIndex; i++) {
       const item = flatData[i];
       if (item.folder && item.id === destGroup.id) {
@@ -115,6 +113,7 @@ export default function CustomDrawerContent(props: any) {
         targetRelIndex += 1;
       }
     }
+
     updatedDestCals.splice(targetRelIndex, 0, movingItem.calendar);
 
     // Update the Context
@@ -127,6 +126,33 @@ export default function CustomDrawerContent(props: any) {
       ]);
     }
   };
+
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [contentHeight, setContentHeight] = useState(35);
+  const animatedHeight = useSharedValue(0);
+
+  const toggleExpand = (contentHeight: number) => {
+    // Toggle the boolean state
+    const nextState = !isExpanded;
+    setIsExpanded(nextState);
+
+    animatedHeight.value = withSpring(nextState ? contentHeight : 0, {
+      stiffness: 100, // Default was ~100. Lower = slower.
+      damping: 15, // Default was ~15. Higher = less bouncy/slower.
+    });
+  };
+
+  useEffect(() => {
+    toggleExpand(contentHeight);
+  }, [viewMode]);
+
+  // The animated style applied to the outer clipping container
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      height: animatedHeight.value,
+      opacity: animatedHeight.value > 0 ? 1 : 0, // Optional: fade out when fully closed
+    };
+  });
 
   if (!jwtToken) return null;
 
@@ -148,40 +174,59 @@ export default function CustomDrawerContent(props: any) {
         {/* --- CALENDAR TYPE TOGGLE --- */}
         <View style={styles.viewToggleContainer}>
           <Text style={styles.headerText}>View Mode</Text>
-          {['1', '2', '3'].map((option) => (
+          {[1, 2, 3, 7].map((option) => (
             <Pressable
               key={option}
               onPress={() => {
-                setCalendarType(option as '1' | '2' | '3' | 'W' | 'M');
+                setCalendarType({ type: 'D', num: option });
                 props.navigation.closeDrawer();
               }}
-              style={({ pressed }) => getButtonStyle(option as '1' | '2' | '3' | 'W' | 'M', pressed)}
+              style={({ pressed }) => getButtonStyle({ type: 'D', num: option }, pressed)}
             >
-              <Text style={[globalStyles.smallButtonText, calendarType === option && globalStyles.activeSmallButtonText]}>
-                {option === 'W' ? 'week' : option === 'M' ? 'month' : `${option} day${option !== '1' ? 's' : ''}`}
+              <Text style={[globalStyles.smallButtonText, calendarType.num === option && globalStyles.activeSmallButtonText]}>
+                {`${option} days`}
               </Text>
             </Pressable>
           ))}
         </View>
         {/* --- CALENDAR VISIBILITY TOGGLE --- */}
         <View style={{ marginBottom: 10 }}>
-          <Text style={styles.headerText}>Calendars</Text>
-          {flatData.map((data, index) => (
-            <DraggableCalendar
-              key={data.folder ? `folder-${data.id}` : `cal-${data.calendar?.calendarId}`}
-              cal={data}
-              onDrop={handleDrop}
-              toggleCalendar={toggleCalendar}
-              thisIndex={index}
-              hoverIndex={hoverIndex}
-              activeIndex={activeIndex}
-            />
-          ))}
+          <Text style={[styles.headerText]}>Calendars</Text>
+          {viewMode !== 'default' && (
+            <Pressable
+              style={({ pressed }) => [themeStyles.viewModeButton, pressed && themeStyles.actionButtonPressed, { flex: 1 }]}
+              onPress={() => resetViewMode()}
+            >
+              <Text style={themeStyles.viewModeText}>remove {viewMode}</Text>
+            </Pressable>
+          )}
+          <View style={{ gap: 6 }}>
+            {flatData.map((data, index) => (
+              <DraggableCalendar
+                key={data.folder ? `folder-${data.id}` : `cal-${data.calendar?.calendarId}`}
+                cal={data}
+                onDrop={handleDrop}
+                toggleCalendar={toggleCalendar}
+                thisIndex={index}
+                hoverIndex={hoverIndex}
+                activeIndex={activeIndex}
+                isHovering={isHovering}
+              />
+            ))}
+          </View>
         </View>
         <View style={{}}>
           <Pressable
-            style={({ pressed }) => [themeStyles.actionButton, { paddingVertical: 8 }, pressed && themeStyles.actionButtonPressed]}
-            onPress={() => calendarGroups.addGroup(null)}
+            style={({ pressed }) => [
+              themeStyles.actionButton,
+              { paddingVertical: 8, backgroundColor: uiTheme.isDark ? COLORS.background.dark : COLORS.background.light },
+              pressed && themeStyles.actionButtonPressed,
+            ]}
+            onPress={() => {
+              if (isHovering.get() === false) {
+                calendarGroups.addGroup(null);
+              }
+            }}
           >
             <Plus size={16} color={uiTheme.isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark} style={themeStyles.plusIcon} />
           </Pressable>
@@ -190,39 +235,3 @@ export default function CustomDrawerContent(props: any) {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  headerContainer: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    padding: 20,
-  },
-  headerText: {
-    fontSize: 14,
-    color: COLORS.text.main,
-    fontWeight: FONT_WEIGHTS.heavy,
-  },
-  profile: {
-    height: 42,
-    marginBottom: 20,
-  },
-  username: {
-    fontSize: SIZES.l,
-    marginBottom: 4,
-    fontWeight: FONT_WEIGHTS.medium,
-    color: COLORS.text.main,
-  },
-  email: {
-    fontSize: SIZES.s,
-    color: COLORS.textLight,
-  },
-  viewToggleContainer: {
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  viewButton: {
-    padding: 8,
-    marginVertical: 2,
-    borderRadius: 8,
-  },
-});

@@ -1,203 +1,365 @@
+import { getIconColor } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { EventObj } from '@/utility/types';
+import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { useCalendarEvents } from '../contexts/calendar-events-context';
+import { useCalendarObjects } from '../contexts/calendar-obj-context';
+import { useUIContext } from '../contexts/ui-context';
 import CalendarObjView from './calendar-obj-view';
+import { eventViewStyles } from './eventDetailsStyles';
 import { EventTimeDatePicker } from './expanded-view-time';
 import PlaceSearchBar from './location-container';
+import MutateRecurrenceModal from './mutate-recurrence-modal';
 
 interface ExpandedViewProps {
   initialEvent: EventObj;
   bottomSheetModalRef: React.RefObject<BottomSheetModal | null>;
   modalIndex: number;
+  onClose: () => void;
 }
 
-const HorizontalBar = () => <View style={styles.bar} />;
-
-function eventsAreEqual(a: EventObj, b: EventObj): boolean {
+export function eventsAreEqual(a: EventObj, b: EventObj): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, modalIndex }: ExpandedViewProps) => {
-  const { deleteEvent, createEvent, editEvent, uniqueCalendars } = useCalendarEvents();
-  const [event, setEvent] = useState<EventObj>(initialEvent);
+const menuHeight = 116;
+const menuWidth = 150;
 
+export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, modalIndex, onClose }: ExpandedViewProps) => {
+  const { mutateEvent, uniqueCalendars } = useCalendarEvents();
+  const { theme } = useUIContext();
+  const { calendarObjs } = useCalendarObjects();
+  const styles = eventViewStyles(theme.isDark);
+  const inputColor = theme.isDark ? COLORS.text.light : COLORS.text.lightGray;
+  const iconColor = getIconColor(theme.isDark);
+  const [titleHeight, setTitleHeight] = useState(35);
+
+  const [event, setEvent] = useState<EventObj>(initialEvent);
+  const [creatingEvent, setCreatingEvent] = useState<boolean>(initialEvent.id === '');
+  const [editableEvent, setEditableEvent] = useState<boolean>(false);
+  const [recurringEvent, setRecurringEvent] = useState<boolean>(false);
+  const [firstRecurringEvent, setFirstRecurringEvent] = useState<boolean>(false);
   const baselineRef = useRef<EventObj>(initialEvent);
   const hasChanges = !eventsAreEqual(event, baselineRef.current);
 
+  // Update Local event
   useEffect(() => {
+    if (initialEvent.recurringEventId) {
+      const targetCalendar = uniqueCalendars.find((cal) => cal.id === initialEvent.calendarId);
+      const foundEvent = targetCalendar?.events.find((e) => e.id === initialEvent.recurringEventId);
+
+      if (foundEvent?.recurrence) {
+        initialEvent.recurrence = foundEvent.recurrence;
+        setRecurringEvent(true);
+        if (foundEvent.startDate.getTime() === initialEvent.startDate.getTime()) {
+          setFirstRecurringEvent(true);
+        } else setFirstRecurringEvent(false);
+      } else {
+        setRecurringEvent(false);
+        setFirstRecurringEvent(false);
+      }
+    } else {
+      setRecurringEvent(false);
+      setFirstRecurringEvent(false);
+    }
+
     setEvent(initialEvent);
     baselineRef.current = initialEvent;
-  }, [initialEvent]);
+    setCreatingEvent(initialEvent.id === '');
 
-  const recurrence = useMemo(() => {
-    const targetCalendar = uniqueCalendars.find((cal) => cal.id === event.calendarId);
-    if (!targetCalendar) return null;
-    const foundEvent = targetCalendar.events.find((e) => e.id === event.recurringEventId);
-    if (foundEvent?.recurrence) event.recurrence = foundEvent.recurrence;
-    return foundEvent?.recurrence || null;
-  }, [event.id, event.calendarId, uniqueCalendars]);
+    const cal = calendarObjs?.find((c) => c.calendarId === initialEvent.calendarId);
+    if (!cal) setEditableEvent(true);
+    else setEditableEvent(cal.accessRole === 'writer' || cal.accessRole === 'owner');
+  }, [initialEvent, uniqueCalendars]);
 
   const updateField = (field: keyof EventObj, value: any) => {
     setEvent((prev) => ({ ...prev, [field]: value }));
   };
 
-  useEffect(() => {
-    console.log(event);
-  }, [event]);
-
-  const [titleHeight, setTitleHeight] = useState(0);
-
-  const handleSave = () => {
-    editEvent(event);
-    baselineRef.current = event;
-    setEvent({ ...event });
+  const closeModal = () => {
+    initialEvent = { sequence: -1 } as EventObj;
+    setCreatingEvent(false);
+    setEditableEvent(false);
+    setRecurringEvent(false);
+    setFirstRecurringEvent(false);
+    onClose();
   };
 
   const handleLocationSelect = ({ address }: { address: string }) => {
     updateField('location', address);
   };
 
+  const handleCalendarObjectSelect = (calendarId: string) => {
+    updateField('calendarId', calendarId);
+  };
+
+  const handleWebChange = (event: any) => {
+    if (Platform.OS === 'web') {
+      const el = event.target;
+      el.style.height = '0px';
+      const nextHeight = Math.max(40, el.scrollHeight);
+
+      el.style.height = `${nextHeight}px`;
+      setTitleHeight(nextHeight);
+    }
+  };
+
+  // ─── Delete & Edit handlers ───────────────────────────────────────────────────────────
+
+  const [mutateModalVisible, setMutateModalVisible] = useState(false);
+  const [mutateRecurrenceType, setMutateRecurrenceType] = useState<'delete' | 'edit'>('delete');
+
+  const handleDelete = (option: 'this' | 'following' | 'all') => {
+    if (option === 'this') {
+      mutateEvent.deleteSingleEvent(event);
+    } else if (option === 'all') {
+      mutateEvent.deleteAllRecurringEvents(event);
+    } else if (option === 'following') {
+      mutateEvent.deleteThisAndFollowingEvents(event);
+    }
+
+    closeModal();
+  };
+
+  const handleDeleteModal = () => {
+    if (recurringEvent) {
+      setMutateRecurrenceType('delete');
+      setMutateModalVisible(true);
+    } else handleDelete('this');
+  };
+
+  const handleEdit = (option: 'this' | 'following' | 'all') => {
+    if (option === 'this') {
+      mutateEvent.editEvent(event);
+    } else if (option === 'all') {
+      mutateEvent.editAllRecurringEvents(event);
+    } else if (option === 'following') {
+      mutateEvent.editThisAndFollowingEvents(event);
+    }
+
+    closeModal();
+  };
+
+  const handleEditModal = () => {
+    if (recurringEvent) {
+      setMutateRecurrenceType('edit');
+      setMutateModalVisible(true);
+    } else handleEdit('this');
+  };
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
-      {/* TITLE — multiline, grows downward */}
-      <TextInput
-        style={[styles.title, titleHeight > 0 && { height: titleHeight }]}
-        value={event.title}
-        onChangeText={(text) => updateField('title', text)}
-        onContentSizeChange={(e) => setTitleHeight(e.nativeEvent.contentSize.height)}
-        onFocus={() => bottomSheetModalRef.current?.snapToIndex(1)}
-        placeholder="New Event"
-        placeholderTextColor="#c9c8c6"
-        multiline
-        scrollEnabled={false}
-      />
-
-      {/* TIME / DATE / ALL-DAY / RECURRENCE */}
-      <EventTimeDatePicker event={event} onUpdate={updateField} />
-
-      <HorizontalBar />
-      <PlaceSearchBar initialValue={event.location} onLocationSelect={handleLocationSelect} />
-
-      <HorizontalBar />
-      {/* PROPERTIES BLOCK — flat rows */}
-      <View style={styles.listBlock}>
-        <View style={styles.listDivider} />
-        <CalendarObjView calendar={event.calendar} />
-
-        <View style={styles.listRow}>
-          <Text style={styles.icon}>🔔</Text>
-          <Text style={styles.listTextMuted}>
-            {event.reminders.useDefault
-              ? 'Default reminders'
-              : `${event.reminders.overrides?.length || 0} custom reminder${event.reminders.overrides?.length === 1 ? '' : 's'}`}
-          </Text>
-        </View>
-      </View>
-
-      <HorizontalBar />
-
-      {/* DESCRIPTION */}
-      <TextInput
-        style={styles.descriptionInput}
-        value={event.description}
-        onChangeText={(text) => updateField('description', text)}
-        placeholder="Add description…"
-        placeholderTextColor="#c9c8c6"
-        multiline
-        scrollEnabled={false}
-      />
-
-      <HorizontalBar />
-
-      {/* ACTIONS */}
-      <View style={styles.actionBlock}>
-        {event.id && hasChanges ? (
-          <Pressable style={({ pressed }) => [styles.btn, styles.primaryBtn, pressed && styles.primaryBtnPressed]} onPress={handleSave}>
-            <Text style={styles.primaryBtnText}>Save Changes</Text>
-          </Pressable>
-        ) : null}
-
-        <View style={styles.actionRow}>
-          <Pressable
-            style={({ pressed }) => [styles.btn, styles.secondaryBtn, pressed && styles.btnPressed]}
-            onPress={() => createEvent(event)}
-          >
-            <Text style={styles.secondaryBtnText}>{event.id ? 'Duplicate' : 'Create Event'}</Text>
-          </Pressable>
-          {event.id ? (
+    <>
+      <View style={styles.container}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          {editableEvent && creatingEvent && (
             <Pressable
-              style={({ pressed }) => [styles.btn, styles.deleteBtn, pressed && styles.deleteBtnPressed]}
-              onPress={() => deleteEvent(event)}
+              style={[
+                styles.card,
+                {
+                  padding: 8,
+                  alignSelf: 'flex-start',
+                  flexDirection: 'row',
+                  gap: 5,
+                  alignItems: 'center',
+                  marginBottom: 8,
+                  backgroundColor:
+                    hasChanges && event.title !== ''
+                      ? theme.isDark
+                        ? COLORS.primaryy.light
+                        : COLORS.primaryy.dark
+                      : theme.isDark
+                        ? COLORS.primaryy.mutedBackgroundDark
+                        : COLORS.primaryy.mutedBackgroundLight,
+                },
+              ]}
+              onPress={() => {
+                if (editableEvent && creatingEvent && event.title !== '') {
+                  closeModal();
+                  mutateEvent.createEvent(event);
+                }
+              }}
             >
-              <Text style={styles.deleteBtnText}>Delete</Text>
+              <Ionicons
+                name={'add-outline'}
+                size={16}
+                color={
+                  hasChanges && event.title !== ''
+                    ? theme.isDark
+                      ? COLORS.text.light
+                      : COLORS.text.light
+                    : theme.isDark
+                      ? COLORS.primaryy.mutedTextLight
+                      : COLORS.primaryy.mutedTextDark
+                }
+              />
+              <Text
+                style={{
+                  marginRight: 5,
+                  color:
+                    hasChanges && event.title !== ''
+                      ? theme.isDark
+                        ? COLORS.text.light
+                        : COLORS.text.light
+                      : theme.isDark
+                        ? COLORS.primaryy.mutedTextLight
+                        : COLORS.primaryy.mutedTextDark,
+                }}
+              >
+                Create Event
+              </Text>
             </Pressable>
-          ) : null}
+          )}
+          {editableEvent && !creatingEvent && (
+            <Pressable
+              style={[
+                styles.card,
+                {
+                  padding: 8,
+                  alignSelf: 'flex-start',
+                  flexDirection: 'row',
+                  gap: 5,
+                  alignItems: 'center',
+                  marginBottom: 8,
+                  backgroundColor:
+                    hasChanges && event.title !== ''
+                      ? theme.isDark
+                        ? COLORS.primaryy.light
+                        : COLORS.primaryy.dark
+                      : theme.isDark
+                        ? COLORS.primaryy.mutedBackgroundDark
+                        : COLORS.primaryy.mutedBackgroundLight,
+                },
+              ]}
+              onPress={() => {
+                if (hasChanges) handleEditModal();
+              }}
+            >
+              <Text
+                style={{
+                  marginHorizontal: 5,
+                  color:
+                    hasChanges && event.title !== ''
+                      ? theme.isDark
+                        ? COLORS.text.light
+                        : COLORS.text.light
+                      : theme.isDark
+                        ? COLORS.primaryy.mutedTextLight
+                        : COLORS.primaryy.mutedTextDark,
+                }}
+              >
+                Save Changes
+              </Text>
+            </Pressable>
+          )}
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {editableEvent && !creatingEvent && (
+              <>
+                <Pressable
+                  style={[
+                    styles.card,
+                    {
+                      padding: 8,
+                      paddingHorizontal: 12,
+                      alignSelf: 'flex-start',
+                      flexDirection: 'row',
+                      gap: 5,
+                      alignItems: 'center',
+                      marginBottom: 8,
+                    },
+                  ]}
+                  onPress={() => {
+                    closeModal();
+                    mutateEvent.createEvent(event);
+                  }}
+                >
+                  <Ionicons name={'copy-outline'} size={16} color={iconColor} />
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.card,
+                    {
+                      padding: 8,
+                      paddingHorizontal: 12,
+                      alignSelf: 'flex-start',
+                      flexDirection: 'row',
+                      gap: 5,
+                      alignItems: 'center',
+                      marginBottom: 8,
+                    },
+                  ]}
+                  onPress={handleDeleteModal}
+                >
+                  <Ionicons name={'trash-outline'} size={16} color={iconColor} />
+                </Pressable>
+              </>
+            )}
+          </View>
+        </View>
+        {/* Title */}
+        <View style={styles.card}>
+          <TextInput
+            style={[styles.titleInput, { height: titleHeight }]}
+            value={event.title}
+            onChangeText={(text) => updateField('title', text)}
+            onFocus={() => bottomSheetModalRef.current?.snapToIndex(1)}
+            onChange={Platform.OS === 'web' ? handleWebChange : undefined}
+            onContentSizeChange={Platform.OS !== 'web' ? (e) => setTitleHeight(e.nativeEvent.contentSize.height) : undefined}
+            placeholder="Add Title"
+            placeholderTextColor={inputColor}
+            multiline={true}
+            scrollEnabled={false}
+            editable={editableEvent}
+          />
+        </View>
+        {/* Time */}
+        <View style={styles.card}>
+          <EventTimeDatePicker event={event} editable={editableEvent} onUpdate={updateField} />
+        </View>
+        {/* Place */}
+        <View style={[styles.card, { zIndex: 10, padding: 0 }]}>
+          <PlaceSearchBar initialValue={event.location} onLocationSelect={handleLocationSelect} editable={editableEvent} />
+        </View>
+        {/* Calendar Obj */}
+        <View style={styles.card}>
+          <CalendarObjView calendarId={event.calendarId} creatingEvent={creatingEvent} calendarObjectSelect={handleCalendarObjectSelect} />
+        </View>
+        {/* Description */}
+        <View style={styles.card}>
+          <TextInput
+            style={styles.descriptionInput}
+            value={event.description}
+            onChangeText={(text) => updateField('description', text)}
+            placeholder="Add description…"
+            placeholderTextColor={inputColor}
+            multiline
+            scrollEnabled={false}
+            editable={editableEvent}
+          />
         </View>
       </View>
-    </ScrollView>
+      <MutateRecurrenceModal
+        isVisible={mutateModalVisible}
+        setVisible={setMutateModalVisible}
+        handleDelete={handleDelete}
+        handleEdit={handleEdit}
+        options={
+          firstRecurringEvent
+            ? [
+                { value: 'this', label: 'This event' },
+                { value: 'following', label: 'This and following events' },
+                { value: 'all', label: 'All events' },
+              ]
+            : [
+                { value: 'this', label: 'This event' },
+                { value: 'following', label: 'This and following events' },
+                { value: 'all', label: 'All events' },
+              ]
+        }
+        type={mutateRecurrenceType}
+      />
+    </>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#FFFFFF',
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-  bar: { height: 1, backgroundColor: '#f0f0ee', marginVertical: 16 },
-
-  // Title — no fixed height, wraps naturally
-  title: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: COLORS.text.main,
-    lineHeight: 34,
-    paddingVertical: 4,
-    marginBottom: 4,
-    // no fixed height — grows/shrinks via onContentSizeChange
-  },
-
-  // Properties list
-  listBlock: { marginVertical: 4 },
-  listRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 11 },
-  listDivider: { height: 1, backgroundColor: '#f0f0ee' },
-  icon: { fontSize: 16, width: 20, textAlign: 'center' },
-  calDot: { width: 13, height: 13, borderRadius: 3, marginLeft: 2, marginRight: 1 },
-  listInput: { flex: 1, fontSize: 15, color: '#37352f', padding: 0 },
-  listText: { flex: 1, fontSize: 15, color: '#37352f' },
-  listTextMuted: { flex: 1, fontSize: 15, color: '#9b9b97' },
-
-  // Description
-  descriptionInput: {
-    fontSize: 15,
-    color: '#37352f',
-    lineHeight: 22,
-    minHeight: 80,
-    paddingVertical: 0,
-    textAlignVertical: 'top',
-  },
-
-  // Buttons
-  actionBlock: { gap: 10 },
-  actionRow: { flexDirection: 'row', gap: 10 },
-  btn: {
-    flex: 1,
-    paddingVertical: 13,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryBtn: { backgroundColor: '#2383e2' },
-  primaryBtnPressed: { backgroundColor: '#1d6ebc' },
-  primaryBtnText: { fontSize: 15, fontWeight: '600', color: '#FFFFFF' },
-  secondaryBtn: { backgroundColor: '#f1f1ef' },
-  btnPressed: { backgroundColor: '#e4e4e1' },
-  secondaryBtnText: { fontSize: 14, fontWeight: '500', color: '#37352f' },
-  deleteBtn: { backgroundColor: '#fff0f0' },
-  deleteBtnPressed: { backgroundColor: '#fde0e0' },
-  deleteBtnText: { fontSize: 14, fontWeight: '500', color: '#d44c47' },
-});

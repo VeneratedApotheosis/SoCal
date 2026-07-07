@@ -1,22 +1,31 @@
-import { lightenColor } from '@/utility/eventUtils';
+import { lightenColor } from '@/utility/eventColorUtil';
 import { COLORS } from '@/utility/theme';
 import { calendarObj } from '@/utility/types';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useAuthContext } from '../contexts/auth-context';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
 import { useUIContext } from '../contexts/ui-context';
 import CalendarSelectionModal from './calendar-obj-view-modal';
+import { calendarObjViewStyles } from './eventDetailsStyles';
 
-export default function CalendarObjView({ calendar }: { calendar: calendarObj }) {
+export interface CalendarObjViewProps {
+  calendarId: string;
+  creatingEvent: boolean;
+  calendarObjectSelect: (calendarId: string) => void;
+}
+
+export default function CalendarObjView({ calendarId, creatingEvent, calendarObjectSelect }: CalendarObjViewProps) {
   const { familyProfiles } = useAuthContext();
   const { calendarObjs } = useCalendarObjects();
+  const { theme } = useUIContext();
+  const styles = calendarObjViewStyles(theme.isDark);
 
-  //  -------------------------------------------
-  // Local Calendar Object
-  //  -------------------------------------------
+  // ─── Local Calendar Object ───────────────────────────────────────────────────────────
+
   const [localCalendar, setLocalCalendar] = useState<calendarObj | undefined>(() => {
-    if (calendar && calendar.calendarId) return calendar;
+    const calendar = calendarObjs?.find((c) => c.calendarId === calendarId);
+    if (calendar) return calendar;
 
     // Fallback: Find the primary calendar matching the parent's ID
     const parentId = familyProfiles?.parent?.email;
@@ -24,7 +33,8 @@ export default function CalendarObjView({ calendar }: { calendar: calendarObj })
   });
 
   useEffect(() => {
-    if (calendar && calendar.calendarId) {
+    const calendar = calendarObjs?.find((c) => c.calendarId === calendarId);
+    if (calendar) {
       setLocalCalendar(calendar);
       return;
     } else {
@@ -34,13 +44,12 @@ export default function CalendarObjView({ calendar }: { calendar: calendarObj })
         setLocalCalendar(primaryCal);
       }
     }
-  }, [calendarObjs, familyProfiles, calendar]);
+  }, [calendarObjs, familyProfiles, calendarId]);
 
-  // -------------------------------------------
-  // Color
-  // -------------------------------------------
+  // ─── Color ───────────────────────────────────────────────────────────
+
   const { colorCache } = useUIContext();
-  const [color, setColor] = useState<string>('#00FFFF');
+  const [color, setColor] = useState<string>(theme.isDark ? COLORS.primaryy.light : COLORS.primaryy.dark);
 
   useEffect(() => {
     if (localCalendar) {
@@ -48,12 +57,10 @@ export default function CalendarObjView({ calendar }: { calendar: calendarObj })
     }
   }, [colorCache.allCaches, colorCache.activeCacheId, localCalendar]);
 
-  // -------------------------------------------
-  // Modal Stuff
-  // -------------------------------------------
+  // ─── Modal Stuff ───────────────────────────────────────────────────────────
+
   const buttonRef = useRef<View>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
 
   return (
     <>
@@ -61,82 +68,27 @@ export default function CalendarObjView({ calendar }: { calendar: calendarObj })
         style={styles.listRow}
         ref={buttonRef}
         onPress={() => {
-          setIsVisible(true);
+          if (creatingEvent && localCalendar) setIsVisible(true);
         }}
       >
         <View style={[styles.calDot, { backgroundColor: color }]} />
-        <Text style={styles.listText} numberOfLines={1}>
-          {localCalendar?.calendarName}
-        </Text>
+        {localCalendar ? (
+          <Text style={styles.listText} numberOfLines={1}>
+            {localCalendar?.calendarName}
+          </Text>
+        ) : (
+          <Text style={styles.noCalsText} numberOfLines={1}>
+            No Calendars Found.
+          </Text>
+        )}
       </Pressable>
 
       <CalendarSelectionModal
         isVisible={isVisible}
         setVisible={setIsVisible}
         selectedCalendarId={localCalendar?.calendarId}
-        onSelectCalendar={() => {}}
+        onSelectCalendar={calendarObjectSelect}
       />
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#FFFFFF',
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-  bar: { height: 1, backgroundColor: '#f0f0ee', marginVertical: 16 },
-
-  // Title — no fixed height, wraps naturally
-  title: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: COLORS.text.main,
-    lineHeight: 34,
-    paddingVertical: 4,
-    marginBottom: 4,
-    // no fixed height — grows/shrinks via onContentSizeChange
-  },
-
-  // Properties list
-  listBlock: { marginVertical: 4 },
-  listRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 11 },
-  listDivider: { height: 1, backgroundColor: '#f0f0ee' },
-  icon: { fontSize: 16, width: 20, textAlign: 'center' },
-  calDot: { width: 13, height: 13, borderRadius: 3, marginLeft: 2, marginRight: 1 },
-  listInput: { flex: 1, fontSize: 15, color: '#37352f', padding: 0 },
-  listText: { flex: 1, fontSize: 15, color: '#37352f' },
-  listTextMuted: { flex: 1, fontSize: 15, color: '#9b9b97' },
-
-  // Description
-  descriptionInput: {
-    fontSize: 15,
-    color: '#37352f',
-    lineHeight: 22,
-    minHeight: 80,
-    paddingVertical: 0,
-    textAlignVertical: 'top',
-  },
-
-  // Buttons
-  actionBlock: { gap: 10 },
-  actionRow: { flexDirection: 'row', gap: 10 },
-  btn: {
-    flex: 1,
-    paddingVertical: 13,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryBtn: { backgroundColor: '#2383e2' },
-  primaryBtnPressed: { backgroundColor: '#1d6ebc' },
-  primaryBtnText: { fontSize: 15, fontWeight: '600', color: '#FFFFFF' },
-  secondaryBtn: { backgroundColor: '#f1f1ef' },
-  btnPressed: { backgroundColor: '#e4e4e1' },
-  secondaryBtnText: { fontSize: 14, fontWeight: '500', color: '#37352f' },
-  deleteBtn: { backgroundColor: '#fff0f0' },
-  deleteBtnPressed: { backgroundColor: '#fde0e0' },
-  deleteBtnText: { fontSize: 14, fontWeight: '500', color: '#d44c47' },
-});

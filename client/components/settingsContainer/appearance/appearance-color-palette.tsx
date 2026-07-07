@@ -1,12 +1,13 @@
-import { lightenColor } from '@/utility/eventUtils';
-import { getColorEditStyles, getColorPaletteStyles, getEventCardStyles, getIconColor, getSettingCardStyles } from '@/utility/globalStyles';
+import { lightenColor } from '@/utility/eventColorUtil';
+import { getIconColor } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { colorCache } from '@/utility/types';
 import { Ionicons } from '@expo/vector-icons';
 import { Plus } from 'lucide-react-native';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Animated, LayoutAnimation, Pressable, Text, TextInput, View } from 'react-native';
 import { useUIContext } from '../../contexts/ui-context';
+import { getColorEditStyles, getColorPaletteStyles, getSettingCardStyles } from '../settingsContainerStyles';
 
 export default function AppearanceColorPalette() {
   const { theme: uiTheme } = useUIContext();
@@ -115,6 +116,13 @@ export default function AppearanceColorPalette() {
 
   const iconColor = getIconColor(uiTheme.isDark);
 
+  const getColor = useCallback(
+    (color: string, type: string) => {
+      return lightenColor(color, type, uiTheme.isDark);
+    },
+    [uiTheme.isDark, lightenColor],
+  );
+
   return (
     <View style={cardStyles.container}>
       {/* --- Trigger (Header) --- */}
@@ -145,7 +153,13 @@ export default function AppearanceColorPalette() {
                 {displayColors.map((color, index) => (
                   <Pressable
                     key={color + ' ' + index}
-                    style={[themeStyles.colorCircle, { backgroundColor: color, borderColor: lightenColor(color, 'border') }]}
+                    style={[
+                      themeStyles.colorCircle,
+                      {
+                        backgroundColor: getColor(color, 'raw'),
+                        borderColor: getColor(color, 'border'),
+                      },
+                    ]}
                   />
                 ))}
               </View>
@@ -181,8 +195,11 @@ export default function AppearanceColorPalette() {
                     onPress={() => handleEditColor(color, index)}
                     style={[
                       themeStyles.colorCircle,
-                      { backgroundColor: color, borderColor: lightenColor(color, 'border') },
-                      pickingColorIndex === index && { shadowColor: lightenColor(color, 'border') },
+                      {
+                        backgroundColor: getColor(color, 'raw'),
+                        borderColor: getColor(getColor(color, 'raw'), 'border'),
+                      },
+                      pickingColorIndex === index && { shadowColor: getColor(color, 'border') },
                       pickingColorIndex === index && editStyles.selectedCircle,
                     ]}
                   />
@@ -232,13 +249,13 @@ export default function AppearanceColorPalette() {
                       style={[
                         editStyles.event,
                         {
-                          backgroundColor: hexInput,
-                          borderLeftColor: lightenColor(hexInput, 'border'),
+                          backgroundColor: getColor(hexInput, 'raw'),
+                          borderLeftColor: getColor(getColor(hexInput, 'raw'), 'border'),
                         },
                       ]}
                     >
                       {/* --- EVENT TITLE --- */}
-                      <Text style={[editStyles.eventText, { color: lightenColor(hexInput, 'text') }]} numberOfLines={1}>
+                      <Text style={[editStyles.eventText, { color: getColor(getColor(hexInput, 'raw'), 'text') }]} numberOfLines={1}>
                         Event Title
                       </Text>
                     </View>

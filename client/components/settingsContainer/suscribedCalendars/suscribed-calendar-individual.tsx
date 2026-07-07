@@ -1,8 +1,13 @@
-import { globalStyles } from '@/utility/globalStyles';
-import { COLORS } from '@/utility/theme';
+import { useScreenSize } from '@/components/contexts/screen-size-context';
+import { useUIContext } from '@/components/contexts/ui-context';
+import { getPositions } from '@/utility/drawerUtil';
+import { getIconColor, globalStyles } from '@/utility/globalStyles';
 import { calendarObj } from '@/utility/types';
+import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { getSubscribedCalStyles } from '../settingsContainerStyles';
+import SuscribedSettingsModal, { suscribedSettingsModalHeight, suscribedSettingsModalWidth } from './suscribed-settings-modal';
 
 export interface SharedCalIndividualProps {
   cal: calendarObj;
@@ -12,58 +17,28 @@ export default function SuscribedCalendarIndividual({ cal }: SharedCalIndividual
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [isVisible, setVisible] = useState(false);
   const buttonRef = useRef<View>(null);
+  const { theme } = useUIContext();
+  const styles = getSubscribedCalStyles(theme.isDark);
+  const iconColor = getIconColor(theme.isDark);
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
 
   return (
-    <View key={cal.calendarId} style={[styles.accordionContainer, globalStyles.bottomRightShadow]}>
+    <View key={cal.calendarId} style={styles.accordionContainer}>
       <Text style={styles.accordionTitle}>{cal.calendarName}</Text>
 
       {/* --- SETTINGS BUTTON --- */}
       <View ref={buttonRef} collapsable={false}>
-        {/* <Pressable
+        <Pressable
           onPress={() => {
-            getPositions(buttonRef, setMenuPos, suscribedSettingsModalHeight, suscribedSettingsModalWidth);
+            getPositions(buttonRef, setMenuPos, suscribedSettingsModalHeight, suscribedSettingsModalWidth, SCREEN_WIDTH, SCREEN_HEIGHT);
             setVisible(true);
           }}
           style={({ pressed }) => [pressed && globalStyles.pressedButton]}
         >
-          <Ionicons name={'ellipsis-horizontal-circle-outline'} size={20} color={'#333'} />
-        </Pressable> */}
+          <Ionicons name={'ellipsis-horizontal-circle-outline'} size={20} color={iconColor} />
+        </Pressable>
       </View>
-      {/* <SuscribedSettingsModal isVisible={isVisible} setVisible={setVisible} top={menuPos.top} left={menuPos.left} calId={cal.calendarId} /> */}
+      <SuscribedSettingsModal isVisible={isVisible} setVisible={setVisible} top={menuPos.top} left={menuPos.left} calId={cal.calendarId} />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  sharedAccessSection: {
-    marginTop: 10,
-    flex: 1,
-  },
-  listContainer: {
-    flex: 1,
-    gap: 12,
-  },
-  emptyText: {
-    color: '#888',
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  accordionContainer: {
-    backgroundColor: '#F9F9F9',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#EAEAEA',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 12,
-  },
-  accordionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-    flex: 1,
-    marginRight: 10,
-  },
-});

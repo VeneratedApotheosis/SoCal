@@ -1,15 +1,24 @@
+import { COLORS } from '@/utility/theme';
 import React, { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { usePlacesAutocomplete } from '../../hooks/usePlacesAutocomplete';
 import { useAuthContext } from '../contexts/auth-context';
+import { useUIContext } from '../contexts/ui-context';
+import { locationStyles } from './eventDetailsStyles';
 
 export interface LocationContainerProps {
   initialValue: string;
   onLocationSelect: ({ address }: { address: string }) => void;
+  editable: boolean;
 }
 
-export default function LocationContainer({ initialValue, onLocationSelect }: LocationContainerProps) {
+export default function LocationContainer({ initialValue, onLocationSelect, editable }: LocationContainerProps) {
   const { jwtToken } = useAuthContext();
+  const { theme } = useUIContext();
+  const styles = locationStyles(theme.isDark);
+  const inputColor = COLORS.text.lightGray;
+  const listColor = theme.isDark ? COLORS.text.lightGray : COLORS.text.darkGray;
+
   const [inputValue, setInputValue] = useState(initialValue);
 
   useEffect(() => {
@@ -24,6 +33,7 @@ export default function LocationContainer({ initialValue, onLocationSelect }: Lo
     onLocationSelect,
   });
   const handleTextChange = (text: string) => {
+    onLocationSelect({ address: text });
     setInputValue(text);
     getPredictions(text);
   };
@@ -31,7 +41,6 @@ export default function LocationContainer({ initialValue, onLocationSelect }: Lo
   const handleRowPress = async (item: any) => {
     const chosenPlaceName = await selectPlace(item);
     if (chosenPlaceName) {
-      console.log(chosenPlaceName);
       setInputValue(chosenPlaceName);
     }
   };
@@ -44,7 +53,8 @@ export default function LocationContainer({ initialValue, onLocationSelect }: Lo
           value={inputValue}
           onChangeText={handleTextChange}
           placeholder="Search for a location..."
-          placeholderTextColor="#888"
+          placeholderTextColor={inputColor}
+          editable={editable}
         />
       </View>
       {predictions.length > 0 && (
@@ -55,7 +65,7 @@ export default function LocationContainer({ initialValue, onLocationSelect }: Lo
           keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => (
             <TouchableOpacity style={styles.row} onPress={() => handleRowPress(item)}>
-              <Text numberOfLines={1} style={{ color: '#333', fontSize: 14 }}>
+              <Text numberOfLines={1} style={{ color: listColor, fontSize: 14 }}>
                 {item.description}
               </Text>
             </TouchableOpacity>
@@ -65,47 +75,3 @@ export default function LocationContainer({ initialValue, onLocationSelect }: Lo
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    width: '100%',
-    zIndex: 1,
-  },
-  textInputContainer: {
-    backgroundColor: 'transparent',
-    borderTopWidth: 0,
-    borderBottomWidth: 0,
-    paddingHorizontal: 10,
-  },
-  textInput: {
-    height: 48,
-    color: '#333',
-    fontSize: 16,
-    //borderWidth: 1,
-    //borderColor: '#ccc',
-    //borderRadius: 8,
-    paddingHorizontal: 15,
-    backgroundColor: '#fff',
-  },
-  listView: {
-    backgroundColor: '#fff',
-    marginHorizontal: 10,
-    borderWidth: 1,
-    borderColor: '#eee',
-    borderRadius: 8,
-    elevation: 3,
-    boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.1)',
-    position: 'absolute',
-    top: 52,
-    left: 0,
-    right: 0,
-    maxHeight: 220,
-  },
-  row: {
-    padding: 13,
-    height: 44,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-});

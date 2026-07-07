@@ -1,7 +1,12 @@
+import {
+  getSettingBackgroundStyles,
+  getSettingCardStyles,
+  getSettingProfileStyles,
+} from '@/components/settingsContainer/settingsContainerStyles';
 import { toTitleCase } from '@/utility/drawerUtil';
-import { getSettingBackgroundStyles, getSettingCardStyles, getSettingProfileStyles, globalStyles } from '@/utility/globalStyles';
+import { globalStyles } from '@/utility/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 import { useAuthContext } from '../contexts/auth-context';
 import { useUIContext } from '../contexts/ui-context';
 import SharedCalendars from './sharedCalendars/shared-calendars';
@@ -15,10 +20,8 @@ export default function Login() {
   const rootStyles = getSettingBackgroundStyles(theme.isDark);
   const profileStyles = getSettingProfileStyles(theme.isDark);
 
-  console.log(authProps.jwtToken);
-
   return (
-    <ScrollView style={rootStyles.tabContainer} contentContainerStyle={{ paddingBottom: 40 }}>
+    <View style={rootStyles.tabContainer}>
       {/* --- profile --- */}
       <View style={[cardStyles.container, profileStyles.profileContainer]}>
         {familyProfiles?.parent && familyProfiles?.parent.picture && (
@@ -50,6 +53,6 @@ export default function Login() {
       </View>
       <SharedCalendars />
       <SuscribedCalendars />
-    </ScrollView>
+    </View>
   );
 }

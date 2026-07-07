@@ -1,10 +1,12 @@
-import { GRID_COLOR } from '@/utility/constants';
+import { COLORS } from '@/utility/theme';
 import { Text, View } from 'react-native';
+import { useUIContext } from '../contexts/ui-context';
 
 //TODO: add a stylesheet to this
 const hours = Array.from({ length: 24 }, (_, i) => i);
 export default function HourGuide({ hourHeight, labelWidth }: { hourHeight: number; labelWidth: number }) {
-  // Create an array [0, 1, ..., 23]
+  const { theme } = useUIContext();
+
   return (
     <View
       style={{
@@ -12,8 +14,8 @@ export default function HourGuide({ hourHeight, labelWidth }: { hourHeight: numb
         backgroundColor: 'transparent',
         borderTopWidth: 1,
         borderRightWidth: 1,
-        borderTopColor: GRID_COLOR,
-        borderRightColor: GRID_COLOR,
+        borderTopColor: theme.isDark ? COLORS.border.mutedDark : COLORS.border.mutedLight,
+        borderRightColor: theme.isDark ? COLORS.border.mutedDark : COLORS.border.mutedLight,
       }}
     >
       {hours.map((hour) => (
@@ -26,7 +28,7 @@ export default function HourGuide({ hourHeight, labelWidth }: { hourHeight: numb
           }}
         >
           {/*todo: dynmically resizing font size depending on how zoomed in stuff is*/}
-          <Text style={{ fontSize: 10, color: '#888', marginTop: -6 }}> 
+          <Text style={{ fontSize: 10, color: theme.isDark ? COLORS.text.subtleLight : COLORS.text.subtleDark, marginTop: -6 }}>
             {hour === 0 ? '' : `${hour > 12 ? hour - 12 : hour} ${hour >= 12 ? 'PM' : 'AM'}`}
           </Text>
           {/* Optional: Add a subtle divider line that spans the width */}

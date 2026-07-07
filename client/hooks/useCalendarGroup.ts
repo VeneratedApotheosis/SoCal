@@ -111,6 +111,7 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null) => {
     const containsGroupName = groupedCalendars.find((g) => g.id === name)
     if (containsGroupName) {
       addGroup(name + " (1)");
+      return;
     }
 
     setGroupedCalendars((prev) => {

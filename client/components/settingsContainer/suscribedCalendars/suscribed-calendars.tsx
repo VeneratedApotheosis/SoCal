@@ -1,10 +1,11 @@
 import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
 import { useUIContext } from '@/components/contexts/ui-context';
-import { getIconColor, getSettingCardStyles } from '@/utility/globalStyles';
+import { getIconColor } from '@/utility/globalStyles';
 import { calendarObj } from '@/utility/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useRef, useState } from 'react';
-import { Animated, LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, LayoutAnimation, Pressable, Text, View } from 'react-native';
+import { getSettingCardStyles, getSubscribedCalStyles } from '../settingsContainerStyles';
 import SuscribedCalendarIndividual from './suscribed-calendar-individual';
 
 export default function SuscribedCalendars() {
@@ -12,6 +13,7 @@ export default function SuscribedCalendars() {
 
   const { theme: uiTheme } = useUIContext();
   const cardStyles = getSettingCardStyles(uiTheme.isDark);
+  const styles = getSubscribedCalStyles(uiTheme.isDark);
 
   const iconColor = getIconColor(uiTheme.isDark);
   const [isExpanded, setIsExpanded] = useState(true);
@@ -45,7 +47,7 @@ export default function SuscribedCalendars() {
       <Pressable onPress={toggleSection} style={cardStyles.trigger}>
         <View style={cardStyles.triggerLeft}>
           <Ionicons name="today-outline" size={20} color={iconColor} />
-          <Text style={cardStyles.label}>Shared Access</Text>
+          <Text style={cardStyles.label}>Suscribed Calendars</Text>
         </View>
         <View style={cardStyles.triggerLeft}>
           <Animated.View style={{ transform: [{ rotate: arrowRotation }] }}>
@@ -68,20 +70,3 @@ export default function SuscribedCalendars() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  sharedAccessSection: {
-    marginTop: 10,
-    flex: 1,
-  },
-  listContainer: {
-    flex: 1,
-    gap: 12,
-  },
-  emptyText: {
-    color: '#888',
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: 20,
-  },
-});

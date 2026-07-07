@@ -1,23 +1,30 @@
 import React, { createContext, ReactNode, useContext, useState } from 'react';
-import { SharedValue, useSharedValue } from 'react-native-reanimated';
 
 export interface DateContextType {
   curDate: Date;
   setCurDate: (curDate: Date) => void;
-  currentMonthText: SharedValue<string>;
+  currentMonthText: string;
+  setCurrentMonthText: React.Dispatch<React.SetStateAction<string>>;
+  resetDate: number;
+  setResetDate: React.Dispatch<React.SetStateAction<number>>;
 }
 
-export const DateContext = createContext<DateContextType>({} as DateContextType);
+export const CalendarIndexContext = createContext<DateContextType>({} as DateContextType);
 
 export const DateProvider = ({ children }: { children: ReactNode }) => {
   const [curDate, setCurDate] = useState<Date>(new Date());
-  const currentMonthText = useSharedValue<string>(curDate.toLocaleString('default', { month: 'long' }));
+  const [currentMonthText, setCurrentMonthText] = useState<string>(curDate.toLocaleString('default', { month: 'long' }));
+  const [resetDate, setResetDate] = useState<number>(0);
 
-  return <DateContext.Provider value={{ curDate, setCurDate, currentMonthText }}>{children}</DateContext.Provider>;
+  return (
+    <CalendarIndexContext.Provider value={{ curDate, setCurDate, currentMonthText, setCurrentMonthText, resetDate, setResetDate }}>
+      {children}
+    </CalendarIndexContext.Provider>
+  );
 };
 
 export function useCalendarIndex() {
-  const ctx = useContext(DateContext);
+  const ctx = useContext(CalendarIndexContext);
   if (!ctx) throw new Error('useCalendarIndex must be within DateProvider');
   return ctx;
 }

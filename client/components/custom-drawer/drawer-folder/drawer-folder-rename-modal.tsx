@@ -1,6 +1,8 @@
 import { useCalendarGroups } from '@/components/contexts/calendar-groups-context';
+import { useUIContext } from '@/components/contexts/ui-context';
 import { useEffect, useRef, useState } from 'react';
-import { Keyboard, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Modal, Pressable, Text, TextInput, View } from 'react-native';
+import { getFolderRenameModal } from '../customDrawer';
 
 export interface FolderSettingsRenameModalInterface {
   isVisible: boolean;
@@ -22,6 +24,8 @@ export default function FolderSettingsRenameModal({
   const [newName, setNewName] = useState(calId || '');
   const inputRef = useRef<TextInput>(null);
   const { calendarGroups } = useCalendarGroups();
+  const { theme } = useUIContext();
+  const styles = getFolderRenameModal(theme.isDark);
 
   useEffect(() => {
     if (isVisible) {
@@ -89,62 +93,3 @@ export default function FolderSettingsRenameModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  menuBox: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
-    width: '80%', // Takes up a nice chunk of the screen width
-    maxWidth: 300,
-    boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.25)',
-    elevation: 10,
-  },
-  colorButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-  },
-  pressedButton: {
-    transform: [{ scale: 0.9 }],
-  },
-  centeredContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 14,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 16,
-  },
-  button: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  cancelText: {
-    color: '#666',
-    fontWeight: '500',
-  },
-  saveText: {
-    color: '#4285F4', // Google Blue to match your calendar defaults
-    fontWeight: '600',
-  },
-});

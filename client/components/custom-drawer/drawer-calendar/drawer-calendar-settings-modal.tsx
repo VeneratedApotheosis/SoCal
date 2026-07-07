@@ -1,8 +1,13 @@
+import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
+import { useScreenSize } from '@/components/contexts/screen-size-context';
+import { useUIContext } from '@/components/contexts/ui-context';
 import { getPositions } from '@/utility/drawerUtil';
+import { getIconColor } from '@/utility/globalStyles';
 import { calendarObj } from '@/utility/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
+import { getFolderModal } from '../customDrawer';
 import CalendarSettingsColorModal from './drawer-calendar-settings-color-modal';
 
 const menuHeight = 116;
@@ -20,6 +25,13 @@ export default function CalendarSettingsModal({ isVisible, setVisible, calendar,
   const buttonRef = useRef<View>(null);
   const [isColorsVisible, setColorsVisible] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const { toggleTransparent, toggleIsolate } = useCalendarObjects();
+
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
+
+  const { theme } = useUIContext();
+  const styles = getFolderModal(theme.isDark, menuWidth, menuHeight);
+  const iconColor = getIconColor(theme.isDark);
 
   return (
     <>
@@ -50,16 +62,16 @@ export default function CalendarSettingsModal({ isVisible, setVisible, calendar,
             <Pressable
               style={({ pressed }) => [styles.menuItem, pressed && styles.pressedButton]}
               onPress={() => {
-                getPositions(buttonRef, setMenuPos, menuHeight, menuWidth);
+                getPositions(buttonRef, setMenuPos, menuHeight, menuWidth, SCREEN_WIDTH, SCREEN_HEIGHT);
                 setColorsVisible(true);
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name={'color-palette-outline'} size={13} />
-                <Text>Color</Text>
+                <Ionicons name={'color-palette-outline'} size={13} color={iconColor} />
+                <Text style={styles.menuText}>Color</Text>
               </View>
               <View>
-                <Ionicons name={'chevron-forward-outline'} size={13} />
+                <Ionicons name={'chevron-forward-outline'} size={13} color={iconColor} />
               </View>
             </Pressable>
           </View>
@@ -75,49 +87,22 @@ export default function CalendarSettingsModal({ isVisible, setVisible, calendar,
           <Pressable
             style={styles.menuItem}
             onPress={() => {
-              /* logic */
+              toggleIsolate(calendar.calendarId);
             }}
           >
-            <Text>Isolate</Text>
+            <Text style={styles.menuText}>Isolate</Text>
           </Pressable>
           <Pressable
             style={styles.menuItem}
             onPress={() => {
-              /* logic */
+              toggleTransparent(calendar.calendarId);
+              setVisible(false);
             }}
           >
-            <Text>Make Transparent</Text>
+            <Text style={styles.menuText}>Make Transparent</Text>
           </Pressable>
         </View>
       </Modal>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  menuBox: {
-    position: 'absolute',
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 6,
-    minWidth: menuWidth,
-    minHeight: menuHeight,
-    boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)',
-
-    elevation: 10,
-  },
-  menuItem: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    fontSize: 11,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  pressedButton: {
-    transform: [{ scale: 0.96 }],
-  },
-});

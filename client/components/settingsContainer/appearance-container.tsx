@@ -1,11 +1,12 @@
 import AppearanceColorPalette from '@/components/settingsContainer/appearance/appearance-color-palette';
 import AppearanceTheme from '@/components/settingsContainer/appearance/appearance-theme';
-import { lightenColor } from '@/utility/eventUtils';
-import { getSettingBackgroundStyles, globalStyles } from '@/utility/globalStyles';
+import { lightenColor } from '@/utility/eventColorUtil';
+import { globalStyles } from '@/utility/globalStyles';
 import { colorCache } from '@/utility/types';
 import { useMemo, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Pressable, Text, TouchableOpacity, View } from 'react-native';
 import { useUIContext } from '../contexts/ui-context';
+import { getSettingAppearanceStyles, getSettingBackgroundStyles } from './settingsContainerStyles';
 
 const ThemeButton = ({
   option,
@@ -34,9 +35,13 @@ const ThemeButton = ({
   );
 };
 
+const lightStyles = getSettingAppearanceStyles(false);
+const darkStyles = getSettingAppearanceStyles(true);
+
 export default function AppearanceContainer() {
   const { theme, colorCache } = useUIContext();
   const rootStyles = getSettingBackgroundStyles(theme.isDark);
+  const styles = theme.isDark ? darkStyles : lightStyles;
 
   // Palettes and palette ID's
   const [palettes, setPalettes] = useState(colorCache.allCaches);
@@ -45,8 +50,7 @@ export default function AppearanceContainer() {
   // UI States
   const [isModalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [pickingColorIndex, setPickingColorIndex] = useState<number | null>(null);
-  const [isDebug, setDebug] = useState<boolean>(false);
+  const [isDebug, setDebug] = useState<boolean>(true);
 
   // --- temporary state ---
   // hold colors while editing
@@ -69,63 +73,71 @@ export default function AppearanceContainer() {
     setIsEditing(true);
   };
 
+  const [selectedEvent, setSelectedEvent] = useState<number>(-1);
+
   const rawColors = useMemo(() => {
     const c = colorCache.allCaches[colorCache.activeCacheId];
     const output: string[] = [];
     c.palette.map((color, index) => {
-      output.push(color);
+      output.push(lightenColor(color, 'raw', theme.isDark));
     });
     return output;
-  }, [colorCache.allCaches, colorCache.activeCacheId, lightenColor]);
-  const colors = useMemo(() => {
+  }, [colorCache.allCaches, colorCache.activeCacheId, lightenColor, theme.isDark]);
+  const borderColors = useMemo(() => {
     const output2: string[] = [];
     rawColors.map((color) => {
-      output2.push(lightenColor(color, 'border'));
+      output2.push(lightenColor(color, 'border', theme.isDark));
     });
     return output2;
-  }, [rawColors, lightenColor]);
+  }, [rawColors, lightenColor, theme.isDark]);
   const textColors = useMemo(() => {
     const output2: string[] = [];
     rawColors.map((color, index) => {
-      output2.push(lightenColor(color, 'text'));
+      output2.push(lightenColor(color, 'text', theme.isDark));
     });
     return output2;
-  }, [rawColors]);
+  }, [rawColors, theme.isDark]);
 
   return (
     <View style={rootStyles.tabContainer}>
       <AppearanceTheme />
-
       <AppearanceColorPalette />
 
       {/* --- DEBUGGER --- */}
       {isDebug === true && (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, width: '100%' }}>
-          {colors.map((color, index) => (
-            <View
+          {borderColors.map((color, index) => (
+            <Pressable
               style={{
                 height: 50,
                 width: 85,
               }}
               key={color + ' ' + index}
+              onPress={() => setSelectedEvent(index)}
             >
               {/* --- EVENT LEFT BAR --- */}
               <View
                 style={[
                   styles.event,
                   {
-                    backgroundColor: rawColors[index],
+                    backgroundColor: selectedEvent === index ? borderColors[index] : rawColors[index],
                     borderLeftColor: color,
                     height: 100,
                   },
                 ]}
               >
                 {/* --- EVENT TITLE --- */}
-                <Text style={[styles.eventText, { color: textColors[index] }]} numberOfLines={1}>
+                <Text
+                  style={[
+                    styles.eventText,
+                    { color: selectedEvent === index ? (theme.isDark ? textColors[index] : rawColors[index]) : textColors[index] },
+                  ]}
+                  numberOfLines={1}
+                >
                   Title
                 </Text>
               </View>
-            </View>
+            </Pressable>
           ))}
         </View>
       )}
@@ -150,47 +162,3 @@ export default function AppearanceContainer() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  //modal styles
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 25,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-
-    boxShadow: '0px -2px 4px rgba(0, 0, 0, 0.1)',
-    elevation: 10,
-  },
-  modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 15 },
-  modalOption: { paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  modalOptionText: { fontSize: 16, color: '#1F2937' },
-  modalCancel: { marginTop: 15, alignItems: 'center' },
-
-  eventContainer: {
-    borderWidth: 1,
-    borderColor: 'white',
-    overflow: 'hidden',
-    position: 'absolute', // Allows use of 'top'
-    borderRadius: 4,
-  },
-  event: {
-    flex: 1,
-    borderLeftWidth: 6,
-    borderRadius: 4,
-    padding: 4,
-  },
-  eventText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  eventTime: {
-    fontSize: 8,
-    fontWeight: '600',
-    color: '#000000',
-  },
-});

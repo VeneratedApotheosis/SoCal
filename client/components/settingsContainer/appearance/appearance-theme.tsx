@@ -1,8 +1,9 @@
-import { getIconColor, getSettingCardStyles, getSettingThemeStyles } from '@/utility/globalStyles';
+import { getIconColor } from '@/utility/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
 import { Animated, LayoutAnimation, Platform, Pressable, Text, UIManager, View } from 'react-native';
 import { useUIContext } from '../../contexts/ui-context';
+import { getSettingCardStyles, getSettingThemeStyles } from '../settingsContainerStyles';
 
 export default function AppearanceTheme() {
   if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {

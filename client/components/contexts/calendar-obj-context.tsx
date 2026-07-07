@@ -1,14 +1,20 @@
 // calendar-events-context.tsx
 import { useCalendarList } from '@/hooks/useCalendarList';
-import { calendarObj, sharedObj } from '@/utility/types';
-import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useState } from 'react';
+import { calendarObj, sharedObj, visibility } from '@/utility/types';
+import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useEffect, useState } from 'react';
 import { useAuthContext } from './auth-context';
 
 export interface CalendarObjectsContextType {
   calendarObjs: calendarObj[] | null;
-  setCalendarObj: Dispatch<SetStateAction<calendarObj[]>>;
+  setCalendarObjs: Dispatch<SetStateAction<calendarObj[]>>;
   refetchCalendarList: () => Promise<void>;
   sharedCalendars: sharedObj[];
+  viewMode: 'default' | 'isolate' | 'transparent';
+  setViewMode: React.Dispatch<React.SetStateAction<'default' | 'isolate' | 'transparent'>>;
+  toggleCalendar: (id: string) => void;
+  toggleTransparent: (id: string) => void;
+  toggleIsolate: (id: string) => void;
+  resetViewMode: () => void;
 }
 
 export const CalendarObjectsContext = createContext<CalendarObjectsContextType>({} as CalendarObjectsContextType);
@@ -17,8 +23,15 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
   const { jwtToken, familyProfiles } = useAuthContext();
   const sessionTokenString = jwtToken?.sessionToken ?? null;
 
-  const { calendarObjs, setCalendarIds, sharedObjs, refetch: refetchCalendarList } = useCalendarList(sessionTokenString);
+  const { calendarObjs, setCalendarObjs, sharedObjs, refetch, error } = useCalendarList(sessionTokenString);
+
   const [sharedCalendars, setSharedCalendars] = useState<sharedObj[]>([]);
+
+  const [viewMode, setViewMode] = useState<'default' | 'isolate' | 'transparent'>('default');
+
+  const refetchCalendarList = async () => {
+    await refetch(sessionTokenString);
+  };
 
   // -------------------------------------------
   // shared Calendars
@@ -49,13 +62,85 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
     setSharedCalendars(processedCalendars);
   }, [sharedObjs, familyProfiles]);
 
+  const toggleCalendar = useCallback(
+    (id: string) => {
+      setCalendarObjs((prev) => {
+        const next = prev.map((cal) =>
+          cal.calendarId === id
+            ? {
+                ...cal,
+                shown: !cal.shown,
+              }
+            : cal,
+        );
+        return next;
+      });
+    },
+    [setCalendarObjs],
+  );
+
+  const toggleTransparent = useCallback(
+    (id: string) => {
+      if (viewMode !== 'transparent') setViewMode('transparent');
+
+      setCalendarObjs((prev) => {
+        const next = prev.map((cal) =>
+          cal.calendarId === id
+            ? {
+                ...cal,
+                visibility: (cal.visibility === 'transparent' ? 'default' : 'transparent') as visibility,
+              }
+            : cal,
+        );
+        return next;
+      });
+    },
+    [setCalendarObjs],
+  );
+
+  const toggleIsolate = useCallback(
+    (id: string) => {
+      if (viewMode !== 'isolate') setViewMode('isolate');
+
+      setCalendarObjs((prev) => {
+        const next = prev.map((cal) =>
+          cal.calendarId === id
+            ? {
+                ...cal,
+                visibility: (cal.visibility === 'isolate' ? 'default' : 'isolate') as visibility,
+              }
+            : cal,
+        );
+        return next;
+      });
+    },
+    [setCalendarObjs],
+  );
+
+  const resetViewMode = useCallback(() => {
+    setViewMode('default');
+
+    setCalendarObjs((prev) =>
+      prev.map((cal) => ({
+        ...cal,
+        visibility: 'default',
+      })),
+    );
+  }, [setCalendarObjs]);
+
   return (
     <CalendarObjectsContext.Provider
       value={{
         calendarObjs,
         refetchCalendarList,
-        setCalendarObj: setCalendarIds,
+        setCalendarObjs,
         sharedCalendars,
+        viewMode,
+        setViewMode,
+        toggleCalendar,
+        toggleTransparent,
+        toggleIsolate,
+        resetViewMode,
       }}
     >
       {children}

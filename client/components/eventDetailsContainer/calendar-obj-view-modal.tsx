@@ -1,14 +1,19 @@
-import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 // Adjust these imports to match your project's context path=
+import { lightenColor } from '@/utility/eventColorUtil';
+import { COLORS } from '@/utility/theme';
 import { calendarObj } from '@/utility/types';
+import { Ionicons } from '@expo/vector-icons';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
+import { useUIContext } from '../contexts/ui-context';
+import { calendarObjModalStyles } from './eventDetailsStyles';
 
 export interface CalendarSelectionModalInterface {
   isVisible: boolean;
   setVisible: React.Dispatch<React.SetStateAction<boolean>>;
   selectedCalendarId: string | undefined;
-  onSelectCalendar: (calendar: calendarObj) => void;
+  onSelectCalendar: (calendarId: string) => void;
 }
 
 export default function CalendarSelectionModal({
@@ -19,19 +24,24 @@ export default function CalendarSelectionModal({
 }: CalendarSelectionModalInterface) {
   const { calendarObjs } = useCalendarObjects();
   const [ownedCalendars, setOwnedCalendars] = useState<calendarObj[]>([]);
-
+  const { colorCache, theme } = useUIContext();
+  const styles = calendarObjModalStyles(theme.isDark);
   // Filter owned calendars
   useEffect(() => {
     if (isVisible && calendarObjs) {
-      const filtered = calendarObjs.filter((cal) => cal.owner === true);
+      const filtered = calendarObjs.filter((cal) => cal.accessRole === 'owner' || cal.accessRole === 'writer');
       setOwnedCalendars(filtered);
     }
   }, [isVisible, calendarObjs]);
 
   const handleSelect = (calendar: calendarObj) => {
-    onSelectCalendar(calendar);
+    onSelectCalendar(calendar.calendarId);
     setVisible(false);
   };
+
+  const displayColors = useMemo(() => {
+    return colorCache.allCaches[colorCache.activeCacheId];
+  }, [colorCache.allCaches, colorCache.activeCacheId]);
 
   return (
     <Modal visible={isVisible} transparent={true} animationType="fade" onRequestClose={() => setVisible(false)}>
@@ -43,11 +53,11 @@ export default function CalendarSelectionModal({
         <View style={styles.menuBox}>
           <Text style={styles.title}>Select Calendar</Text>
 
-          <ScrollView style={styles.listContainer} showsVerticalScrollIndicator={true}>
+          <ScrollView showsVerticalScrollIndicator={true}>
             {ownedCalendars.length === 0 ? (
               <Text style={styles.emptyText}>No writable calendars found.</Text>
             ) : (
-              ownedCalendars.map((cal) => {
+              ownedCalendars.map((cal, index) => {
                 const isSelected = cal.calendarId === selectedCalendarId;
                 return (
                   <Pressable
@@ -56,14 +66,20 @@ export default function CalendarSelectionModal({
                     onPress={() => handleSelect(cal)}
                   >
                     <View style={styles.leftRowSection}>
-                      {/* Optional: Displays a color indicator dot if your calendarObj has colors */}
-                      <View style={[styles.colorDot, { backgroundColor: cal.calendarCustomColor || '#4285F4' }]} />
+                      <View
+                        style={[
+                          styles.colorDot,
+                          { backgroundColor: lightenColor(displayColors.colorMap[cal.calendarId], 'border', theme.isDark) || '#4285F4' },
+                        ]}
+                      />
                       <Text style={[styles.calendarName, isSelected && styles.selectedCalendarName]} numberOfLines={1}>
                         {cal.calendarName}
                       </Text>
                     </View>
 
-                    {isSelected && <Text style={styles.checkmark}>✓</Text>}
+                    {isSelected && (
+                      <Ionicons name={'checkmark-outline'} size={16} color={theme.isDark ? COLORS.primaryy.light : COLORS.primaryy.dark} />
+                    )}
                   </Pressable>
                 );
               })
@@ -80,95 +96,3 @@ export default function CalendarSelectionModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)', // Subtle dimming overlay
-  },
-  centeredContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  menuBox: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
-    width: '85%',
-    maxWidth: 320,
-    boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.25)',
-    elevation: 10,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-    color: '#333',
-  },
-  listContainer: {
-    marginVertical: 4,
-  },
-  calendarItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-    marginVertical: 2,
-  },
-  selectedItem: {
-    backgroundColor: '#F0F4FF', // Light tint for selection highlight
-  },
-  pressedItem: {
-    opacity: 0.7,
-    transform: [{ scale: 0.98 }],
-  },
-  leftRowSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 12,
-  },
-  colorDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-  },
-  calendarName: {
-    fontSize: 14,
-    color: '#444',
-    flex: 1,
-  },
-  selectedCalendarName: {
-    fontWeight: '600',
-    color: '#1A73E8',
-  },
-  checkmark: {
-    color: '#1A73E8',
-    fontWeight: '700',
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
-    paddingVertical: 16,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 12,
-  },
-  button: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  cancelText: {
-    color: '#666',
-    fontWeight: '500',
-  },
-});

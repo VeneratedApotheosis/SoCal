@@ -1,5 +1,4 @@
 import { View } from 'react-native';
-import { SCREEN_HEIGHT, SCREEN_WIDTH } from './constants';
 
 //Sets a useState (top, left) given a reference for a modal
 export const getPositions = (
@@ -12,6 +11,8 @@ export const getPositions = (
   >,
   menuHeight: number,
   menuWidth: number,
+  SCREEN_WIDTH: number,
+  SCREEN_HEIGHT: number,
 ) => {
   buttonRef.current?.measureInWindow((x, y, width, height) => {
     const padding = 10;
@@ -52,4 +53,4 @@ export const toTitleCase = (str: string): string => {
       return word.charAt(0).toUpperCase() + word.slice(1);
     })
     .join(' ');
-}
+};

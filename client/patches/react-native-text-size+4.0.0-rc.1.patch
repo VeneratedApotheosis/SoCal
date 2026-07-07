@@ -1,0 +1,20 @@
+diff --git a/node_modules/react-native-text-size/android/build.gradle b/node_modules/react-native-text-size/android/build.gradle
+index 2617bd7..4a1e1e8 100644
+--- a/node_modules/react-native-text-size/android/build.gradle
++++ b/node_modules/react-native-text-size/android/build.gradle
+@@ -26,12 +26,12 @@ buildscript {
+ apply plugin: 'com.android.library'
+ 
+ android {
+-    compileSdkVersion _compileSdkVersion
+-    buildToolsVersion _buildToolsVersion
++    compileSdkVersion 34
++    buildToolsVersion "34.0.0"
+ 
+     defaultConfig {
+         minSdkVersion _minSdkVersion
+-        targetSdkVersion _targetSdkVersion
++        targetSdkVersion 34
+         versionCode 4
+         versionName getPackageVersion()
+     }

@@ -1,6 +1,6 @@
 import { storage } from "@/services/storage";
 import { findClosestColor } from "@/utility/colorCacheUtil";
-import { ACTIVE_ID_KEY, CACHE_STORAGE_KEY, PASTEL_COLORS_2 } from "@/utility/constants";
+import { ACTIVE_ID_KEY, CACHE_STORAGE_KEY, DEFAULT_COLORS } from "@/utility/constants";
 import { calendarObj, colorCache } from "@/utility/types";
 import { useCallback, useEffect, useState } from "react";
 
@@ -9,10 +9,8 @@ export const useColorCache = (calendarObjs: calendarObj[] | null) => {
   const [activeCacheId, setActiveCacheId] = useState<number>(0);
   const [isStorageLoaded, setIsStorageLoaded] = useState(false);
 
-  // -------------------------------------------
-  // Storage Functions
-  // -------------------------------------------
-  
+  // ─── Storage Functions ───────────────────────────────────────────────────────────
+    
   // Load Color Cache from storage
   useEffect(() => {
     const loadFromStorage = async () => {
@@ -26,7 +24,7 @@ export const useColorCache = (calendarObjs: calendarObj[] | null) => {
           setAllCaches([{
             paletteId: 0,
             name: 'Default Palette',
-            palette: PASTEL_COLORS_2,
+            palette: DEFAULT_COLORS,
             colorMap: {},
           } as colorCache]);
         }

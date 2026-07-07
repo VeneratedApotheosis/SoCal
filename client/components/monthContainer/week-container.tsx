@@ -1,13 +1,12 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { Dimensions, View } from 'react-native';
+import { View } from 'react-native';
+import { useScreenSize } from '../contexts/screen-size-context';
 import DayBox from './day-container';
-
-// --- CONSTANTS ---
-const SCREEN_WIDTH = Dimensions.get('window').width;
 
 // --- WeekBox Element (NEEDS TO BE ABSTRACTED AWAY) ---
 export default function WeekBox({ day, weekHeight }: { day: { id: string; date: Date }; weekHeight: number }) {
   const ref = useRef(null);
+  const SCREEN_WIDTH = useScreenSize().width;
   const [unitWidth, setUnitWidth] = useState(SCREEN_WIDTH / 7);
   const [daysOfWeek, setDaysOfWeek] = useState<Date[]>([]);
 

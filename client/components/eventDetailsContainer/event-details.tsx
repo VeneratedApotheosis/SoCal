@@ -2,7 +2,9 @@ import { EventObj } from '@/utility/types';
 
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Keyboard, StyleSheet } from 'react-native';
+import { Keyboard } from 'react-native';
+import { useUIContext } from '../contexts/ui-context';
+import { eventDetailStyles } from './eventDetailsStyles';
 import { EventExpandedView } from './expanded-view';
 
 interface Props {
@@ -15,12 +17,14 @@ export default function EventDetails({ isVisible, event, onClose }: Props) {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['20%', '98%'], []);
   const [currentIndex, setCurrentIndex] = React.useState(-1);
+  const { theme } = useUIContext();
+  const styles = eventDetailStyles(theme.isDark);
 
   useEffect(() => {
     if (isVisible) {
       bottomSheetModalRef.current?.present();
     } else {
-      bottomSheetModalRef.current?.dismiss();
+      if (currentIndex !== -1) bottomSheetModalRef.current?.dismiss();
     }
   }, [isVisible]);
 
@@ -35,49 +39,20 @@ export default function EventDetails({ isVisible, event, onClose }: Props) {
         duration: 250,
       }}
       handleStyle={styles.handleContainer}
+      handleIndicatorStyle={styles.handleIndicator}
       onChange={(index) => {
         Keyboard.dismiss();
         setCurrentIndex(index);
-        if (index === -1) {
-          onClose();
-        }
       }}
+      index={0}
+      onDismiss={onClose}
       stackBehavior="push"
     >
-      <BottomSheetScrollView contentContainerStyle={styles.contentContainer}>
-        {event && <EventExpandedView initialEvent={event} bottomSheetModalRef={bottomSheetModalRef} modalIndex={currentIndex} />}
+      <BottomSheetScrollView style={styles.container}>
+        {event && (
+          <EventExpandedView initialEvent={event} bottomSheetModalRef={bottomSheetModalRef} modalIndex={currentIndex} onClose={onClose} />
+        )}
       </BottomSheetScrollView>
     </BottomSheetModal>
   );
 }
-
-const styles = StyleSheet.create({
-  handleContainer: {
-    backgroundColor: 'white', // Matches your sheet color
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    boxShadow: '0px -2px 4px rgba(0, 0, 0, 0.2)',
-    elevation: 10,
-  },
-  contentContainer: {
-    paddingHorizontal: 24,
-    paddingTop: 8,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  timeRow: {
-    fontSize: 18,
-    color: '#374151', // Darker gray for the "Actionable" time
-    fontWeight: '500',
-    lineHeight: 24,
-  },
-  dateRow: {
-    fontSize: 16,
-    color: '#6B7280', // Lighter gray for the date
-    marginTop: 2,
-  },
-});

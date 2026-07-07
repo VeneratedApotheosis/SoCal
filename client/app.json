@@ -15,11 +15,11 @@
         "ITSAppUsesNonExemptEncryption": false,
         "GIDClientID": "198333533430-s56q7jj007kdk6h9qs0a6gpa8h05vo3u.apps.googleusercontent.com",
         "CFBundleURLTypes": [
-            {
-                "CFBundleURLSchemes": [
-                    "com.googleusercontent.apps.198333533430-s56q7jj007kdk6h9qs0a6gpa8h05vo3u"
-                ]
-            }
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.198333533430-s56q7jj007kdk6h9qs0a6gpa8h05vo3u"
+            ]
+          }
         ]
       }
     },
@@ -37,7 +37,8 @@
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "baseUrl": "/SoCal"
     },
     "plugins": [
       "expo-router",
@@ -59,14 +60,12 @@
           "iosUrlScheme": "com.googleusercontent.apps.198333533430-s56q7jj007kdk6h9qs0a6gpa8h05vo3u"
         }
       ],
-      "expo-web-browser"
-    ]
-    
-    ,
+      "expo-web-browser",
+      "expo-localization"
+    ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true,
-      "baseUrl": "/SoCal"
+      "reactCompiler": true
     },
     "extra": {
       "router": {},

@@ -1,7 +1,8 @@
+import { lightenColor } from '@/utility/eventColorUtil';
 import { calendarObj } from '@/utility/types';
-import { useContext } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
-import { UIContext } from '../../contexts/ui-context';
+import { Modal, Pressable, View } from 'react-native';
+import { useUIContext } from '../../contexts/ui-context';
+import { getCalendarColorModal } from '../customDrawer';
 
 export default function CalendarSettingsColorModal({
   isVisible,
@@ -18,7 +19,8 @@ export default function CalendarSettingsColorModal({
   top: number;
   left: number;
 }) {
-  const { colorCache } = useContext(UIContext);
+  const { colorCache, theme } = useUIContext();
+  const styles = getCalendarColorModal(theme.isDark);
 
   return (
     <Modal
@@ -53,7 +55,11 @@ export default function CalendarSettingsColorModal({
         {colorCache.allCaches[colorCache.activeCacheId].palette.map((color) => (
           <Pressable
             key={color + ' ' + calendar.calendarId}
-            style={({ pressed }) => [styles.colorButton, { backgroundColor: color }, pressed && styles.pressedButton]}
+            style={({ pressed }) => [
+              styles.colorButton,
+              { backgroundColor: lightenColor(color, 'border', theme.isDark) },
+              pressed && styles.pressedButton,
+            ]}
             onPress={() => {
               colorCache.setManualCalendarColor(calendar.calendarId, color);
             }}
@@ -63,32 +69,3 @@ export default function CalendarSettingsColorModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  menuBox: {
-    position: 'absolute',
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 6,
-    width: 150,
-
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)',
-
-    // Android Settings
-    elevation: 10,
-  },
-  colorButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-  },
-  pressedButton: {
-    transform: [{ scale: 0.9 }],
-  },
-});

@@ -1,8 +1,8 @@
 import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
+import { useUIContext } from '@/components/contexts/ui-context';
 import { useUnshareCalendar } from '@/hooks/sharingCalendars/useUnshareCalendar';
-import { globalStyles } from '@/utility/globalStyles';
-import { COLORS, SIZES } from '@/utility/theme';
-import { Keyboard, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { getModalStyles, globalStyles } from '@/utility/globalStyles';
+import { Keyboard, Modal, Pressable, Text, View } from 'react-native';
 import { useAuthContext } from '../../contexts/auth-context';
 
 export const sharedSettingsModalHeight = 50;
@@ -20,6 +20,8 @@ export default function SharedCalendarSettingsModal({ isVisible, setVisible, top
   const { unshare, isLoading, error, clearError } = useUnshareCalendar();
   const { refetchCalendarList } = useCalendarObjects();
   const { jwtToken } = useAuthContext();
+  const { theme } = useUIContext();
+  const styles = getModalStyles(theme.isDark, sharedSettingsModalWidth, sharedSettingsModalHeight);
 
   const handleUnshare = async () => {
     if (!email || !calId || !jwtToken) return;
@@ -52,29 +54,3 @@ export default function SharedCalendarSettingsModal({ isVisible, setVisible, top
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  menuBox: {
-    position: 'absolute',
-    backgroundColor: 'white',
-    borderRadius: 8,
-    minWidth: sharedSettingsModalWidth,
-    height: sharedSettingsModalHeight,
-    justifyContent: 'center',
-    boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)',
-
-    elevation: 10,
-  },
-  menuItem: {
-    paddingVertical: 8,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  menuText: {
-    fontSize: SIZES.m,
-    color: COLORS.text.main,
-  },
-});

@@ -1,11 +1,8 @@
 import { useDate } from '@/hooks/calendarHooks/useDate';
 import { useEffect, useRef, useState } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { FlatList as RoundList } from 'react-native-bidirectional-infinite-scroll';
 import WeekBox from './week-container';
-
-// --- CONSTANTS ---
-const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function MonthContainer({ numWeeks }: { numWeeks: number }) {
   const { days: today, refetch: refetchToday } = useDate(0, 2);
@@ -74,8 +71,5 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: 'white',
     flex: 1,
-  },
-  weekContainer: {
-    width: SCREEN_WIDTH,
   },
 });

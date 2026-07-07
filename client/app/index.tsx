@@ -1,16 +1,19 @@
+//Libraries
+import { useContext } from 'react';
+import { LogBox, View } from 'react-native';
+
 //Components
 import MonthContainer from '@/components/monthContainer/month-container';
 import MultiDayContainer from '@/components/multiDayContainer/multi-day-container';
 import SettingsModal from '@/components/settingsContainer/settings-modal';
 import WelcomeScreen from '@/components/welcome-screen';
 
-import { useContext } from 'react';
-import { View } from 'react-native';
-
 //Global Contexts
 import { EventsContext } from '@/components/contexts/calendar-events-context';
 import { UIContext } from '@/components/contexts/ui-context';
 import { AuthContext } from '../components/contexts/auth-context';
+
+LogBox.ignoreLogs(['[Reanimated] ...']);
 
 // --- MAIN COMPONENT ---
 export default function Index() {
@@ -22,11 +25,9 @@ export default function Index() {
   // --- DISPLAY ---
   return jwtToken ? (
     <View style={{ flex: 1 }}>
-      {(calendarType === '3' || calendarType === '2' || calendarType === '1') && (
-        <MultiDayContainer calendarType={calendarType} events={allEvents} />
-      )}
+      {calendarType.type === 'D' && <MultiDayContainer calendarType={calendarType} events={allEvents} />}
 
-      {calendarType === 'M' && <MonthContainer numWeeks={6} />}
+      {calendarType.type === 'W' && <MonthContainer numWeeks={6} />}
 
       <SettingsModal isVisible={isLoginVisible} onClose={() => setLoginVisible(false)} />
     </View>

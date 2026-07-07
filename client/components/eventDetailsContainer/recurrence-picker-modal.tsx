@@ -1,6 +1,12 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import React, { useMemo } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { COLORS } from '@/utility/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView, useBottomSheetTimingConfigs } from '@gorhom/bottom-sheet';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { Easing } from 'react-native-reanimated';
+import { useUIContext } from '../contexts/ui-context';
+import { recurrenceStyles } from './eventDetailsStyles';
+import { CustomRecurrenceModal } from './recurrence-custom-modal';
 
 // ─── Recurrence options ───────────────────────────────────────────────────────
 
@@ -31,7 +37,11 @@ export function getRecurrenceLabel(recurrence: string[] | null | undefined): str
 }
 
 function isOptionSelected(option: RecurrenceOption, current: string[] | null | undefined): boolean {
-  if (option.isCustom) return false;
+  if (option.isCustom) {
+    const found = RECURRENCE_OPTIONS.find((o) => JSON.stringify(o.value) === JSON.stringify(current ?? null));
+    if (found) return false;
+    return true;
+  }
   return JSON.stringify(option.value) === JSON.stringify(current ?? null);
 }
 
@@ -46,88 +56,71 @@ interface RecurrencePickerModalProps {
 
 export const RecurrencePickerModal = ({ sheetRef, current, onSelect, onCustom }: RecurrencePickerModalProps) => {
   const snapPoints = useMemo(() => ['50%'], []);
+  const { theme } = useUIContext();
+  const styles = recurrenceStyles(theme.isDark);
+  const ruleString = current ? current[0] : '';
+
+  const [isVisible, setIsVisible] = useState<boolean>(false);
+
+  const renderBackdrop = useCallback(
+    (props: any) => <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />,
+    [],
+  );
+
+  const customAnimationConfigs = useBottomSheetTimingConfigs({
+    duration: 500, // Decrease this number to make it even faster
+    easing: Easing.out(Easing.exp),
+  });
 
   return (
-    <BottomSheetModal
-      ref={sheetRef}
-      snapPoints={snapPoints}
-      enablePanDownToClose
-      stackBehavior="push"
-      handleStyle={styles.sheetHandle}
-      handleIndicatorStyle={styles.sheetIndicator}
-    >
-      <BottomSheetView style={styles.sheetContent}>
-        <Text style={styles.sheetTitle}>Repeat</Text>
+    <>
+      <BottomSheetModal
+        ref={sheetRef}
+        snapPoints={snapPoints}
+        enablePanDownToClose
+        stackBehavior="push"
+        handleStyle={styles.sheetHandle}
+        handleIndicatorStyle={styles.sheetIndicator}
+        backdropComponent={renderBackdrop}
+        animationConfigs={customAnimationConfigs}
+      >
+        <BottomSheetView style={styles.sheetContent}>
+          <Text style={styles.sheetTitle}>Repeat</Text>
 
-        {RECURRENCE_OPTIONS.map((option, idx) => {
-          const selected = isOptionSelected(option, current);
-          const isLast = idx === RECURRENCE_OPTIONS.length - 1;
-          return (
-            <View key={option.label}>
-              <TouchableOpacity
-                style={styles.optionRow}
-                activeOpacity={0.6}
-                onPress={() => {
-                  if (option.isCustom) {
-                    sheetRef.current?.dismiss();
-                    onCustom();
-                  } else {
-                    onSelect(option.value);
-                    sheetRef.current?.dismiss();
-                  }
-                }}
-              >
-                <Text style={[styles.optionLabel, option.isCustom && styles.optionCustom]}>{option.label}</Text>
-                {selected && <Text style={styles.checkmark}>✓</Text>}
-              </TouchableOpacity>
-              {!isLast && <View style={styles.optionDivider} />}
-            </View>
-          );
-        })}
-      </BottomSheetView>
-    </BottomSheetModal>
+          {RECURRENCE_OPTIONS.map((option, idx) => {
+            const selected = isOptionSelected(option, current);
+            return (
+              <View key={option.label}>
+                <TouchableOpacity
+                  style={[styles.optionRow, selected && styles.optionSelected]}
+                  activeOpacity={0.6}
+                  onPress={() => {
+                    if (option.isCustom) {
+                      setIsVisible(true);
+                    } else {
+                      onSelect(option.value);
+                      sheetRef.current?.dismiss();
+                    }
+                  }}
+                >
+                  <Text style={[styles.optionLabel, selected && styles.optionSelected]}>{option.label}</Text>
+                  {selected && (
+                    <Ionicons name={'checkmark-outline'} size={16} color={theme.isDark ? COLORS.primaryy.light : COLORS.primaryy.dark} />
+                  )}
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+        </BottomSheetView>
+      </BottomSheetModal>
+      <CustomRecurrenceModal
+        isOpen={isVisible}
+        onClose={() => setIsVisible(false)}
+        rruleString={ruleString}
+        onSave={(newRuleString: string) => {
+          onSelect([newRuleString]);
+        }}
+      />
+    </>
   );
 };
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  sheetHandle: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  sheetIndicator: {
-    backgroundColor: '#d8d8d6',
-    width: 36,
-  },
-  sheetContent: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    paddingBottom: 36,
-  },
-  sheetTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#9b9b97',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    textAlign: 'center',
-    paddingVertical: 10,
-  },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 15,
-    paddingHorizontal: 24,
-  },
-  optionDivider: {
-    height: 1,
-    backgroundColor: '#f0f0ee',
-    marginHorizontal: 24,
-  },
-  optionLabel: { fontSize: 16, color: '#37352f' },
-  optionCustom: { color: '#2383e2' },
-  checkmark: { fontSize: 16, color: '#2383e2', fontWeight: '600' },
-});

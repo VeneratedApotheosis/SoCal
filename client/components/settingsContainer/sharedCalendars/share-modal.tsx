@@ -1,20 +1,22 @@
 import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
+import { useUIContext } from '@/components/contexts/ui-context';
 import { useShareCalendar } from '@/hooks/sharingCalendars/useShareCalendar';
-import { globalStyles } from '@/utility/globalStyles';
-import { COLORS, FONT_WEIGHTS, SIZES } from '@/utility/theme';
-import { shareRole } from '@/utility/types';
+import { globalParameterStyles } from '@/utility/globalStyles';
+import { COLORS } from '@/utility/theme';
+import { accessRole } from '@/utility/types';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import React, { createRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Animated, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { useAuthContext } from '../../contexts/auth-context';
+import { getShareModalStyles } from '../settingsContainerStyles';
 
 export const shareModalRef = createRef<BottomSheetModal>();
 
 export default function ShareModal() {
   const [email, setEmail] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [accessRole, setAccessRole] = useState<shareRole>('reader');
+  const [accessRole, setAccessRole] = useState<accessRole>('reader');
   const [status, setStatus] = useState<'success' | 'error' | null>(null);
 
   const snapPoints = useMemo(() => ['95%'], []);
@@ -25,6 +27,10 @@ export default function ShareModal() {
   const { calendarObjs = [] } = useCalendarObjects();
   const { share, isLoading, error, clearError } = useShareCalendar();
   const { jwtToken } = useAuthContext();
+
+  const { theme } = useUIContext();
+  const styles = getShareModalStyles(theme.isDark);
+  const globalStyles = globalParameterStyles(theme.isDark);
 
   const ownedCalendars = useMemo(() => {
     if (!familyProfiles?.parent?.email || !calendarObjs) return [];
@@ -211,131 +217,13 @@ export default function ShareModal() {
                   onPress={() => toggleSelection(cal.calendarId)}
                 >
                   <Text style={[styles.calendarText, isSelected && styles.calendarTextActive]}>{cal.calendarName}</Text>
-                  {/* Optional: Add a checkmark icon or indicator here if you have Ionicons */}
                   {isSelected && <Ionicons name="checkmark-outline" color={COLORS.primary} size={16} />}
                 </Pressable>
               );
             })
           )}
         </View>
-
-        {/* Share Button */}
       </BottomSheetScrollView>
     </BottomSheetModal>
   );
 }
-
-const styles = StyleSheet.create({
-  modalBackground: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    boxShadow: '0px -4px 10px rgba(0, 0, 0, 0.1)',
-    elevation: 5,
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 'auto',
-    marginBottom: 10,
-  },
-  title: {
-    fontSize: SIZES.l,
-    fontWeight: FONT_WEIGHTS.medium,
-    color: COLORS.text.main,
-  },
-  subtitle: {
-    fontSize: SIZES.s,
-    fontWeight: FONT_WEIGHTS.light,
-    color: COLORS.textLight,
-  },
-  input: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    padding: 12,
-    fontSize: SIZES.m,
-    color: '#1A1A1A',
-    marginBottom: 4,
-    borderWidth: 1,
-    borderColor: '#EAEAEA',
-  },
-  sectionTitle: {
-    fontSize: SIZES.l,
-    fontWeight: FONT_WEIGHTS.medium,
-    color: COLORS.text.main,
-    marginBottom: 12,
-  },
-  scrollContent: {
-    padding: 24,
-  },
-  emptyText: {
-    color: COLORS.textLight,
-    fontStyle: 'italic',
-  },
-  calendarsContainer: {
-    gap: 12,
-    flexDirection: 'column',
-  },
-  calendarItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F9F9F9',
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#EAEAEA',
-  },
-  calendarItemActive: {
-    backgroundColor: '#E8F0FE',
-    borderColor: COLORS.primary,
-  },
-  calendarText: {
-    fontSize: SIZES.m,
-    color: COLORS.text.main,
-    fontWeight: FONT_WEIGHTS.light,
-  },
-  calendarTextActive: {
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  activeIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: COLORS.primary,
-  },
-  shareButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 12,
-    padding: 8,
-    alignItems: 'center',
-    marginTop: 'auto',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 5,
-  },
-  shareButtonDisabled: { backgroundColor: '#A0C2F9' },
-  shareButtonText: {
-    color: 'white',
-    fontSize: SIZES.l,
-    fontWeight: FONT_WEIGHTS.medium,
-  },
-  errorText: {
-    color: '#EA4335',
-    fontSize: SIZES.xs,
-    fontWeight: FONT_WEIGHTS.medium,
-    textAlign: 'center',
-    backgroundColor: '#FEEBEE',
-    padding: 4,
-    borderRadius: 8,
-  },
-  successText: {
-    color: '#3eea35',
-    fontSize: SIZES.xs,
-    fontWeight: FONT_WEIGHTS.medium,
-    textAlign: 'center',
-    backgroundColor: '#ebfeee',
-    padding: 4,
-    borderRadius: 8,
-  },
-});

@@ -12,7 +12,7 @@ export const useAuth = () => {
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
-      clientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID || "",
+      clientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID || '',
       scopes: [
         'openid',
         'https://www.googleapis.com/auth/calendar',
@@ -35,14 +35,13 @@ export const useAuth = () => {
     if (response?.type === 'success' && request?.codeVerifier) {
       setIsLoading(true);
       setError(null);
-      try{
-      loginWithCode(response.params.code, request.codeVerifier, request.redirectUri)
-      } catch{
+      try {
+        loginWithCode(response.params.code, request.codeVerifier, request.redirectUri);
+      } catch {
         setError('Login failed');
-      } finally{
+      } finally {
         setIsLoading(false);
       }
-        
     } else if (response?.type === 'error') {
       setError(response.error?.message || 'Authentication error');
     }

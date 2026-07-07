@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 // Replace this with the actual path to your api file
 import { shareCalendar } from '@/services/api';
-import { shareRole } from '@/utility/types';
+import { accessRole } from '@/utility/types';
 
 export const useShareCalendar = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,7 +11,7 @@ export const useShareCalendar = () => {
     calId: string,
     email: string,
     token: string,
-    role: shareRole
+    role: accessRole
   ) => {
     setIsLoading(true);
     setError(null);

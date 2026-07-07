@@ -1,12 +1,14 @@
-import { DRAWER_DRAGGABLE_HEIGHT } from '@/utility/constants';
 import { getPositions } from '@/utility/drawerUtil';
-import { lightenColor } from '@/utility/eventUtils';
+import { lightenColor } from '@/utility/eventColorUtil';
 import { calendarObj } from '@/utility/types';
 
+import { useScreenSize } from '@/components/contexts/screen-size-context';
+import { getIconColor } from '@/utility/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useUIContext } from '../../contexts/ui-context';
+import { getCalendarIndividual } from '../customDrawer';
 import CalendarSettingsModal from './drawer-calendar-settings-modal';
 
 const menuHeight = 116;
@@ -15,22 +17,39 @@ const menuWidth = 150;
 export default function CalendarDrawerList({
   calendarObj,
   onToggle,
+  isolated,
 }: {
   calendarObj: calendarObj;
   onToggle: (calendarId: string) => void;
+  isolated: 'NA' | 'true' | 'false';
 }) {
+  const { colorCache, theme } = useUIContext();
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
+
   const [isVisible, setVisible] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<View>(null);
-  const [opacity, setOpacity] = useState(calendarObj.shown ? 1 : 0.5);
+  const [opacity, setOpacity] = useState(() => {
+    if (isolated === 'NA') return calendarObj.shown ? 1 : 0.5;
+    else return isolated === 'true' ? 1 : 0.5;
+  });
 
-  const { colorCache } = useUIContext();
+  useEffect(() => {
+    setOpacity(() => {
+      if (isolated === 'NA') return calendarObj.shown ? 1 : 0.5;
+      else return isolated === 'true' ? 1 : 0.5;
+    });
+  }, [calendarObj.shown, isolated]);
+
+  const styles = getCalendarIndividual(theme.isDark);
+  const iconColor = getIconColor(theme.isDark, opacity !== 1);
+
   const [color, setColor] = useState<string>();
 
   //Sync color with colorCache
   useEffect(() => {
-    setColor(lightenColor(colorCache.getCalendarColor(calendarObj.calendarId), 'border'));
-  }, [colorCache.allCaches, colorCache.activeCacheId]);
+    setColor(lightenColor(colorCache.getCalendarColor(calendarObj.calendarId), 'border', theme.isDark));
+  }, [colorCache.allCaches, colorCache.activeCacheId, lightenColor, theme.isDark]);
 
   return (
     <View key={calendarObj.calendarId} style={styles.calendarItem}>
@@ -51,65 +70,41 @@ export default function CalendarDrawerList({
       </View>
 
       {/* --- BUTTONS --- */}
-      <View style={{ flexDirection: 'row' }}>
-        {/* --- SETTINGS BUTTON --- */}
-        <View ref={buttonRef} collapsable={false}>
+      {isolated === 'NA' && (
+        <View style={{ flexDirection: 'row' }}>
+          {/* --- SETTINGS BUTTON --- */}
+          <View ref={buttonRef} collapsable={false}>
+            <Pressable
+              onPress={() => {
+                getPositions(buttonRef, setMenuPos, menuHeight, menuWidth, SCREEN_WIDTH, SCREEN_HEIGHT);
+                setVisible(true);
+              }}
+              style={({ pressed }) => [styles.iconButton, pressed && styles.pressedButton]}
+            >
+              <Ionicons name={'ellipsis-horizontal-outline'} size={14} color={iconColor} />
+            </Pressable>
+          </View>
+          {/* --- SETTINGS MODAL --- */}
+          <CalendarSettingsModal
+            isVisible={isVisible}
+            setVisible={setVisible}
+            calendar={calendarObj}
+            top={menuPos.top}
+            left={menuPos.left}
+          />
+
+          {/* --- VISIBILITY TOGGLE --- */}
           <Pressable
             onPress={() => {
-              getPositions(buttonRef, setMenuPos, menuHeight, menuWidth);
-              setVisible(true);
+              setOpacity(opacity === 0.5 ? 1 : 0.5);
+              onToggle(calendarObj.calendarId);
             }}
             style={({ pressed }) => [styles.iconButton, pressed && styles.pressedButton]}
           >
-            <Ionicons name={'ellipsis-horizontal-outline'} size={14} color={opacity === 1 ? '#333' : '#ccc'} />
+            <Ionicons name={calendarObj.shown ? 'eye-outline' : 'eye-off-outline'} size={14} color={iconColor} />
           </Pressable>
         </View>
-        {/* --- SETTINGS MODAL --- */}
-        <CalendarSettingsModal isVisible={isVisible} setVisible={setVisible} calendar={calendarObj} top={menuPos.top} left={menuPos.left} />
-
-        {/* --- VISIBILITY TOGGLE --- */}
-        <Pressable
-          onPress={() => {
-            setOpacity(opacity === 0.5 ? 1 : 0.5);
-            onToggle(calendarObj.calendarId);
-          }}
-          style={({ pressed }) => [styles.iconButton, pressed && styles.pressedButton]}
-        >
-          <Ionicons name={calendarObj.shown ? 'eye-outline' : 'eye-off-outline'} size={14} color={opacity === 1 ? '#333' : '#ccc'} />
-        </Pressable>
-      </View>
+      )}
     </View>
   );
 }
-const styles = StyleSheet.create({
-  calendarItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 6,
-    backgroundColor: 'white',
-    height: DRAWER_DRAGGABLE_HEIGHT,
-  },
-  calendarInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  colorSquare: {
-    width: 16,
-    height: 16,
-    borderRadius: 4,
-    marginRight: 12,
-  },
-  calendarName: {
-    fontSize: 12,
-    color: '#333',
-    fontWeight: '500',
-  },
-  iconButton: {
-    padding: 4,
-  },
-  pressedButton: {
-    transform: [{ scale: 0.96 }],
-  },
-});

@@ -1,9 +1,11 @@
+import { useScreenSize } from '@/components/contexts/screen-size-context';
+import { useUIContext } from '@/components/contexts/ui-context';
 import { getPositions } from '@/utility/drawerUtil';
-import { globalStyles } from '@/utility/globalStyles';
-import { COLORS } from '@/utility/theme';
+import { getIconColor, globalStyles } from '@/utility/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { getSharedCalIndividualStyles } from '../settingsContainerStyles';
 import SharedCalendarSettingsModal, { sharedSettingsModalHeight, sharedSettingsModalWidth } from './shared-calendar-settings-modal';
 
 export interface SharedCalIndividualProps {
@@ -19,6 +21,10 @@ export default function SharedCalendarIndividual({ calName, accessRole, calId, u
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [isVisible, setVisible] = useState(false);
   const buttonRef = useRef<View>(null);
+  const { theme } = useUIContext();
+  const styles = getSharedCalIndividualStyles(theme.isDark);
+  const iconColor = getIconColor(theme.isDark);
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
 
   return (
     <View key={`${userId}-${idx}`} style={styles.detailRow}>
@@ -49,44 +55,14 @@ export default function SharedCalendarIndividual({ calName, accessRole, calId, u
       <View ref={buttonRef} collapsable={false}>
         <Pressable
           onPress={() => {
-            getPositions(buttonRef, setMenuPos, sharedSettingsModalHeight, sharedSettingsModalWidth);
+            getPositions(buttonRef, setMenuPos, sharedSettingsModalHeight, sharedSettingsModalWidth, SCREEN_WIDTH, SCREEN_HEIGHT);
             setVisible(true);
           }}
           style={({ pressed }) => [styles.iconButton, pressed && globalStyles.pressedButton]}
         >
-          <Ionicons name={'ellipsis-horizontal-circle-outline'} size={20} color={'#333'} />
+          <Ionicons name={'ellipsis-horizontal-circle-outline'} size={20} color={iconColor} />
         </Pressable>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-    alignItems: 'center',
-    paddingVertical: 4,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#CCC',
-  },
-  detailName: {
-    fontSize: 14,
-    color: COLORS.text,
-    flex: 1,
-    marginRight: 10,
-  },
-  detailRole: {
-    fontSize: 12,
-    color: '#888',
-    textTransform: 'capitalize',
-    backgroundColor: '#EAEAEA',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  iconButton: {
-    padding: 4,
-  },
-});
