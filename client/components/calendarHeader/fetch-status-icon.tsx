@@ -5,13 +5,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { useCalendarEvents } from '../contexts/calendar-events-context';
 import { useUIContext } from '../contexts/ui-context';
 
-// Define the props we expect
-interface SyncStatusProps {
-  isLoading: boolean;
-  errorCode?: string | null;
-}
-
-export const FetchStatusIcon = ({ errorCode = null }: SyncStatusProps) => {
+export const FetchStatusIcon = () => {
   const { isLoading, error } = useCalendarEvents();
   const { theme } = useUIContext();
   const iconColor = theme.isDark ? COLORS.border.mutedLight : COLORS.border.mutedDark;

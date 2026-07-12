@@ -3,7 +3,7 @@ import { useUIContext } from '@/components/contexts/ui-context';
 import { lightenColor } from '@/utility/eventColorUtil';
 import { useMemo } from 'react';
 
-export const useEventColors = (calendarId: string) => {
+export const useEventColors = (calendarId: string, newEvent: boolean = false) => {
   const { colorCache, theme } = useUIContext();
   const isDark = theme.isDark;
 

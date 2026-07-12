@@ -10,13 +10,13 @@ export interface LocationContainerProps {
   initialValue: string;
   onLocationSelect: ({ address }: { address: string }) => void;
   editable: boolean;
+  inputColor: string;
 }
 
-export default function LocationContainer({ initialValue, onLocationSelect, editable }: LocationContainerProps) {
+export default function LocationContainer({ initialValue, onLocationSelect, editable, inputColor }: LocationContainerProps) {
   const { jwtToken } = useAuthContext();
   const { theme } = useUIContext();
   const styles = locationStyles(theme.isDark);
-  const inputColor = COLORS.text.lightGray;
   const listColor = theme.isDark ? COLORS.text.lightGray : COLORS.text.darkGray;
 
   const [inputValue, setInputValue] = useState(initialValue);
@@ -49,7 +49,7 @@ export default function LocationContainer({ initialValue, onLocationSelect, edit
     <View style={styles.container}>
       <View style={styles.textInputContainer}>
         <TextInput
-          style={styles.textInput}
+          style={[styles.textInput, inputValue.length === 0 && { fontStyle: 'italic' }]}
           value={inputValue}
           onChangeText={handleTextChange}
           placeholder="Search for a location..."

@@ -2,7 +2,7 @@ import { calendarObj, CalendarView } from '@/utility/types';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { useSharedValue, withSpring } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 //Global Contexts
@@ -15,13 +15,15 @@ import { COLORS } from '@/utility/theme';
 import { Plus } from 'lucide-react-native';
 import { useCalendarGroups } from '../contexts/calendar-groups-context';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
+import { useScreenSize } from '../contexts/screen-size-context';
 import { getColorPaletteStyles } from '../settingsContainer/settingsContainerStyles';
 import { getDrawerStyles } from './customDrawer';
 import DraggableCalendar from './drawer-draggable-calendar';
 
 export default function CustomDrawerContent(props: any) {
   const { jwtToken, calendarType, setCalendarType, familyProfiles } = useAuthContext();
-  const { calendarObjs, toggleCalendar, viewMode, resetViewMode } = useCalendarObjects();
+  const { fixedSidebar, isWeb } = useScreenSize();
+  const { toggleCalendar, viewMode, resetViewMode } = useCalendarObjects();
   const { calendarGroups } = useCalendarGroups();
   const { setLoginVisible, theme: uiTheme } = useUIContext();
   const hoverIndex = useSharedValue<number | null>(null);
@@ -52,7 +54,7 @@ export default function CustomDrawerContent(props: any) {
   //open up settings/login page
   const handleSettingspress = () => {
     setLoginVisible(true);
-    props.navigation.closeDrawer();
+    if (!fixedSidebar) props.navigation.closeDrawer();
   };
 
   const handleDrop = (thisIndex: number, newIndex: number): void => {
@@ -146,49 +148,45 @@ export default function CustomDrawerContent(props: any) {
     toggleExpand(contentHeight);
   }, [viewMode]);
 
-  // The animated style applied to the outer clipping container
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      height: animatedHeight.value,
-      opacity: animatedHeight.value > 0 ? 1 : 0, // Optional: fade out when fully closed
-    };
-  });
-
   if (!jwtToken) return null;
 
   return (
-    <SafeAreaView style={styles.headerContainer}>
+    <SafeAreaView style={[styles.headerContainer, { padding: fixedSidebar ? 0 : 20 }]}>
       {/* --- USER INFO --- */}
-      <View style={styles.profile}>
-        <Pressable onPress={handleSettingspress} style={{ flexDirection: 'row', gap: 10 }}>
-          <View style={{ width: 42, height: 42, backgroundColor: '#4986e7', borderRadius: 8 }}></View>
-          <View>
-            <Text style={styles.username}>
-              {familyProfiles && familyProfiles.parent ? toTitleCase(familyProfiles.parent.name) : 'Username'}
-            </Text>
-            <Text style={styles.email}>{familyProfiles && familyProfiles.parent ? familyProfiles.parent.email : 'Email'}</Text>
-          </View>
-        </Pressable>
-      </View>
+      {!fixedSidebar && (
+        <View style={styles.profile}>
+          <Pressable onPress={handleSettingspress} style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ width: 42, height: 42, backgroundColor: '#4986e7', borderRadius: 8 }}></View>
+            <View>
+              <Text style={styles.username}>
+                {familyProfiles && familyProfiles.parent ? toTitleCase(familyProfiles.parent.name) : 'Username'}
+              </Text>
+              <Text style={styles.email}>{familyProfiles && familyProfiles.parent ? familyProfiles.parent.email : 'Email'}</Text>
+            </View>
+          </Pressable>
+        </View>
+      )}
       <ScrollView>
         {/* --- CALENDAR TYPE TOGGLE --- */}
-        <View style={styles.viewToggleContainer}>
-          <Text style={styles.headerText}>View Mode</Text>
-          {[1, 2, 3, 7].map((option) => (
-            <Pressable
-              key={option}
-              onPress={() => {
-                setCalendarType({ type: 'D', num: option });
-                props.navigation.closeDrawer();
-              }}
-              style={({ pressed }) => getButtonStyle({ type: 'D', num: option }, pressed)}
-            >
-              <Text style={[globalStyles.smallButtonText, calendarType.num === option && globalStyles.activeSmallButtonText]}>
-                {`${option} days`}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+        {!isWeb && (
+          <View style={styles.viewToggleContainer}>
+            <Text style={styles.headerText}>View Mode</Text>
+            {[1, 2, 3, 7].map((option) => (
+              <Pressable
+                key={option}
+                onPress={() => {
+                  setCalendarType({ type: 'D', num: option });
+                  if (!fixedSidebar) props.navigation.closeDrawer();
+                }}
+                style={({ pressed }) => getButtonStyle({ type: 'D', num: option }, pressed)}
+              >
+                <Text style={[globalStyles.smallButtonText, calendarType.num === option && globalStyles.activeSmallButtonText]}>
+                  {`${option} days`}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
         {/* --- CALENDAR VISIBILITY TOGGLE --- */}
         <View style={{ marginBottom: 10 }}>
           <Text style={[styles.headerText]}>Calendars</Text>

@@ -1,16 +1,15 @@
-import { DRAWER_DRAGGABLE_HEIGHT } from "@/utility/constants";
-import { baseFlexStyles, getBasicThemeStyles, getBasicTypographyStyles } from "@/utility/globalStyles";
-import { SIZES } from "@/utility/theme";
-import { StyleSheet } from "react-native";
+import { DRAWER_DRAGGABLE_HEIGHT } from '@/utility/constants';
+import { baseFlexStyles, getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
+import { SIZES } from '@/utility/theme';
+import { StyleSheet } from 'react-native';
 
 export const getDrawerStyles = (isDark: boolean) => {
-  const baseTheme = getBasicThemeStyles(isDark);  
+  const baseTheme = getBasicThemeStyles(isDark);
   const baseText = getBasicTypographyStyles(isDark);
-  
+
   return StyleSheet.create({
     headerContainer: {
       flex: 1,
-      padding: 20,
       ...baseTheme.backgroundMuted,
     },
     headerText: {
@@ -38,13 +37,12 @@ export const getDrawerStyles = (isDark: boolean) => {
       borderRadius: 8,
     },
   });
-  
-}
+};
 
 export const getFolderIndividual = (isDark: boolean) => {
-  const baseTheme = getBasicThemeStyles(isDark);  
+  const baseTheme = getBasicThemeStyles(isDark);
   const baseText = getBasicTypographyStyles(isDark);
-  
+
   return StyleSheet.create({
     folderContainer: {
       flexDirection: 'row',
@@ -68,47 +66,46 @@ export const getFolderIndividual = (isDark: boolean) => {
       transform: [{ scale: 0.96 }],
     },
   });
-}
+};
 
 export const getCalendarIndividual = (isDark: boolean) => {
-  const baseTheme = getBasicThemeStyles(isDark);  
+  const baseTheme = getBasicThemeStyles(isDark);
   const baseText = getBasicTypographyStyles(isDark);
-  
-  return StyleSheet.create({
-  calendarItem: {
-    ...baseFlexStyles.rowBetween,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    height: DRAWER_DRAGGABLE_HEIGHT,
-    borderRadius: 12,
-  },
-  calendarInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  colorSquare: {
-    width: 16,
-    height: 16,
-    borderRadius: 4,
-    marginRight: 12,
-  },
-  calendarName: {
-    ...baseText.body,
-    fontSize: 12,
-  },
-  iconButton: {
-    padding: 4,
-  },
-  pressedButton: {
-    transform: [{ scale: 0.96 }],
-  },
-});
 
-}
+  return StyleSheet.create({
+    calendarItem: {
+      ...baseFlexStyles.rowBetween,
+      paddingVertical: 6,
+      paddingHorizontal: 8,
+      height: DRAWER_DRAGGABLE_HEIGHT,
+      borderRadius: 12,
+    },
+    calendarInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    colorSquare: {
+      width: 16,
+      height: 16,
+      borderRadius: 4,
+      marginRight: 12,
+    },
+    calendarName: {
+      ...baseText.body,
+      fontSize: 12,
+    },
+    iconButton: {
+      padding: 4,
+    },
+    pressedButton: {
+      transform: [{ scale: 0.96 }],
+    },
+  });
+};
 
 export const getFolderRenameModal = (isDark: boolean) => {
-  const baseTheme = getBasicThemeStyles(isDark);  
+  const baseTheme = getBasicThemeStyles(isDark);
   const baseText = getBasicTypographyStyles(isDark);
 
   return StyleSheet.create({
@@ -146,7 +143,7 @@ export const getFolderRenameModal = (isDark: boolean) => {
       borderRadius: 6,
       paddingHorizontal: 10,
       paddingVertical: 8,
-      ...baseText.body,
+      ...baseText.input,
     },
     buttonRow: {
       paddingTop: 6,
@@ -168,13 +165,12 @@ export const getFolderRenameModal = (isDark: boolean) => {
       fontWeight: '600',
     },
   });
-
-}
+};
 
 export const getFolderModal = (isDark: boolean, width: number, height: number) => {
-  const baseTheme = getBasicThemeStyles(isDark);  
+  const baseTheme = getBasicThemeStyles(isDark);
   const baseText = getBasicTypographyStyles(isDark);
-  
+
   return StyleSheet.create({
     backdrop: {
       ...StyleSheet.absoluteFillObject,
@@ -187,7 +183,7 @@ export const getFolderModal = (isDark: boolean, width: number, height: number) =
       minWidth: width,
       minHeight: height,
       boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)',
-  
+
       elevation: 10,
     },
     menuItem: {
@@ -203,11 +199,10 @@ export const getFolderModal = (isDark: boolean, width: number, height: number) =
       ...baseText.subtitle,
     },
   });
-  
-}
+};
 
 export const getCalendarColorModal = (isDark: boolean) => {
-  const baseTheme = getBasicThemeStyles(isDark);  
+  const baseTheme = getBasicThemeStyles(isDark);
   const baseText = getBasicTypographyStyles(isDark);
 
   return StyleSheet.create({
@@ -238,4 +233,4 @@ export const getCalendarColorModal = (isDark: boolean) => {
       transform: [{ scale: 0.9 }],
     },
   });
-}
+};

@@ -1,7 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Drawer } from 'expo-router/drawer';
 
-import CalendarHeader from '../components/calendarHeader/calendar-header';
 import CustomDrawerContent from '../components/custom-drawer/drawer-container';
 
 //Proivders
@@ -13,7 +12,9 @@ import { RangeProvider } from '@/components/contexts/calendar-range-context';
 import { ScreenSizeProvider } from '@/components/contexts/screen-size-context';
 import { TimeZoneProvider } from '@/components/contexts/time-zone-context';
 import { UIProvider } from '@/components/contexts/ui-context';
+import { PORTAL_HOME_NAME } from '@/utility/constants';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { PortalHost } from '@gorhom/portal';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '../components/contexts/auth-context';
 
@@ -40,7 +41,7 @@ export default function RootLayout() {
                             <Drawer.Screen
                               name="index"
                               options={{
-                                header: ({ options }) => <CalendarHeader />,
+                                headerShown: false,
                                 headerTransparent: false,
                                 headerTitle: 'Calender',
                                 drawerLabel: 'Calendar',
@@ -48,6 +49,7 @@ export default function RootLayout() {
                               }}
                             />
                           </Drawer>
+                          <PortalHost name={PORTAL_HOME_NAME} />
                         </BottomSheetModalProvider>
                       </UIProvider>
                     </RangeProvider>

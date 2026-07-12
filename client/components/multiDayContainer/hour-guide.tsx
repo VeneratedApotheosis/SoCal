@@ -12,10 +12,6 @@ export default function HourGuide({ hourHeight, labelWidth }: { hourHeight: numb
       style={{
         width: labelWidth,
         backgroundColor: 'transparent',
-        borderTopWidth: 1,
-        borderRightWidth: 1,
-        borderTopColor: theme.isDark ? COLORS.border.mutedDark : COLORS.border.mutedLight,
-        borderRightColor: theme.isDark ? COLORS.border.mutedDark : COLORS.border.mutedLight,
       }}
     >
       {hours.map((hour) => (

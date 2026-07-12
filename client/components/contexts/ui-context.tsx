@@ -22,6 +22,14 @@ interface UIContextType {
     isDark: boolean;
     setThemeMode: React.Dispatch<React.SetStateAction<string>>;
   };
+  sideBar: {
+    isSidebarExpanded: boolean;
+    setSidebarExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+    isSidebarLoading: boolean;
+    setSidebarLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  };
+  isSidebarExpanded: boolean;
+  setSidebarExpanded: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const UIContext = createContext<UIContextType>({} as UIContextType);
@@ -33,10 +41,11 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
   const colorCache = useColorCache(calendarObjs);
   const theme = useTheme();
 
-  // -------------------------------------------
-  // Now
-  // -------------------------------------------
-  //update "now"
+  const [isSidebarExpanded, setSidebarExpanded] = useState<boolean>(true);
+  const [isSidebarLoading, setSidebarLoading] = useState<boolean>(true);
+
+  // ─── Now ───────────────────────────────────────────────────────────
+
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(interval);
@@ -50,6 +59,14 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
         setLoginVisible,
         colorCache,
         theme,
+        isSidebarExpanded,
+        setSidebarExpanded,
+        sideBar: {
+          isSidebarExpanded,
+          setSidebarExpanded,
+          isSidebarLoading,
+          setSidebarLoading,
+        },
       }}
     >
       {children}

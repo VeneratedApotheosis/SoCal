@@ -18,7 +18,9 @@
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.7.10",
     "@expo/vector-icons": "^15.0.3",
+    "@fanchenbao/react-native-scroll-indicator": "^0.4.0",
     "@gorhom/bottom-sheet": "^5.2.14",
+    "@gorhom/portal": "^1.0.14",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-google-signin/google-signin": "^16.1.2",
     "@react-navigation/drawer": "^7.8.0",

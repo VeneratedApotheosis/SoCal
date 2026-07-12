@@ -1,23 +1,22 @@
-import { getIconColor } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { EventObj } from '@/utility/types';
-import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import React, { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { Platform, TextInput, View } from 'react-native';
 import { useCalendarEvents } from '../contexts/calendar-events-context';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
+import { useScreenSize } from '../contexts/screen-size-context';
 import { useUIContext } from '../contexts/ui-context';
 import CalendarObjView from './calendar-obj-view';
 import { eventViewStyles } from './eventDetailsStyles';
 import { EventTimeDatePicker } from './expanded-view-time';
 import PlaceSearchBar from './location-container';
+import { MutateButtons } from './mutate-buttons';
 import MutateRecurrenceModal from './mutate-recurrence-modal';
 
 interface ExpandedViewProps {
   initialEvent: EventObj;
   bottomSheetModalRef: React.RefObject<BottomSheetModal | null>;
-  modalIndex: number;
   onClose: () => void;
 }
 
@@ -25,17 +24,16 @@ export function eventsAreEqual(a: EventObj, b: EventObj): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-const menuHeight = 116;
-const menuWidth = 150;
-
-export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, modalIndex, onClose }: ExpandedViewProps) => {
+export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose }: ExpandedViewProps) => {
   const { mutateEvent, uniqueCalendars } = useCalendarEvents();
+  const { isWeb } = useScreenSize();
   const { theme } = useUIContext();
   const { calendarObjs } = useCalendarObjects();
   const styles = eventViewStyles(theme.isDark);
-  const inputColor = theme.isDark ? COLORS.text.light : COLORS.text.lightGray;
-  const iconColor = getIconColor(theme.isDark);
-  const [titleHeight, setTitleHeight] = useState(35);
+  const inputColor = theme.isDark ? COLORS.text.subtleDark : COLORS.text.lightGray;
+
+  const [titleHeight, setTitleHeight] = useState(36);
+  const [descriptionHeight, setDescriptionHeight] = useState(36);
 
   const [event, setEvent] = useState<EventObj>(initialEvent);
   const [creatingEvent, setCreatingEvent] = useState<boolean>(initialEvent.id === '');
@@ -96,7 +94,7 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, modalInde
     updateField('calendarId', calendarId);
   };
 
-  const handleWebChange = (event: any) => {
+  const handleWebTitleChange = (event: any) => {
     if (Platform.OS === 'web') {
       const el = event.target;
       el.style.height = '0px';
@@ -104,6 +102,17 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, modalInde
 
       el.style.height = `${nextHeight}px`;
       setTitleHeight(nextHeight);
+    }
+  };
+
+  const handleWebDescriptionChange = (event: any) => {
+    if (Platform.OS === 'web') {
+      const el = event.target;
+      el.style.height = '0px';
+      const nextHeight = Math.max(40, el.scrollHeight);
+
+      el.style.height = `${nextHeight}px`;
+      setDescriptionHeight(nextHeight);
     }
   };
 
@@ -151,163 +160,18 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, modalInde
   };
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       <View style={styles.container}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          {editableEvent && creatingEvent && (
-            <Pressable
-              style={[
-                styles.card,
-                {
-                  padding: 8,
-                  alignSelf: 'flex-start',
-                  flexDirection: 'row',
-                  gap: 5,
-                  alignItems: 'center',
-                  marginBottom: 8,
-                  backgroundColor:
-                    hasChanges && event.title !== ''
-                      ? theme.isDark
-                        ? COLORS.primaryy.light
-                        : COLORS.primaryy.dark
-                      : theme.isDark
-                        ? COLORS.primaryy.mutedBackgroundDark
-                        : COLORS.primaryy.mutedBackgroundLight,
-                },
-              ]}
-              onPress={() => {
-                if (editableEvent && creatingEvent && event.title !== '') {
-                  closeModal();
-                  mutateEvent.createEvent(event);
-                }
-              }}
-            >
-              <Ionicons
-                name={'add-outline'}
-                size={16}
-                color={
-                  hasChanges && event.title !== ''
-                    ? theme.isDark
-                      ? COLORS.text.light
-                      : COLORS.text.light
-                    : theme.isDark
-                      ? COLORS.primaryy.mutedTextLight
-                      : COLORS.primaryy.mutedTextDark
-                }
-              />
-              <Text
-                style={{
-                  marginRight: 5,
-                  color:
-                    hasChanges && event.title !== ''
-                      ? theme.isDark
-                        ? COLORS.text.light
-                        : COLORS.text.light
-                      : theme.isDark
-                        ? COLORS.primaryy.mutedTextLight
-                        : COLORS.primaryy.mutedTextDark,
-                }}
-              >
-                Create Event
-              </Text>
-            </Pressable>
-          )}
-          {editableEvent && !creatingEvent && (
-            <Pressable
-              style={[
-                styles.card,
-                {
-                  padding: 8,
-                  alignSelf: 'flex-start',
-                  flexDirection: 'row',
-                  gap: 5,
-                  alignItems: 'center',
-                  marginBottom: 8,
-                  backgroundColor:
-                    hasChanges && event.title !== ''
-                      ? theme.isDark
-                        ? COLORS.primaryy.light
-                        : COLORS.primaryy.dark
-                      : theme.isDark
-                        ? COLORS.primaryy.mutedBackgroundDark
-                        : COLORS.primaryy.mutedBackgroundLight,
-                },
-              ]}
-              onPress={() => {
-                if (hasChanges) handleEditModal();
-              }}
-            >
-              <Text
-                style={{
-                  marginHorizontal: 5,
-                  color:
-                    hasChanges && event.title !== ''
-                      ? theme.isDark
-                        ? COLORS.text.light
-                        : COLORS.text.light
-                      : theme.isDark
-                        ? COLORS.primaryy.mutedTextLight
-                        : COLORS.primaryy.mutedTextDark,
-                }}
-              >
-                Save Changes
-              </Text>
-            </Pressable>
-          )}
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {editableEvent && !creatingEvent && (
-              <>
-                <Pressable
-                  style={[
-                    styles.card,
-                    {
-                      padding: 8,
-                      paddingHorizontal: 12,
-                      alignSelf: 'flex-start',
-                      flexDirection: 'row',
-                      gap: 5,
-                      alignItems: 'center',
-                      marginBottom: 8,
-                    },
-                  ]}
-                  onPress={() => {
-                    closeModal();
-                    mutateEvent.createEvent(event);
-                  }}
-                >
-                  <Ionicons name={'copy-outline'} size={16} color={iconColor} />
-                </Pressable>
-                <Pressable
-                  style={[
-                    styles.card,
-                    {
-                      padding: 8,
-                      paddingHorizontal: 12,
-                      alignSelf: 'flex-start',
-                      flexDirection: 'row',
-                      gap: 5,
-                      alignItems: 'center',
-                      marginBottom: 8,
-                    },
-                  ]}
-                  onPress={handleDeleteModal}
-                >
-                  <Ionicons name={'trash-outline'} size={16} color={iconColor} />
-                </Pressable>
-              </>
-            )}
-          </View>
-        </View>
         {/* Title */}
         <View style={styles.card}>
           <TextInput
-            style={[styles.titleInput, { height: titleHeight }]}
+            style={[styles.titleInput, { height: titleHeight }, event.title.length === 0 && { fontStyle: 'italic' }]}
             value={event.title}
             onChangeText={(text) => updateField('title', text)}
             onFocus={() => bottomSheetModalRef.current?.snapToIndex(1)}
-            onChange={Platform.OS === 'web' ? handleWebChange : undefined}
+            onChange={Platform.OS === 'web' ? handleWebTitleChange : undefined}
             onContentSizeChange={Platform.OS !== 'web' ? (e) => setTitleHeight(e.nativeEvent.contentSize.height) : undefined}
-            placeholder="Add Title"
+            placeholder="Add Title..."
             placeholderTextColor={inputColor}
             multiline={true}
             scrollEnabled={false}
@@ -315,12 +179,17 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, modalInde
           />
         </View>
         {/* Time */}
-        <View style={styles.card}>
+        <View style={[styles.card, { flex: 1 }]}>
           <EventTimeDatePicker event={event} editable={editableEvent} onUpdate={updateField} />
         </View>
         {/* Place */}
         <View style={[styles.card, { zIndex: 10, padding: 0 }]}>
-          <PlaceSearchBar initialValue={event.location} onLocationSelect={handleLocationSelect} editable={editableEvent} />
+          <PlaceSearchBar
+            initialValue={event.location}
+            onLocationSelect={handleLocationSelect}
+            editable={editableEvent}
+            inputColor={inputColor}
+          />
         </View>
         {/* Calendar Obj */}
         <View style={styles.card}>
@@ -329,9 +198,18 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, modalInde
         {/* Description */}
         <View style={styles.card}>
           <TextInput
-            style={styles.descriptionInput}
+            style={[
+              styles.descriptionInput,
+              {
+                minHeight: 0,
+                height: descriptionHeight,
+              },
+              event.description.length === 0 && { fontStyle: 'italic' },
+            ]}
             value={event.description}
             onChangeText={(text) => updateField('description', text)}
+            onChange={Platform.OS === 'web' ? handleWebDescriptionChange : undefined}
+            onContentSizeChange={Platform.OS !== 'web' ? (e) => setDescriptionHeight(e.nativeEvent.contentSize.height) : undefined}
             placeholder="Add description…"
             placeholderTextColor={inputColor}
             multiline
@@ -339,6 +217,16 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, modalInde
             editable={editableEvent}
           />
         </View>
+        {/* Mutate Buttons */}
+        <MutateButtons
+          editableEvent={editableEvent}
+          creatingEvent={creatingEvent}
+          hasChanges={hasChanges}
+          event={event}
+          closeModal={closeModal}
+          handleEditModal={handleEditModal}
+          handleDeleteModal={handleDeleteModal}
+        />
       </View>
       <MutateRecurrenceModal
         isVisible={mutateModalVisible}
@@ -360,6 +248,6 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, modalInde
         }
         type={mutateRecurrenceType}
       />
-    </>
+    </View>
   );
 };

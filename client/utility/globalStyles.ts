@@ -102,6 +102,11 @@ export const getBasicTypographyStyles = (isDark: boolean) => {
       fontWeight: '500',
       color: defaultColor,
     },
+    input: {
+      fontSize: SIZES.input,
+      fontWeight: '500',
+      color: defaultColor,
+    },
     body: {
       fontSize: SIZES.s,
       fontWeight: FONT_WEIGHTS.light,
@@ -278,7 +283,7 @@ export const getHeaderStyles = (isDark: boolean) => {
       flexDirection: 'row',
       alignItems: 'stretch',
       ...baseTheme.backgroundMuted,
-      padding: 16,
+      paddingVertical: 16,
       gap: 10,
     },
     waffle: {

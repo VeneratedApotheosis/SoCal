@@ -45,7 +45,7 @@ export default function SharedCalendars() {
   // -------------------------------------------
   // Calendar View Modes and Expanded View
   // -------------------------------------------
-  const [viewMode, setViewMode] = useState('calendars');
+  const [viewMode, setViewMode] = useState('users');
   const [expandedId, setExpandedId] = useState<string[]>([]);
 
   const activeCalendars = useMemo(() => {

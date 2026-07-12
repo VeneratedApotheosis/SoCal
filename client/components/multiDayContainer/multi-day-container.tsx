@@ -8,10 +8,15 @@ import {
   HEADER_HEIGHT,
   HOUR_LABEL_WIDTH,
   PAST_BUFFER,
+  WEB_DATE_HEADER_PADDING,
+  WEB_DRAWER_WIDTH,
+  WEB_MUTED_PADDING,
+  WEB_X_PADDING,
+  WEB_Y_PADDING,
 } from '@/utility/constants';
 import { AllDayPool, CalendarView, EventObj, EventWithLayout } from '@/utility/types';
 import { FlashList, FlashListRef } from '@shopify/flash-list';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DeviceEventEmitter, Platform, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -26,6 +31,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { getPositionsFromPointer } from '@/utility/drawerUtil';
 import { getShortTimeZone } from '@/utility/timeZoneUtil';
 import { useCalendarEvents } from '../contexts/calendar-events-context';
 import { useCalendarIndex } from '../contexts/calendar-index-context';
@@ -34,6 +40,7 @@ import { useScreenSize } from '../contexts/screen-size-context';
 import { useTimeZoneContext } from '../contexts/time-zone-context';
 import { useUIContext } from '../contexts/ui-context';
 import EventDetails from '../eventDetailsContainer/event-details';
+import WebEventDetails, { webEventHeight, webEventWidth } from '../eventDetailsContainer/web-event-details';
 import DayContainer from './day-container';
 import HourGuide from './hour-guide';
 import { getCalendarGridStyles } from './multiDayStyles';
@@ -48,20 +55,27 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 const emptyPool = Array(10).fill({ isActive: false, eventId: '', name: '', color: '', offset: 0, length: 0 });
 
 export default function MultiDayContainer({ calendarType, events }: { calendarType: CalendarView; events: EventObj[] }) {
+  // contexts
   const { days } = useCalendarRange();
   const { currentMonthText, setCurrentMonthText, resetDate } = useCalendarIndex();
   const { timeZone } = useTimeZoneContext();
-  const { theme } = useUIContext();
+  const { theme, sideBar } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;
 
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
-  const GRID_WIDTH = SCREEN_WIDTH - HOUR_LABEL_WIDTH;
+  // Dimensions
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, isWeb, fixedSidebar } = useScreenSize();
+  const GRID_WIDTH = useMemo(() => {
+    const rawWidth = SCREEN_WIDTH - HOUR_LABEL_WIDTH + 1;
+    const webPadding = -1 * Number(isWeb) * WEB_X_PADDING;
+    const sideBarPadding =
+      fixedSidebar * Number(!(sideBar.isSidebarExpanded !== !sideBar.isSidebarLoading)) * (WEB_DRAWER_WIDTH + WEB_MUTED_PADDING);
+    return rawWidth + webPadding - sideBarPadding;
+  }, [sideBar.isSidebarExpanded, sideBar.isSidebarLoading]);
 
   const dividers = calendarType.num || 3;
   const dayWidth = Math.round(GRID_WIDTH / dividers);
   const [initialDayWidth] = useState<number>(dayWidth);
   const sharedDayWidth = useSharedValue(dayWidth);
-
   useEffect(() => {
     sharedDayWidth.value = dayWidth;
   }, [dayWidth, sharedDayWidth]);
@@ -69,7 +83,6 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
   const { hourHeight } = usePinchZoom();
 
   const listRef = useAnimatedRef<FlashListRef<any>>();
-
   useEffect(() => {
     const subscription = DeviceEventEmitter.addListener('JUMP_TO_TODAY', () => {
       if (listRef.current) {
@@ -97,26 +110,55 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
 
   const { groupedTimedEvents, groupedAllDayEvents, extraLongAllday } = useEventGrouping(displayedEvents);
 
-  // Event Details Modal
+  // ─── Event Details Modal ───────────────────────────────────────────────────────────
+
   const [eventDetailsVisible, setEventDetailsVisible] = useState(false);
+  const [webDetailsVisible, setWebDetailsVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventObj | null>(null);
+  const [newEvent, setNewEvent] = useState<EventObj | null>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
 
   const handlePress = useCallback(
-    (event: EventObj | null, newEvent: boolean) => {
-      if (eventDetailsVisible) {
+    (event: EventObj | null, newEvent: boolean, e: any) => {
+      if (eventDetailsVisible || webDetailsVisible) {
         if (newEvent) {
           setSelectedEvent(event);
           setEventDetailsVisible(false);
-        } else setSelectedEvent(event);
+          setWebDetailsVisible(false);
+          setNewEvent(null);
+        } else {
+          setSelectedEvent(event);
+          setNewEvent(null);
+          handleWebPress(e);
+        }
       } else {
         setSelectedEvent(event);
-        setEventDetailsVisible(true);
+        if (isWeb) {
+          setWebDetailsVisible(true);
+          handleWebPress(e);
+        } else setEventDetailsVisible(true);
+
+        if (newEvent) setNewEvent(event);
+        else setNewEvent(null);
       }
     },
-    [eventDetailsVisible],
+    [eventDetailsVisible, webDetailsVisible, isWeb],
   );
 
-  // Scroll Variables
+  const handleWebPress = (event: any) => {
+    const { pageX, pageY } = event.nativeEvent;
+    getPositionsFromPointer(pageX, pageY, setMenuPos, webEventHeight, webEventWidth, SCREEN_WIDTH, SCREEN_HEIGHT);
+  };
+
+  const closeEventDetails = () => {
+    setSelectedEvent(null);
+    setEventDetailsVisible(false);
+    setWebDetailsVisible(false);
+    setNewEvent(null);
+  };
+
+  // ─── Scroll Variables ───────────────────────────────────────────────────────────
+
   const scrollX = useSharedValue<number>(initialDayWidth * PAST_BUFFER);
   const scrollY = useSharedValue<number>(0);
   const contextY = useSharedValue<number>(0);
@@ -149,6 +191,10 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
 
   // ─── Vertical SCroll ───────────────────────────────────────────────────────────
 
+  const maxScrollLimit = (isWeb: number, hourHeight: number): number => {
+    return hourHeight * 24 - SCREEN_HEIGHT + HEADER_HEIGHT + DATE_HEADER_HEIGHT + isWeb * (WEB_Y_PADDING + WEB_DATE_HEADER_PADDING * 2);
+  };
+
   const webContainerRef = useRef<any>(null);
   useEffect(() => {
     if (Platform.OS !== 'web' || !webContainerRef.current) return;
@@ -159,7 +205,7 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
       if (isHorizontalScroll) return;
 
       const minScroll = -currentAllDayHeight.value;
-      const maxScroll = hourHeight * 24 - SCREEN_HEIGHT + HEADER_HEIGHT + DATE_HEADER_HEIGHT;
+      const maxScroll = maxScrollLimit(isWeb, hourHeight);
       scrollY.value = Math.max(minScroll, Math.min(scrollY.value + e.deltaY, maxScroll));
     };
 
@@ -179,13 +225,13 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
       contextY.value = scrollY.value;
     })
     .onUpdate((event) => {
-      const minScroll = 0;
-      const maxScroll = hourHeight * 24 - SCREEN_HEIGHT + HEADER_HEIGHT + DATE_HEADER_HEIGHT;
+      const minScroll = -currentAllDayHeight.value;
+      const maxScroll = maxScrollLimit(isWeb, hourHeight);
       scrollY.value = Math.max(minScroll, Math.min(contextY.value - event.translationY, maxScroll));
     })
     .onEnd((event) => {
       const minScroll = -currentAllDayHeight.value;
-      const maxScroll = hourHeight * 24 - SCREEN_HEIGHT + HEADER_HEIGHT + DATE_HEADER_HEIGHT + currentAllDayHeight.value;
+      const maxScroll = maxScrollLimit(isWeb, hourHeight);
       scrollY.value = withDecay({
         velocity: -event.velocityY,
         clamp: [minScroll, maxScroll],
@@ -254,11 +300,12 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
         handlePress={handlePress}
         scrollY={scrollY}
         scrollX={scrollX}
-        isVisible={eventDetailsVisible}
+        isVisible={eventDetailsVisible || webDetailsVisible}
         selectedEventId={selectedEvent?.id ? selectedEvent?.id : null}
         currentAllDayHeight={currentAllDayHeight}
         eventPool={eventPool}
         widthsDictionary={widthsDictionary}
+        newEvent={newEvent}
       />
     ),
     [
@@ -269,6 +316,7 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
       handlePress,
       scrollY,
       eventDetailsVisible,
+      webDetailsVisible,
       selectedEvent,
       currentAllDayHeight,
       scrollX,
@@ -276,7 +324,14 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
   );
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          height: SCREEN_HEIGHT - HEADER_HEIGHT - isWeb * WEB_Y_PADDING,
+        },
+      ]}
+    >
       {/* --- FAILED ATTEMPT, WILL TRY LATER --- */}
       {/* {indices.map((__, index) => {
           return <AllDayPoolChip key={index} index={index} eventPool={eventPool} scrollX={scrollX} widthsDictionary={widthsDictionary} />;
@@ -285,12 +340,20 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
       <GestureDetector gesture={verticalPan}>
         <Animated.View ref={webContainerRef} style={{ flex: 1, overflow: 'visible' }}>
           {/* Hour Guide */}
-          <View style={{ flex: 1, flexDirection: 'row', overflow: 'visible' }}>
-            <View style={{ flexDirection: 'column' }}>
-              <View style={[styles.timeZone, { height: hourHeight }]}>
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              overflow: 'hidden',
+            }}
+          >
+            <View style={styles.sideBarContainer}>
+              <View style={[styles.timeZone, { height: DATE_HEADER_HEIGHT + isWeb * WEB_DATE_HEADER_PADDING * 2 }]}>
                 <Text style={styles.timeZoneText}>{getShortTimeZone(new Date(), timeZone)}</Text>
               </View>
-              <Animated.View style={[animatedAllDayStyle, styles.allDay, { top: hourHeight }]}>
+              <Animated.View
+                style={[animatedAllDayStyle, styles.allDay, { top: DATE_HEADER_HEIGHT + isWeb * WEB_DATE_HEADER_PADDING * 2 }]}
+              >
                 <Text style={styles.allDayText}>All-Day</Text>
               </Animated.View>
               <Animated.View style={[animatedHourGuideStyle, { zIndex: 8 }]}>
@@ -314,11 +377,20 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
               renderItem={renderDay}
               showsHorizontalScrollIndicator={false}
               key={`timeline-width-${dayWidth}`}
+              snapToAlignment={'start'}
             />
           </View>
         </Animated.View>
       </GestureDetector>
       <EventDetails event={selectedEvent} isVisible={eventDetailsVisible} onClose={() => setEventDetailsVisible(false)} />
+      <WebEventDetails
+        event={selectedEvent}
+        isVisible={webDetailsVisible}
+        onClose={closeEventDetails}
+        setVisible={setWebDetailsVisible}
+        top={menuPos.top}
+        left={menuPos.left}
+      />
     </View>
   );
 }

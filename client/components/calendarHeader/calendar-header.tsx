@@ -1,3 +1,4 @@
+import { WEB_MUTED_PADDING } from '@/utility/constants';
 import { getHeaderStyles, getIconColor } from '@/utility/globalStyles';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DrawerActions } from '@react-navigation/native';
@@ -6,28 +7,43 @@ import { DeviceEventEmitter, Pressable, Text, TextInput, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthContext } from '../contexts/auth-context';
 import { useCalendarIndex } from '../contexts/calendar-index-context';
+import { useScreenSize } from '../contexts/screen-size-context';
 import { useUIContext } from '../contexts/ui-context';
+import CalendarTypePicker from './calendar-type';
 import { FetchStatusIcon } from './fetch-status-icon';
 
 export default function CalendarHeader() {
   const { jwtToken } = useAuthContext();
   const navigation = useNavigation();
   const { currentMonthText } = useCalendarIndex();
-  const { now, theme } = useUIContext();
+  const { now, theme, sideBar, setLoginVisible } = useUIContext();
+  const { isWeb, fixedSidebar } = useScreenSize();
   const styles = getHeaderStyles(theme.isDark);
   const iconColor = getIconColor(theme.isDark);
   const handleJumpToToday = () => {
-    // Fire off the signal instantly
     DeviceEventEmitter.emit('JUMP_TO_TODAY');
   };
 
+  const wafflePress = () => {
+    if (fixedSidebar) {
+      sideBar.setSidebarExpanded((prev) => !prev);
+      sideBar.setSidebarLoading(true);
+    } else {
+      navigation.dispatch(DrawerActions.openDrawer());
+    }
+  };
+
+  const handleSettingspress = () => {
+    setLoginVisible(true);
+  };
+
   return (
-    <SafeAreaView edges={['top']}>
+    <SafeAreaView edges={['top']} style={{ zIndex: 10 }}>
       {jwtToken && (
-        <View style={styles.headerContainer}>
+        <View style={[styles.headerContainer, { paddingHorizontal: 16 + isWeb * WEB_MUTED_PADDING }]}>
           {/* --- Waffle --- */}
           <View style={{ justifyContent: 'center' }}>
-            <Pressable onPress={() => navigation.dispatch(DrawerActions.openDrawer())} style={styles.waffle}>
+            <Pressable onPress={wafflePress} style={styles.waffle}>
               <Ionicons name="menu" size={28} color={iconColor} />
             </Pressable>
           </View>
@@ -40,7 +56,13 @@ export default function CalendarHeader() {
           {/* --- Extra Buttons on the Right --- */}
 
           <View style={styles.headerButtonContainer}>
-            <FetchStatusIcon isLoading={false} />
+            <FetchStatusIcon />
+            {!!isWeb && <CalendarTypePicker />}
+            <View style={{ justifyContent: 'center' }}>
+              <Pressable onPress={handleSettingspress}>
+                <Ionicons name={'settings-outline'} size={24} color={iconColor} />
+              </Pressable>
+            </View>
             <View style={{ justifyContent: 'center' }}>
               <Pressable style={styles.headerButton} onPress={handleJumpToToday}>
                 <Text style={styles.headerButtonText}>{now.toLocaleString('default', { day: 'numeric' })}</Text>

@@ -1,6 +1,5 @@
-import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ScrollView, Text, View } from 'react-native';
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 
 import { getSettingBackgroundStyles } from '@/components/settingsContainer/settingsContainerStyles';
@@ -15,18 +14,11 @@ interface Props {
   onClose: () => void;
 }
 
-export default function SettingsModal({ isVisible, onClose }: Props) {
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+export default function SettingsContainer({ isVisible, onClose }: Props) {
   const { theme } = useUIContext();
   const styles = getSettingBackgroundStyles(theme.isDark);
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
   const snapPoints = useMemo(() => [SCREEN_HEIGHT * 0.98], [SCREEN_HEIGHT]);
-
-  useEffect(() => {
-    if (isVisible) {
-      bottomSheetModalRef.current?.present();
-    }
-  }, [isVisible]);
 
   const [index, setIndex] = useState(0);
   const [routes, setRoutes] = useState<{ key: string; title: string }[]>([
@@ -56,27 +48,27 @@ export default function SettingsModal({ isVisible, onClose }: Props) {
   }, [SCREEN_WIDTH]);
 
   const ProfileSettings = () => (
-    <BottomSheetScrollView key={1} style={styles.scrollViewContainer}>
+    <ScrollView key={1} style={styles.scrollViewContainer}>
       <Login />
-    </BottomSheetScrollView>
+    </ScrollView>
   );
   const AppearanceSettings = () => (
-    <BottomSheetScrollView key={1} style={styles.scrollViewContainer}>
+    <ScrollView key={1} style={styles.scrollViewContainer}>
       <AppearanceContainer />
-    </BottomSheetScrollView>
+    </ScrollView>
   );
   const ProfileAndAppearanceSettings = () => (
-    <BottomSheetScrollView key={1} style={[styles.scrollViewContainer]}>
+    <ScrollView key={1} style={[styles.scrollViewContainer]}>
       <View style={{ flexDirection: 'row' }}>
         <Login />
         <AppearanceContainer />
       </View>
-    </BottomSheetScrollView>
+    </ScrollView>
   );
   const CalendarSettings = () => (
-    <BottomSheetScrollView key={1} style={styles.scrollViewContainer}>
+    <ScrollView key={1} style={styles.scrollViewContainer}>
       <Text>CalendarSettings</Text>
-    </BottomSheetScrollView>
+    </ScrollView>
   );
 
   const renderScene = SceneMap({
@@ -87,37 +79,22 @@ export default function SettingsModal({ isVisible, onClose }: Props) {
   });
 
   return (
-    <BottomSheetModal
-      ref={bottomSheetModalRef}
-      index={1}
-      snapPoints={snapPoints}
-      enablePanDownToClose={true}
-      animationConfigs={{
-        duration: 500,
-      }}
-      onDismiss={onClose}
-      handleStyle={styles.handleContainer}
-      handleIndicatorStyle={styles.handleIndicator}
-      stackBehavior={'push'}
-    >
-      {/* --- SETTINGS COMPONENT --- */}
-      <View style={{ flex: 1 }}>
-        <TabView
-          navigationState={{ index, routes: routes }}
-          renderScene={renderScene}
-          onIndexChange={setIndex}
-          tabBarPosition="bottom"
-          renderTabBar={(props) => (
-            <TabBar
-              {...props}
-              indicatorStyle={styles.indicator}
-              style={styles.tabBar}
-              activeColor={theme.isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark}
-              inactiveColor={theme.isDark ? COLORS.text.subtleLight : COLORS.text.subtleDark}
-            />
-          )}
-        />
-      </View>
-    </BottomSheetModal>
+    <View style={{ flex: 1 }}>
+      <TabView
+        navigationState={{ index, routes: routes }}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        tabBarPosition="bottom"
+        renderTabBar={(props) => (
+          <TabBar
+            {...props}
+            indicatorStyle={styles.indicator}
+            style={styles.tabBar}
+            activeColor={theme.isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark}
+            inactiveColor={theme.isDark ? COLORS.text.subtleLight : COLORS.text.subtleDark}
+          />
+        )}
+      />
+    </View>
   );
 }

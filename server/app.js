@@ -8,6 +8,12 @@ const db = require('./db.js');
 
 const app = express();
 app.use(cors());
+
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  next();
+});
+
 app.use(express.json());
 
 // ===========================================================

@@ -43,8 +43,47 @@ export const getPositions = (
   });
 };
 
+export const getPositionsFromPointer = (
+  pointerX: number,
+  pointerY: number,
+  setMenuPos: React.Dispatch<
+    React.SetStateAction<{
+      top: number;
+      left: number;
+    }>
+  >,
+  menuHeight: number,
+  menuWidth: number,
+  SCREEN_WIDTH: number,
+  SCREEN_HEIGHT: number,
+) => {
+  const padding = 10;
+
+  // --- VERTICAL LOGIC (Y) ---
+  // If opening below the pointer clips off-screen, open above it
+  const showAbove = pointerY + menuHeight > SCREEN_HEIGHT - padding;
+  let top = showAbove ? pointerY - menuHeight : pointerY;
+
+  // SAFETY: Don't let it go above the status bar or below the bottom edge
+  top = Math.max(padding + 40, top); // 40px extra for notch/status bar
+  top = Math.min(top, SCREEN_HEIGHT - menuHeight - padding);
+
+  // --- HORIZONTAL LOGIC (X) ---
+  // If opening to the right of the pointer clips off-screen, shift it to the left
+  const showLeft = pointerX + menuWidth > SCREEN_WIDTH - padding;
+  let left = showLeft ? pointerX - menuWidth : pointerX;
+
+  // SAFETY: Don't let it go off the left or right edges
+  left = Math.max(padding, left);
+  left = Math.min(left, SCREEN_WIDTH - menuWidth - padding);
+
+  setMenuPos({
+    top: top,
+    left: left,
+  });
+};
+
 export const toTitleCase = (str: string): string => {
-  // Convert the whole string to lowercase first for consistent results
   return str
     .toLowerCase()
     .split(' ')

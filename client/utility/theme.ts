@@ -78,6 +78,7 @@ export const SIZES = {
   xs: 11,
   s: 13,
   m: 14,
+  input: 16,
   l: 18,
   xl: 22,
   icon: 20,

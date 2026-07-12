@@ -14,7 +14,7 @@ export interface AllDayChipProps {
   event: EventObj;
   day: Date;
   layout: EventWithLayout;
-  handlePress: (event: EventObj) => void;
+  handlePress: (event: EventObj, e: any) => void;
   dayWidth: number;
   isVisible: boolean;
   selectedEventId: string | null;
@@ -165,7 +165,7 @@ function AllDayChip({
         ></View>
       ) : (
         <Pressable
-          onPress={() => handlePress(event)}
+          onPress={(e: any) => handlePress(event, e)}
           style={[
             styles.eventContainer,
             {

@@ -1,11 +1,21 @@
 // --- CONSTANTS ---
 export const HEADER_HEIGHT = 80;
 export const HOUR_HEIGHT = 40;
-export const HOUR_LABEL_WIDTH = 40;
+export const HOUR_LABEL_WIDTH = 50;
 export const DATE_HEADER_HEIGHT = 40;
 export const EVENT_GAP = 10;
 export const EVENT_OFFSET = 15;
 export const ALL_DAY_HEIGHT = 26;
+
+// --- web constants ---
+export const WEB_DRAWER_WIDTH = 300;
+export const WEB_DATE_HEADER_PADDING = 10;
+export const WEB_GRID_PADDING = 24;
+export const WEB_MUTED_PADDING = 24;
+export const WEB_WHITE_X_PADDING = 16;
+export const WEB_WHITE_Y_PADDING = 16;
+export const WEB_X_PADDING = WEB_WHITE_X_PADDING * 2 + WEB_MUTED_PADDING * 2;
+export const WEB_Y_PADDING = WEB_WHITE_Y_PADDING * 2 + WEB_MUTED_PADDING;
 
 // -- Storage Keys ---
 export const CACHE_STORAGE_KEY = '@ui_color_caches';
@@ -14,6 +24,8 @@ export const THEME_STORAGE_KEY = '@ui_theme';
 export const PROFILE_STORAGE_KEY = '@user_profiles';
 export const CALENDAR_GROUPS_KEY = '@calendar_groups';
 export const TIME_ZONE_KEY = '@time_zone';
+
+export const PORTAL_HOME_NAME = 'layoutPortal';
 
 export const DEFAULT_COLORS = [
   '#f8deff', //287°, 13%, 100%

@@ -224,14 +224,16 @@ export const CustomRecurrenceModal = ({ isOpen, onClose, rruleString, onSave }: 
               {/* --- Ends --- */}
               <View style={styles.sectionFinal}>
                 <Text style={styles.sectionLabel}>Ends</Text>
-                <View style={styles.radioGroup}>
+                <View style={[styles.radioGroup, { justifyContent: 'space-evenly' }]}>
                   {/* Option: Never */}
-                  <TouchableOpacity style={styles.radioRow} onPress={() => setEndsType('never')}>
-                    <View style={[styles.radioOuter, endsType === 'never' && styles.radioOuterActive]}>
-                      {endsType === 'never' && <View style={styles.radioInner} />}
-                    </View>
-                    <Text style={styles.radioText}>Never</Text>
-                  </TouchableOpacity>
+                  <View style={styles.radioRow}>
+                    <TouchableOpacity style={styles.radioRowInline} onPress={() => setEndsType('never')}>
+                      <View style={[styles.radioOuter, endsType === 'never' && styles.radioOuterActive]}>
+                        {endsType === 'never' && <View style={styles.radioInner} />}
+                      </View>
+                      <Text style={styles.radioText}>Never</Text>
+                    </TouchableOpacity>
+                  </View>
 
                   {/* Option: On Date */}
                   <View style={styles.radioRow}>

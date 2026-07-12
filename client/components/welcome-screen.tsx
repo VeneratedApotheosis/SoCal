@@ -6,6 +6,8 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 
 export default function WelcomeScreen() {
   const { promptAsync, isLoading, jwtToken } = useAuth();
+  console.log(isLoading);
+
   return (
     <View style={styles.homepg}>
       {/* --- calendar icon --- */}

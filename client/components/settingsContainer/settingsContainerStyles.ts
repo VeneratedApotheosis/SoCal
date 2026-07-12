@@ -1,6 +1,6 @@
-import { baseFlexStyles, getBasicThemeStyles, getBasicTypographyStyles } from "@/utility/globalStyles";
-import { COLORS, FONT_WEIGHTS, SIZES } from "@/utility/theme";
-import { StyleSheet } from "react-native";
+import { baseFlexStyles, getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
+import { COLORS, FONT_WEIGHTS, SIZES } from '@/utility/theme';
+import { StyleSheet } from 'react-native';
 
 //background of the settings
 export const getSettingBackgroundStyles = (isDark: boolean) => {
@@ -12,30 +12,30 @@ export const getSettingBackgroundStyles = (isDark: boolean) => {
       borderTopLeftRadius: 15,
       borderTopRightRadius: 15,
       color: 'blue',
-      boxShadow: "0px -2px 4px rgba(0, 0, 0, 0.1)",
+      boxShadow: '0px -2px 4px rgba(0, 0, 0, 0.1)',
       elevation: 10,
     },
-    handleIndicator : {
-      backgroundColor: isDark ? COLORS.background.mutedLight : COLORS.background.mutedDark
+    handleIndicator: {
+      backgroundColor: isDark ? COLORS.background.mutedLight : COLORS.background.mutedDark,
     },
     tabBar: {
       ...baseTheme.background,
       elevation: 0,
-      boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)",
+      boxShadow: '0px 0px 0px rgba(0, 0, 0, 0)',
       fontSize: 12,
     },
     indicator: {
-      ...baseTheme.background
+      ...baseTheme.background,
     },
-    tabContainer: { 
-      flex: 1, 
+    tabContainer: {
+      flex: 1,
       ...baseTheme.backgroundMuted,
-      padding: 16 
+      padding: 16,
     },
     scrollViewContainer: {
-      ...baseTheme.backgroundMuted
-    }
-  })
+      ...baseTheme.backgroundMuted,
+    },
+  });
 };
 
 //each card styles
@@ -47,9 +47,9 @@ export const getSettingCardStyles = (isDark: boolean) => {
     container: {
       borderRadius: 16,
       overflow: 'hidden',
-        ...baseTheme.background,
+      ...baseTheme.background,
       marginBottom: 16,
-      boxShadow: isDark ? "0px 1px 2px rgba(0, 0, 0, 0)" : "0px 1px 2px rgba(0, 0, 0, 0.05)",
+      boxShadow: isDark ? '0px 1px 2px rgba(0, 0, 0, 0)' : '0px 1px 2px rgba(0, 0, 0, 0.05)',
       elevation: isDark ? 0 : 2,
     },
     trigger: {
@@ -69,7 +69,7 @@ export const getSettingCardStyles = (isDark: boolean) => {
       paddingBottom: 20,
       gap: 16,
     },
-  })
+  });
 };
 
 //profile (name and picture and logout)
@@ -112,14 +112,14 @@ export const getSettingProfileStyles = (isDark: boolean) => {
     buttonText: {
       ...baseText.title,
       color: isDark ? COLORS.secondary.textDark : COLORS.secondary.textLight,
-      textAlign: "center"
+      textAlign: 'center',
     },
-  })
+  });
 };
 
 //theme (light, dark, auto)
 export const getSettingThemeStyles = (isDark: boolean) => {
-  const baseTheme = getBasicThemeStyles(isDark);  
+  const baseTheme = getBasicThemeStyles(isDark);
   const baseText = getBasicTypographyStyles(isDark);
 
   return StyleSheet.create({
@@ -137,7 +137,7 @@ export const getSettingThemeStyles = (isDark: boolean) => {
     buttonIcon: {
       marginBottom: 8,
     },
-    // Button 
+    // Button
     buttonSelected: {
       ...baseTheme.borderInverted,
       ...baseTheme.background,
@@ -150,13 +150,13 @@ export const getSettingThemeStyles = (isDark: boolean) => {
       ...baseText.subtitle,
       ...baseText.darkGrayColor,
       marginTop: 8,
-    }
-  })
+    },
+  });
 };
 
 //color palette
 export const getColorPaletteStyles = (isDark: boolean) => {
-  const baseTheme = getBasicThemeStyles(isDark);  
+  const baseTheme = getBasicThemeStyles(isDark);
   const baseText = getBasicTypographyStyles(isDark);
 
   return StyleSheet.create({
@@ -165,7 +165,7 @@ export const getColorPaletteStyles = (isDark: boolean) => {
     },
     subLabel: {
       ...baseText.subtitle,
-      color: isDark ? COLORS.text.subtleLight : COLORS.text.subtleDark, 
+      color: isDark ? COLORS.text.subtleLight : COLORS.text.subtleDark,
     },
     modifyText: {
       ...baseText.subtitle,
@@ -208,86 +208,97 @@ export const getColorPaletteStyles = (isDark: boolean) => {
     },
     colorStrip: { gap: 8 },
     colorGrid: { ...baseFlexStyles.rowLeft, flexWrap: 'wrap', gap: 10 },
-  })
+  });
 };
 
 //color palette editing
 export const getColorEditStyles = (isDark: boolean) => {
-  const baseTheme = getBasicThemeStyles(isDark);  
+  const baseTheme = getBasicThemeStyles(isDark);
   const baseText = getBasicTypographyStyles(isDark);
 
   return StyleSheet.create({
     content: { padding: 20, gap: 16 },
-    headerRow: { 
+    headerRow: {
       ...baseFlexStyles.rowBetween,
     },
-    editLabel: { 
+    editLabel: {
       ...baseText.subtitle,
     },
-    
+
     // Grid / Strip
     colorStrip: { gap: 8 },
-    colorGrid: { 
+    colorGrid: {
       ...baseFlexStyles.rowLeft,
-      flexWrap: 'wrap', 
-      gap: 10 },
+      flexWrap: 'wrap',
+      gap: 10,
+    },
     selectedCircle: {
       transform: [{ scale: 1.1 }],
       // ring effect simulation
-      boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.5)",
+      boxShadow: '0px 0px 4px rgba(0, 0, 0, 0.5)',
       elevation: 4,
     },
     addCircle: {
-      width: 40, height: 40, borderRadius: 20,
-      borderWidth: 2, borderStyle: 'dashed',
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      borderWidth: 2,
+      borderStyle: 'dashed',
       ...baseTheme.borderMuted,
       ...baseFlexStyles.centerAll,
     },
 
     // Edit Card
     editorCard: {
-      padding: 16, borderRadius: 12, borderWidth: 2,
+      padding: 16,
+      borderRadius: 12,
+      borderWidth: 2,
       ...baseTheme.borderMuted,
-      borderColor: isDark? COLORS.border.dark : COLORS.border.light,
+      borderColor: isDark ? COLORS.border.dark : COLORS.border.light,
     },
-    inputLabel: { 
-      marginBottom: 8, 
+    inputLabel: {
+      marginBottom: 8,
       ...baseText.subtitle,
     },
-    inputRow: { 
+    inputRow: {
       gap: 8,
       ...baseFlexStyles.rowLeft,
     },
     textInput: {
-      flex: 1, height: 40, borderRadius: 8, paddingHorizontal: 12,
+      flex: 1,
+      height: 40,
+      borderRadius: 8,
+      paddingHorizontal: 12,
       ...baseTheme.background,
       ...baseTheme.border,
-      ...baseText.body,
+      ...baseText.input,
+      fontWeight: '400',
       borderWidth: 1,
     },
-    
+
     // Buttons
-    buttonGroup: { 
+    buttonGroup: {
       ...baseFlexStyles.rowLeft,
-      gap: 8 },
-    saveBtn: { 
-      backgroundColor: isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark,
-      paddingHorizontal: 12, 
-      paddingVertical: 6, 
-      borderRadius: 8 
+      gap: 8,
     },
-    saveBtnText: {  ...baseText.subtitle, color: COLORS.white, },
-    cancelBtn: { 
-      paddingHorizontal: 12, 
-      paddingVertical: 6 
+    saveBtn: {
+      backgroundColor: isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 8,
+    },
+    saveBtnText: { ...baseText.subtitle, color: COLORS.white },
+    cancelBtn: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
     },
     cancelBtnText: { ...baseText.subtitle, ...baseText.subtleColor },
-    removeBtn: { 
-      backgroundColor: 'rgba(239, 44, 44, 0.1)', 
-      paddingHorizontal: 8, 
+    removeBtn: {
+      backgroundColor: 'rgba(239, 44, 44, 0.1)',
+      paddingHorizontal: 8,
       paddingVertical: 0,
       ...baseFlexStyles.centerAll,
-      borderRadius: 8 
+      borderRadius: 8,
     },
     removeBtnText: { ...baseText.subtitle, color: COLORS.secondary.backgroundLight },
 
@@ -301,13 +312,13 @@ export const getColorEditStyles = (isDark: boolean) => {
     },
     eventText: {
       ...baseText.title,
-    }
-  })
+    },
+  });
 };
 
 //appearance container
 export const getSettingAppearanceStyles = (isDark: boolean) => {
-  const baseTheme = getBasicThemeStyles(isDark);  
+  const baseTheme = getBasicThemeStyles(isDark);
   const baseText = getBasicTypographyStyles(isDark);
 
   return StyleSheet.create({
@@ -340,12 +351,12 @@ export const getSettingAppearanceStyles = (isDark: boolean) => {
       fontSize: 11,
       fontWeight: '600',
     },
-  })
+  });
 };
 
-//subscribed container 
+//subscribed container
 export const getSubscribedCalStyles = (isDark: boolean) => {
-  const baseTheme = getBasicThemeStyles(isDark);  
+  const baseTheme = getBasicThemeStyles(isDark);
   const baseText = getBasicTypographyStyles(isDark);
 
   return StyleSheet.create({
@@ -379,32 +390,32 @@ export const getSubscribedCalStyles = (isDark: boolean) => {
     borderTop: {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: isDark ? COLORS.border.mutedDark : COLORS.border.mutedLight,
-    }
-  })
+    },
+  });
 };
 
 //shared container
 export const getSharedCalStyles = (isDark: boolean) => {
-  const baseTheme = getBasicThemeStyles(isDark);  
+  const baseTheme = getBasicThemeStyles(isDark);
   const baseText = getBasicTypographyStyles(isDark);
 
   return StyleSheet.create({
     toggleButtonContainer: {
-      flexDirection: 'row', 
-      borderRadius: 10, 
-      padding: 4, 
-      height: 35, 
+      flexDirection: 'row',
+      borderRadius: 10,
+      padding: 4,
+      height: 35,
     },
     toggleButtonSegment: {
-      flex: 1, 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      borderRadius: 8 
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: 8,
     },
     toggleButtonActiveSegement: {
-      backgroundColor: isDark ? COLORS.background.selectedDark : COLORS.background.selectedLight, 
-      elevation: 3, 
-      boxShadow: "0px 0px 0px rgba(0, 0, 0, 0.1)",
+      backgroundColor: isDark ? COLORS.background.selectedDark : COLORS.background.selectedLight,
+      elevation: 3,
+      boxShadow: '0px 0px 0px rgba(0, 0, 0, 0.1)',
     },
     pressedButton: {
       opacity: 0.8,
@@ -412,7 +423,7 @@ export const getSharedCalStyles = (isDark: boolean) => {
     },
     activeButton: {
       ...baseTheme.backgroundMuted,
-    },  
+    },
     smallButtonText: {
       ...baseText.body,
       fontWeight: FONT_WEIGHTS.light,
@@ -439,7 +450,7 @@ export const getSharedCalStyles = (isDark: boolean) => {
       borderRadius: 12,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: isDark ? COLORS.border.mutedDark : COLORS.border.mutedLight,
-      boxShadow: isDark ? "0px 1px 2px rgba(0, 0, 0, 0)" : "0px 0px 3px rgba(0, 0, 0, 0.1)",
+      boxShadow: isDark ? '0px 1px 2px rgba(0, 0, 0, 0)' : '0px 0px 3px rgba(0, 0, 0, 0.1)',
     },
     accordionHeader: {
       ...baseFlexStyles.rowBetween,
@@ -471,11 +482,11 @@ export const getSharedCalStyles = (isDark: boolean) => {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: isDark ? COLORS.border.mutedDark : COLORS.border.mutedLight,
     },
-  })
+  });
 };
 
 export const getSharedCalIndividualStyles = (isDark: boolean) => {
-  const baseTheme = getBasicThemeStyles(isDark);  
+  const baseTheme = getBasicThemeStyles(isDark);
   const baseText = getBasicTypographyStyles(isDark);
 
   return StyleSheet.create({
@@ -506,9 +517,9 @@ export const getSharedCalIndividualStyles = (isDark: boolean) => {
 };
 
 export const getShareModalStyles = (isDark: boolean) => {
-  const baseTheme = getBasicThemeStyles(isDark);  
+  const baseTheme = getBasicThemeStyles(isDark);
   const baseText = getBasicTypographyStyles(isDark);
-  
+
   return StyleSheet.create({
     modalBackground: {
       ...baseTheme.background,
@@ -533,7 +544,7 @@ export const getShareModalStyles = (isDark: boolean) => {
       ...baseText.subtleColor,
       borderRadius: 12,
       padding: 12,
-      fontSize: SIZES.m,
+      fontSize: SIZES.input,
       marginBottom: 4,
     },
     sectionTitle: {
@@ -578,11 +589,10 @@ export const getShareModalStyles = (isDark: boolean) => {
       flexDirection: 'row',
       gap: 5,
     },
-    shareButtonDisabled: { backgroundColor: isDark ? COLORS.primaryy.mutedBackgroundDark : COLORS.primaryy.mutedBackgroundLight,
-    },
+    shareButtonDisabled: { backgroundColor: isDark ? COLORS.primaryy.mutedBackgroundDark : COLORS.primaryy.mutedBackgroundLight },
     shareButtonText: {
       ...baseText.title,
-      color: "white",
+      color: 'white',
     },
     errorText: {
       color: isDark ? COLORS.secondary.textDark : COLORS.secondary.textLight,
@@ -603,5 +613,4 @@ export const getShareModalStyles = (isDark: boolean) => {
       borderRadius: 8,
     },
   });
-  
-}
+};

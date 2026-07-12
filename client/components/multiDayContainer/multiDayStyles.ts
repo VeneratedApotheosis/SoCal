@@ -1,4 +1,4 @@
-import { ALL_DAY_HEIGHT, DATE_HEADER_HEIGHT, HOUR_HEIGHT, HOUR_LABEL_WIDTH } from '@/utility/constants';
+import { ALL_DAY_HEIGHT, HOUR_LABEL_WIDTH } from '@/utility/constants';
 import { baseFlexStyles, getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { StyleSheet } from 'react-native';
@@ -44,7 +44,6 @@ export const getEventCardStyles = (isDark: boolean) => {
   return StyleSheet.create({
     eventContainer: {
       borderWidth: isDark ? 0 : 1,
-      ...baseTheme.background,
       borderColor: isDark ? COLORS.black : COLORS.white,
       overflow: 'hidden',
       position: 'absolute',
@@ -52,7 +51,6 @@ export const getEventCardStyles = (isDark: boolean) => {
     },
     event: {
       flex: 1,
-      borderLeftWidth: 6,
       borderRadius: 4,
       padding: 4,
     },
@@ -73,9 +71,7 @@ export const getDateHeaderStyles = (isDark: boolean) => {
     date: {
       ...baseTheme.background,
       ...baseFlexStyles.centerAll,
-      height: DATE_HEADER_HEIGHT,
       borderRightWidth: 1,
-      borderTopWidth: 1,
       ...baseTheme.border,
     },
     dateText: {
@@ -99,6 +95,11 @@ export const getCalendarGridStyles = (isDark: boolean) => {
       flex: 1,
       elevation: 0,
     },
+    sideBarContainer: {
+      flexDirection: 'column',
+      borderRightWidth: 1,
+      ...baseTheme.border,
+    },
     timeZone: {
       width: HOUR_LABEL_WIDTH,
       zIndex: 10,
@@ -106,9 +107,6 @@ export const getCalendarGridStyles = (isDark: boolean) => {
       textAlign: 'center',
       ...baseTheme.background,
       padding: 3,
-      borderRightWidth: 1,
-      borderTopWidth: 1,
-      ...baseTheme.border,
     },
     allDay: {
       width: HOUR_LABEL_WIDTH,
@@ -119,7 +117,6 @@ export const getCalendarGridStyles = (isDark: boolean) => {
       padding: 3,
       position: 'absolute',
       borderBottomWidth: 1,
-      borderRightWidth: 1,
       ...baseTheme.border,
     },
     timeZoneText: {
@@ -139,6 +136,11 @@ export const getDayContainerStyles = (isDark: boolean) => {
   const baseText = getBasicTypographyStyles(isDark);
 
   return StyleSheet.create({
+    rootContainer: {
+      overflow: 'hidden',
+      borderRightWidth: 1,
+      borderColor: isDark ? COLORS.border.mutedDark : COLORS.border.mutedLight,
+    },
     allDayContainer: {
       flexDirection: 'column',
       overflow: 'visible',
@@ -147,7 +149,6 @@ export const getDayContainerStyles = (isDark: boolean) => {
       borderRightWidth: 1,
       ...baseTheme.border,
       ...baseTheme.background,
-      top: HOUR_HEIGHT,
     },
     dayContainer: {
       flex: 1,

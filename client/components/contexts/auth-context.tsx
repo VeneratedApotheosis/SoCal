@@ -3,6 +3,7 @@ import { fetchJwtToken } from '@/services/api';
 import { storage } from '@/services/storage';
 import { CalendarView, FamilyProfileObjs, JwtTokenObj } from '@/utility/types';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { useScreenSize } from './screen-size-context';
 
 export interface AuthContextType {
   jwtToken: JwtTokenObj | null;
@@ -25,7 +26,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   //PROFILE HOOK
   const { familyProfiles } = useProfiles(sessionTokenString);
-  const [calendarType, setCalendarType] = useState<CalendarView>({ type: 'D', num: 3 });
+  const { isWeb } = useScreenSize();
+  const [calendarType, setCalendarType] = useState<CalendarView>({ type: 'D', num: isWeb ? 7 : 3 });
 
   const [isHydrated, setIsHydrated] = useState(false);
 

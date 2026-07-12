@@ -49,9 +49,7 @@ export default function EventDetails({ isVisible, event, onClose }: Props) {
       stackBehavior="push"
     >
       <BottomSheetScrollView style={styles.container}>
-        {event && (
-          <EventExpandedView initialEvent={event} bottomSheetModalRef={bottomSheetModalRef} modalIndex={currentIndex} onClose={onClose} />
-        )}
+        {event && <EventExpandedView initialEvent={event} bottomSheetModalRef={bottomSheetModalRef} onClose={onClose} />}
       </BottomSheetScrollView>
     </BottomSheetModal>
   );

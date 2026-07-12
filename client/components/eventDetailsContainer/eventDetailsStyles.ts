@@ -44,6 +44,17 @@ export const eventViewStyles = (isDark: boolean) => {
       padding: 16,
       gap: 16,
     },
+    mutateButtons: {
+      borderRadius: 16,
+      overflow: 'visible',
+      ...baseTheme.background,
+      boxShadow: isDark ? '0px 1px 3px rgba(0, 0, 0, 0)' : '0px 1px 3px rgba(0, 0, 0, 0.05)',
+      elevation: isDark ? 0 : 2,
+      padding: 8,
+
+      alignSelf: 'flex-start',
+      ...baseFlexStyles.rowCenter,
+    },
     titleInput: {
       ...baseText.title,
       fontSize: 26,
@@ -52,50 +63,11 @@ export const eventViewStyles = (isDark: boolean) => {
       ...baseText.noBorder,
     },
     descriptionInput: {
-      ...baseText.subtitle,
+      ...baseText.input,
       fontWeight: '400',
-      minHeight: 80,
       paddingVertical: 0,
       textAlignVertical: 'top',
       ...baseText.noBorder,
-    },
-
-    // Buttons
-    actionBlock: { gap: 16 },
-    actionRow: { flexDirection: 'row', gap: 16 },
-    btn: {
-      flex: 1,
-      paddingVertical: 8,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    primaryBtn: {
-      backgroundColor: isDark ? COLORS.primaryy.backgroundDark : COLORS.primaryy.backgroundLight,
-      boxShadow: isDark ? '0px 1px 3px rgba(0, 0, 0, 0)' : '0px 1px 3px rgba(0, 0, 0, 0.05)',
-    },
-    primaryBtnPressed: {},
-    primaryBtnText: {
-      ...baseText.title,
-      color: isDark ? COLORS.primaryy.textLight : COLORS.primaryy.textDark,
-    },
-    secondaryBtn: {
-      ...baseTheme.background,
-      boxShadow: isDark ? '0px 1px 3px rgba(0, 0, 0, 0)' : '0px 1px 3px rgba(0, 0, 0, 0.05)',
-    },
-    btnPressed: {},
-    secondaryBtnText: {
-      ...baseText.title,
-      ...baseText.subtleColor,
-    },
-    deleteBtn: {
-      backgroundColor: isDark ? COLORS.secondary.backgroundDark : COLORS.secondary.backgroundLight,
-      boxShadow: isDark ? '0px 1px 3px rgba(0, 0, 0, 0)' : '0px 1px 3px rgba(0, 0, 0, 0.05)',
-    },
-    deleteBtnPressed: {},
-    deleteBtnText: {
-      ...baseText.title,
-      color: isDark ? COLORS.secondary.textLight : COLORS.secondary.textDark,
     },
   });
 };
@@ -232,7 +204,7 @@ export const locationStyles = (isDark: boolean) => {
       borderBottomWidth: 0,
     },
     textInput: {
-      ...baseText.subtitle,
+      ...baseText.input,
       fontWeight: '400',
       ...baseText.noBorder,
     },
@@ -263,7 +235,7 @@ export const timeStyles = (isDark: boolean) => {
   return StyleSheet.create({
     pillRow: {
       flexDirection: 'row',
-      gap: 8,
+      gap: 16,
       marginBottom: 16,
     },
     timePill: {
@@ -282,6 +254,8 @@ export const timeStyles = (isDark: boolean) => {
       borderRadius: 10,
       padding: 10,
       ...baseFlexStyles.centerAll,
+      flexDirection: 'row',
+      flex: 1,
     },
     pillInputPressed: {
       backgroundColor: '#e8e8e5',
@@ -313,8 +287,8 @@ export const timeStyles = (isDark: boolean) => {
     },
     //all day thing
     toggleRow: {
-      ...baseFlexStyles.rowBetween,
-      paddingVertical: 16,
+      ...baseFlexStyles.rowLeft,
+      gap: 16,
     },
     toggleLabel: {
       ...baseText.subtitle,
@@ -340,10 +314,16 @@ export const timeStyles = (isDark: boolean) => {
       borderTopWidth: 1,
       ...baseTheme.borderMuted,
     },
+    columnDivider: {
+      width: 0,
+      height: '100%',
+      borderRightWidth: 2,
+      ...baseTheme.borderMuted,
+    },
     //recurrence thing
     repeatRow: {
+      flex: 1,
       ...baseFlexStyles.rowBetween,
-      paddingTop: 12,
     },
     iconColor: {
       width: 32,
@@ -371,7 +351,6 @@ export const recurrenceStyles = (isDark: boolean) => {
       width: 36,
     },
     sheetContent: {
-      flex: 1,
       paddingBottom: 36,
       paddingTop: 24,
       paddingHorizontal: 24,
@@ -435,7 +414,7 @@ export const modalStyles = (isDark: boolean) => {
       marginBottom: 24,
     },
     sectionFinal: {
-      marginBottom: 28,
+      marginBottom: 16,
     },
     sectionLabel: {
       ...baseText.subtitle,
@@ -457,7 +436,7 @@ export const modalStyles = (isDark: boolean) => {
       width: 56,
       textAlign: 'center',
       paddingVertical: 10,
-      ...baseText.subtitle,
+      ...baseText.input,
       ...baseText.noBorder,
     },
     stepperSelected: {
@@ -536,6 +515,7 @@ export const modalStyles = (isDark: boolean) => {
     radioRowInline: {
       ...baseFlexStyles.rowLeft,
       width: 80,
+      height: 40,
     },
     radioOuter: {
       width: 20,
@@ -565,7 +545,7 @@ export const modalStyles = (isDark: boolean) => {
       borderRadius: 12,
       paddingHorizontal: 12,
       paddingVertical: 8,
-      ...baseText.subtitle,
+      ...baseText.input,
       fontWeight: '400',
       ...baseText.noBorder,
     },
@@ -600,7 +580,7 @@ export const modalStyles = (isDark: boolean) => {
       width: 40,
       textAlign: 'center',
       paddingVertical: 8,
-      ...baseText.subtitle,
+      ...baseText.input,
       fontWeight: '600',
     },
     inlineStepperSuffix: {

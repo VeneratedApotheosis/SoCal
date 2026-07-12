@@ -1,6 +1,7 @@
 import { getEventCardStyles } from '@/components/multiDayContainer/multiDayStyles';
 import { useEventColors } from '@/hooks/useEventColor';
 import { getEventLayout } from '@/utility/eventUtils';
+import { COLORS } from '@/utility/theme';
 import { EventObj, EventWithLayout } from '@/utility/types';
 import React, { memo, useMemo } from 'react';
 import { Text, View } from 'react-native';
@@ -12,18 +13,19 @@ export interface EventContainerProps {
   eventWithOffset: EventWithLayout;
   dayWidth: number;
   hourHeight: number;
-  onSelect: (event: EventObj) => void;
+  onSelect: (event: EventObj, e: any) => void;
   isVisible: boolean;
   selectedEventId: string | null;
+  newEvent: boolean;
 }
 
 const lightStyles = getEventCardStyles(false);
 const darkStyles = getEventCardStyles(true);
 
 //TODO: MAKE THIS LOOK PRETTY
-function EventContainer({ eventWithOffset, dayWidth, hourHeight, onSelect, isVisible, selectedEventId }: EventContainerProps) {
+function EventContainer({ eventWithOffset, dayWidth, hourHeight, onSelect, isVisible, selectedEventId, newEvent }: EventContainerProps) {
   const { event, offset, maxOffset } = eventWithOffset;
-  const { colorCache, theme } = useUIContext();
+  const { theme } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;
 
   //position on screen
@@ -35,11 +37,11 @@ function EventContainer({ eventWithOffset, dayWidth, hourHeight, onSelect, isVis
   const totalOffset = selectedThisEvent ? 200 : offset + 100;
 
   //color on screen
-  const { rawColor, borderColor, textColor } = useEventColors(event.calendarId);
+  const { rawColor, borderColor, textColor } = useEventColors(event.calendarId, newEvent);
 
   return (
     <Pressable
-      onPress={() => onSelect(event)}
+      onPress={(e) => onSelect(event, e)}
       delayLongPress={0}
       style={[
         styles.eventContainer,
@@ -55,7 +57,14 @@ function EventContainer({ eventWithOffset, dayWidth, hourHeight, onSelect, isVis
       <View
         style={[
           styles.event,
-          { backgroundColor: rawColor, borderLeftColor: borderColor },
+          {
+            backgroundColor: newEvent ? COLORS.primaryy.backgroundLight : rawColor,
+            borderLeftWidth: newEvent ? 2 : 6,
+            borderWidth: newEvent ? 2 : 0,
+            borderLeftColor: newEvent ? COLORS.primaryy.dark : borderColor,
+            borderColor: newEvent ? COLORS.primaryy.dark : borderColor,
+            opacity: newEvent ? 0.5 : 1,
+          },
           selectedThisEvent && { backgroundColor: borderColor, borderLeftColor: borderColor },
         ]}
       >

@@ -1,4 +1,4 @@
-import { PAST_BUFFER } from '@/utility/constants';
+import { DATE_HEADER_HEIGHT, HEADER_HEIGHT, PAST_BUFFER, WEB_DATE_HEADER_PADDING, WEB_Y_PADDING } from '@/utility/constants';
 import { createEventObj } from '@/utility/eventUtils';
 import { COLORS } from '@/utility/theme';
 import { AllDayPool, EventObj, EventWithLayout } from '@/utility/types';
@@ -38,7 +38,7 @@ export interface DayContainerProps {
   hourHeight: number;
   eventsWithLayout: EventWithLayout[];
   allDayEvents: EventWithLayout[];
-  handlePress: (event: EventObj | null, newEvent: boolean) => void;
+  handlePress: (event: EventObj | null, newEvent: boolean, e: any) => void;
   scrollY: SharedValue<number>;
   scrollX: SharedValue<number>;
   isVisible: boolean;
@@ -46,6 +46,7 @@ export interface DayContainerProps {
   currentAllDayHeight: SharedValue<number>;
   eventPool: SharedValue<AllDayPool[]>;
   widthsDictionary: Record<string, number>;
+  newEvent: EventObj | null;
 }
 
 const lightStyles = getDayContainerStyles(false);
@@ -65,22 +66,32 @@ export default function DayContainer({
   currentAllDayHeight,
   eventPool,
   widthsDictionary,
+  newEvent,
 }: DayContainerProps) {
   const isToday = useMemo(() => isSameDay(day, new Date()), [day]);
   const isWeekend = useMemo(() => day.getDay() === 6 || day.getDay() === 0, [day]);
   const { timeZone } = useTimeZoneContext();
   const { theme } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
+  const { height: SCREEN_HEIGHT, isWeb } = useScreenSize();
 
   const msPerDay = 86400000;
   const thisDay = new Date(day).setHours(0, 0, 0, 0);
   const today = new Date().setHours(0, 0, 0, 0);
   const index = Math.round((today - thisDay) / msPerDay) + PAST_BUFFER;
+  const newEventToday = (() => {
+    if (!newEvent) return false;
+
+    const eventTime = newEvent.startDate.getTime();
+    const after = eventTime >= thisDay;
+    const before = eventTime - thisDay < msPerDay;
+
+    return after && before;
+  })();
 
   const handleEventSelect = useCallback(
-    (event: EventObj) => {
-      handlePress(event, false);
+    (event: EventObj, e: any) => {
+      handlePress(event, false, e);
     },
     [handlePress],
   );
@@ -98,19 +109,23 @@ export default function DayContainer({
 
   return (
     <View
-      style={{
-        overflow: 'hidden',
-        width: dayWidth,
-        zIndex: index,
-        backgroundColor: theme.isDark
-          ? isWeekend
-            ? COLORS.background.elevatedDark
-            : COLORS.background.dark
-          : isWeekend
-            ? COLORS.background.elevatedLight
-            : COLORS.background.light,
-      }}
+      style={[
+        styles.rootContainer,
+        {
+          width: dayWidth,
+          zIndex: index,
+          backgroundColor: theme.isDark
+            ? isWeekend
+              ? COLORS.background.elevatedDark
+              : COLORS.background.dark
+            : isWeekend
+              ? COLORS.background.elevatedLight
+              : COLORS.background.light,
+          height: SCREEN_HEIGHT - HEADER_HEIGHT - isWeb * WEB_Y_PADDING,
+        },
+      ]}
     >
+      {/* ALL DAY GRID */}
       <View style={{ overflow: 'visible', zIndex: 4 }}>
         <DateHeader key={day.toISOString()} day={day} dayWidth={dayWidth} />
         <Animated.View
@@ -125,6 +140,7 @@ export default function DayContainer({
                 : isWeekend
                   ? COLORS.background.elevatedLight
                   : COLORS.background.light,
+              top: DATE_HEADER_HEIGHT + isWeb * WEB_DATE_HEADER_PADDING * 2,
             },
             animatedAllDayStyle,
           ]}
@@ -174,8 +190,29 @@ export default function DayContainer({
             onSelect={handleEventSelect}
             isVisible={isVisible}
             selectedEventId={selectedEventId}
+            newEvent={false}
           />
         ))}
+        {newEventToday && newEvent && (
+          <EventContainer
+            key={newEvent.id}
+            eventWithOffset={{
+              event: newEvent,
+              offset: 0,
+              maxOffset: 0,
+              startDate: newEvent.startDate,
+              endDate: newEvent.endDate,
+              dummy: false,
+            }}
+            dayWidth={dayWidth}
+            hourHeight={hourHeight}
+            onSelect={() => {}}
+            isVisible={false}
+            selectedEventId={null}
+            newEvent={newEventToday}
+          />
+        )}
+
         <Pressable
           onPress={(event) => {
             const y = getYofEventPress(event);
@@ -191,7 +228,7 @@ export default function DayContainer({
               timeZone,
             );
 
-            handlePress(draftEvent, true);
+            handlePress(draftEvent, true, event);
           }}
           style={[StyleSheet.absoluteFill, styles.newEventButton, { height: hourHeight * 24 }]}
         />

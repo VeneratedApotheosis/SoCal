@@ -10,38 +10,8 @@ import { Animated, Platform, Pressable, Text, TextInput, View } from 'react-nati
 import { useUIContext } from '../contexts/ui-context';
 import { timeStyles } from './eventDetailsStyles';
 import { getRecurrenceLabel, RecurrencePickerModal } from './recurrence-picker-modal';
+import { WebRecurrencePickerModal } from './web-reccurence-picker-modal';
 // import DatePicker from 'react-native-date-picker';
-
-// ─── Date display ─────────────────────────────────────────────────────────────
-
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-function formatDisplayDate(date: Date): string {
-  return `${DAY_NAMES[date.getDay()]} ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`;
-}
-
-function getDateDisplay(event: EventObj): string {
-  const start = event.startDate ? new Date(event.startDate) : null;
-  let end = event.endDate ? new Date(event.endDate) : null;
-  if (!start) return '';
-
-  if (event.allDay && end) {
-    // Google all-day end dates are exclusive — subtract 1 day for display
-    const adjusted = new Date(end);
-    adjusted.setDate(adjusted.getDate() - 1);
-    if (adjusted >= start) end = adjusted;
-  } else if (end && end.getTime() <= start.getTime()) {
-    // Overnight event: end time is at or before start, so it's the next calendar day
-    const nextDay = new Date(end);
-    nextDay.setDate(nextDay.getDate() + 1);
-    end = nextDay;
-  }
-
-  if (!end || (start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth() && start.getDate() === end.getDate()))
-    return formatDisplayDate(start);
-  return `${formatDisplayDate(start)} – ${formatDisplayDate(end)}`;
-}
 
 // ─── Web time input ───────────────────────────────────────────────────────────
 
@@ -86,7 +56,6 @@ const WebTimeInput = ({ dateValue, onCommit, placeholder, label, editable }: Web
           onBlur={handleBlur}
           placeholder={placeholder}
           placeholderTextColor="#c9c8c6"
-          selectTextOnFocus
           editable={editable}
         />
       </View>
@@ -134,10 +103,10 @@ const WebDateInput = ({ dateValue, onCommit, label, editable }: WebDateInputProp
             setText(t);
           }}
           onBlur={handleBlur}
-          placeholder="M/D/YYYY"
+          placeholder="MM/DD/YYYY"
           placeholderTextColor="#c9c8c6"
-          selectTextOnFocus
           editable={editable}
+          maxLength={10}
         />
       </View>
     </View>
@@ -175,6 +144,7 @@ interface EventTimeDatePickerProps {
 
 export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDatePickerProps) => {
   const recurrenceSheetRef = useRef<BottomSheetModal>(null);
+  const [webVisible, setWebVisible] = useState<boolean>(false);
   const { theme } = useUIContext();
   const styles = timeStyles(theme.isDark);
   const baseTheme = getBasicThemeStyles(theme.isDark);
@@ -221,15 +191,23 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDate
 
   return (
     <>
-      <View>
-        {/* --- Time pills --- */}
-        <View style={[styles.pillRow, { marginBottom: 10 }]}>
-          {/* Start Time */}
-          {!event.allDay && (
-            <>
+      <View style={{ flexShrink: 1 }}>
+        {!event.allDay && (
+          <>
+            <View style={[styles.pillRow]}>
+              {isWeb ? (
+                <WebDateInput
+                  label={'start time'}
+                  editable={editable}
+                  dateValue={event.startDate}
+                  onCommit={(d) => onUpdate('startDate', d)}
+                />
+              ) : (
+                <IOSPillButton label="start time" value={timeDisplay.startTime} onPress={() => openIOSPicker('startTime')} />
+              )}
               {isWeb ? (
                 <WebTimeInput
-                  label="start time"
+                  label=" "
                   editable={editable}
                   dateValue={event.startDate}
                   onCommit={(d) => onUpdate('startDate', d)}
@@ -238,29 +216,16 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDate
               ) : (
                 <IOSPillButton label="start time" value={timeDisplay.startTime} onPress={() => openIOSPicker('startTime')} />
               )}
-            </>
-          )}
-          {event.allDay && (
-            <>
+            </View>
+            <View style={[styles.pillRow]}>
               {isWeb ? (
-                <WebDateInput
-                  label="start time"
-                  editable={editable}
-                  dateValue={event.startDate}
-                  onCommit={(d) => onUpdate('startDate', d)}
-                />
+                <WebDateInput label={'end time'} editable={editable} dateValue={event.endDate} onCommit={(d) => onUpdate('endDate', d)} />
               ) : (
-                <IOSPillButton label="start time" value={timeDisplay.startTime} onPress={() => openIOSPicker('startTime')} />
+                <IOSPillButton label="end time" value={timeDisplay.endTime} onPress={() => openIOSPicker('endTime')} />
               )}
-            </>
-          )}
-
-          {/* End Time */}
-          {!event.allDay && (
-            <>
               {isWeb ? (
                 <WebTimeInput
-                  label="end time"
+                  label=" "
                   editable={editable}
                   dateValue={event.endDate}
                   onCommit={(d) => onUpdate('endDate', d)}
@@ -269,33 +234,24 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDate
               ) : (
                 <IOSPillButton label="end time" value={timeDisplay.endTime} onPress={() => openIOSPicker('endTime')} />
               )}
-            </>
-          )}
-
-          {event.allDay && (
-            <>
-              {isWeb ? (
-                <WebDateInput label="end time" editable={editable} dateValue={event.endDate} onCommit={(d) => onUpdate('endDate', d)} />
-              ) : (
-                <IOSPillButton label="end time" value={timeDisplay.endTime} onPress={() => openIOSPicker('endTime')} />
-              )}
-            </>
-          )}
-
-          <View style={styles.timePill}>
-            <Text style={styles.pillLabel}>duration</Text>
-            <View style={styles.pillInput}>
-              <Text style={[styles.pillInputText, styles.pillInputMuted]}>{timeDisplay.duration}</Text>
             </View>
-          </View>
-        </View>
-        <View style={styles.pillRow}>
-          {/* Start Time Date */}
-          {!event.allDay && (
-            <>
+
+            <View style={[styles.pillRow]}>
+              <View style={styles.timePill}>
+                <Text style={styles.pillLabel}>duration</Text>
+                <View style={styles.pillInput}>
+                  <Text style={[styles.pillInputText, styles.pillInputMuted]}>{timeDisplay.duration}</Text>
+                </View>
+              </View>
+            </View>
+          </>
+        )}
+        {event.allDay && (
+          <>
+            <View style={[styles.pillRow]}>
               {isWeb ? (
                 <WebDateInput
-                  label={undefined}
+                  label="start time"
                   editable={editable}
                   dateValue={event.startDate}
                   onCommit={(d) => onUpdate('startDate', d)}
@@ -303,23 +259,26 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDate
               ) : (
                 <IOSPillButton label="start time" value={timeDisplay.startTime} onPress={() => openIOSPicker('startTime')} />
               )}
-            </>
-          )}
-          {!event.allDay && (
-            <>
+            </View>
+            <View style={[styles.pillRow]}>
               {isWeb ? (
-                <WebDateInput label={undefined} editable={editable} dateValue={event.endDate} onCommit={(d) => onUpdate('endDate', d)} />
+                <WebDateInput label="end time" editable={editable} dateValue={event.endDate} onCommit={(d) => onUpdate('endDate', d)} />
               ) : (
                 <IOSPillButton label="end time" value={timeDisplay.endTime} onPress={() => openIOSPicker('endTime')} />
               )}
-            </>
-          )}
-          <View style={{ flex: 1 }}></View>
-        </View>
-
-        <View style={styles.rowDivider} />
-        {/* --- All-day toggle --- */}
+            </View>
+            <View style={[styles.pillRow]}>
+              <View style={styles.timePill}>
+                <Text style={styles.pillLabel}>duration</Text>
+                <View style={styles.pillInput}>
+                  <Text style={[styles.pillInputText, styles.pillInputMuted]}>{timeDisplay.duration}</Text>
+                </View>
+              </View>
+            </View>
+          </>
+        )}
         <View style={styles.toggleRow}>
+          {/* --- All-day toggle --- */}
           <Text style={styles.toggleLabel}>All-day</Text>
           <Pressable
             onPress={() => onUpdate('allDay', !event.allDay)}
@@ -333,26 +292,42 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDate
           >
             <Animated.View style={[styles.customThumb, { transform: [{ translateX: transformX }] }]} />
           </Pressable>
+          <View style={styles.columnDivider} />
+          {/* Recurrence */}
+          <Pressable
+            style={styles.repeatRow}
+            onPress={() => {
+              if (isWeb) setWebVisible(true);
+              else recurrenceSheetRef.current?.present();
+            }}
+            disabled={!editable}
+          >
+            <View style={styles.iconColor}>
+              <Ionicons name="sync-outline" size={20} color={theme.isDark ? COLORS.primaryy.light : COLORS.primaryy.dark} />
+            </View>
+            <Text style={[styles.toggleLabel, { flex: 1, marginLeft: 8 }]}>{getRecurrenceLabel(event.recurrence)}</Text>
+            <Ionicons name="chevron-forward-outline" size={20} color={iconColor} />
+          </Pressable>
         </View>
-
-        <View style={styles.rowDivider} />
-
-        {/* Recurrence */}
-        <Pressable style={styles.repeatRow} onPress={() => recurrenceSheetRef.current?.present()} disabled={!editable}>
-          <View style={styles.iconColor}>
-            <Ionicons name="sync-outline" size={20} color={theme.isDark ? COLORS.primaryy.light : COLORS.primaryy.dark} />
-          </View>
-          <Text style={[styles.toggleLabel, { flex: 1, marginLeft: 8 }]}>{getRecurrenceLabel(event.recurrence)}</Text>
-          <Ionicons name="chevron-forward-outline" size={20} color={iconColor} />
-        </Pressable>
       </View>
 
-      <RecurrencePickerModal
-        sheetRef={recurrenceSheetRef}
-        current={event.recurrence}
-        onSelect={(val) => onUpdate('recurrence', val)}
-        onCustom={handleCustomRecurrence}
-      />
+      {isWeb ? (
+        <WebRecurrencePickerModal
+          sheetRef={recurrenceSheetRef}
+          current={event.recurrence}
+          onSelect={(val) => onUpdate('recurrence', val)}
+          onCustom={handleCustomRecurrence}
+          webVisible={webVisible}
+          setWebVisible={setWebVisible}
+        />
+      ) : (
+        <RecurrencePickerModal
+          sheetRef={recurrenceSheetRef}
+          current={event.recurrence}
+          onSelect={(val) => onUpdate('recurrence', val)}
+          onCustom={handleCustomRecurrence}
+        />
+      )}
 
       {/* iOS pickers — uncomment when ready
       <DatePicker
