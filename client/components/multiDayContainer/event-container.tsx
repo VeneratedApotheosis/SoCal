@@ -1,7 +1,7 @@
 import { getEventCardStyles } from '@/components/multiDayContainer/multiDayStyles';
 import { useEventColors } from '@/hooks/useEventColor';
+import { EVENT_GAP } from '@/utility/constants';
 import { getEventLayout } from '@/utility/eventUtils';
-import { COLORS } from '@/utility/theme';
 import { EventObj, EventWithLayout } from '@/utility/types';
 import React, { memo, useMemo } from 'react';
 import { Text, View } from 'react-native';
@@ -40,43 +40,63 @@ function EventContainer({ eventWithOffset, dayWidth, hourHeight, onSelect, isVis
   const { rawColor, borderColor, textColor } = useEventColors(event.calendarId, newEvent);
 
   return (
-    <Pressable
-      onPress={(e) => onSelect(event, e)}
-      delayLongPress={0}
-      style={[
-        styles.eventContainer,
-        {
-          ...layout,
-          zIndex: totalOffset,
-          elevation: totalOffset, // Required for Android layering
-        },
-      ]}
-      hitSlop={5}
-    >
-      {/* --- EVENT LEFT BAR --- */}
-      <View
-        style={[
-          styles.event,
-          {
-            backgroundColor: newEvent ? COLORS.primaryy.backgroundLight : rawColor,
-            borderLeftWidth: newEvent ? 2 : 6,
-            borderWidth: newEvent ? 2 : 0,
-            borderLeftColor: newEvent ? COLORS.primaryy.dark : borderColor,
-            borderColor: newEvent ? COLORS.primaryy.dark : borderColor,
-            opacity: newEvent ? 0.5 : 1,
-          },
-          selectedThisEvent && { backgroundColor: borderColor, borderLeftColor: borderColor },
-        ]}
-      >
-        {/* --- EVENT TITLE --- */}
-        <Text
-          style={[styles.eventText, { color: selectedThisEvent ? (theme.isDark ? textColor : rawColor) : textColor }]}
-          numberOfLines={1}
+    <>
+      {newEvent ? (
+        <Pressable
+          onPress={(e) => onSelect(event, e)}
+          delayLongPress={0}
+          style={[
+            styles.eventContainer,
+            styles.newEvent,
+            {
+              ...layout,
+              width: layout.width + EVENT_GAP,
+              zIndex: 300,
+              elevation: totalOffset,
+            },
+          ]}
+          hitSlop={5}
+        ></Pressable>
+      ) : (
+        <Pressable
+          onPress={(e) => onSelect(event, e)}
+          delayLongPress={0}
+          style={[
+            styles.eventContainer,
+            {
+              ...layout,
+              zIndex: totalOffset,
+              elevation: totalOffset, // Required for Android layering
+            },
+          ]}
+          hitSlop={5}
         >
-          {event.title}
-        </Text>
-      </View>
-    </Pressable>
+          {/* --- EVENT LEFT BAR --- */}
+          <View
+            style={[
+              styles.event,
+              {
+                backgroundColor: rawColor,
+                borderLeftWidth: 6,
+                borderWidth: 0,
+                borderLeftColor: borderColor,
+                borderColor: borderColor,
+                opacity: 1,
+              },
+              selectedThisEvent && { backgroundColor: borderColor, borderLeftColor: borderColor },
+            ]}
+          >
+            {/* --- EVENT TITLE --- */}
+            <Text
+              style={[styles.eventText, { color: selectedThisEvent ? (theme.isDark ? textColor : rawColor) : textColor }]}
+              numberOfLines={1}
+            >
+              {event.title}
+            </Text>
+          </View>
+        </Pressable>
+      )}
+    </>
   );
 }
 

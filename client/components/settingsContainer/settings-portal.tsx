@@ -61,7 +61,7 @@ export default function SettingsPortal({ isVisible, onClose }: SettingsPortalPro
           <Text style={styles.headerText}>Settings</Text>
         </View>
         <View style={styles.rowDivider}></View>
-        <ScrollView>
+        <ScrollView style={styles.scrollViewContainer}>
           <View style={{ flexDirection: 'row' }}>
             <Login />
             <AppearanceContainer />
@@ -97,6 +97,10 @@ const settingsPortalStyles = (isDark: boolean) => {
       height: 0,
       borderTopWidth: 1,
       ...baseTheme.borderMuted,
+    },
+    scrollViewContainer: {
+      flex: 1,
+      ...baseTheme.backgroundMuted,
     },
   });
 };

@@ -131,7 +131,7 @@ export const getEventLayout = (event: EventWithLayout, offset: number, maxOffset
 
   const pixelsPerMinute = hourHeight / 60;
   const minutesFromMidnight = startHour * 60 + startMin;
-  const minimumHeight = pixelsPerMinute * 30;
+  const minimumHeight = pixelsPerMinute * 15;
 
   let left = ((dayWidth - EVENT_GAP) / (maxOffset + 1)) * offset;
   let width = ((dayWidth - EVENT_GAP) / (maxOffset + 1)) * (maxOffset - offset + 1);

@@ -1,10 +1,9 @@
 import { DATE_HEADER_HEIGHT, HEADER_HEIGHT, PAST_BUFFER, WEB_DATE_HEADER_PADDING, WEB_Y_PADDING } from '@/utility/constants';
-import { createEventObj } from '@/utility/eventUtils';
 import { COLORS } from '@/utility/theme';
 import { AllDayPool, EventObj, EventWithLayout } from '@/utility/types';
 import { isSameDay } from 'date-fns';
 import React, { useCallback, useMemo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { SharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import Svg, { Line } from 'react-native-svg';
 import { useScreenSize } from '../contexts/screen-size-context';
@@ -13,7 +12,7 @@ import { useUIContext } from '../contexts/ui-context';
 import AllDayChip from './allday-chip';
 import DateHeader from './date-header';
 import EventContainer from './event-container';
-import { getDayContainerStyles } from './multiDayStyles';
+import { getDayContainerStyles, getEventCardStyles } from './multiDayStyles';
 import TimeIndicator from './time-indicator';
 
 const HourTicks = ({ hourHeight, isDark }: { hourHeight: number; isDark: boolean }) => (
@@ -47,10 +46,16 @@ export interface DayContainerProps {
   eventPool: SharedValue<AllDayPool[]>;
   widthsDictionary: Record<string, number>;
   newEvent: EventObj | null;
+  dragStartDayIdx: SharedValue<number>;
+  dragStartMin: SharedValue<number>;
+  dragCurrentDayMin: SharedValue<number>;
+  isDraggingCreate: SharedValue<boolean>;
 }
 
 const lightStyles = getDayContainerStyles(false);
 const darkStyles = getDayContainerStyles(true);
+const lightEventStyles = getEventCardStyles(false);
+const darkEventStyles = getEventCardStyles(true);
 
 export default function DayContainer({
   day,
@@ -67,18 +72,24 @@ export default function DayContainer({
   eventPool,
   widthsDictionary,
   newEvent,
+  dragStartDayIdx,
+  dragStartMin,
+  dragCurrentDayMin,
+  isDraggingCreate,
 }: DayContainerProps) {
   const isToday = useMemo(() => isSameDay(day, new Date()), [day]);
   const isWeekend = useMemo(() => day.getDay() === 6 || day.getDay() === 0, [day]);
   const { timeZone } = useTimeZoneContext();
   const { theme } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;
+  const eventStyles = theme.isDark ? darkEventStyles : lightEventStyles;
   const { height: SCREEN_HEIGHT, isWeb } = useScreenSize();
 
   const msPerDay = 86400000;
   const thisDay = new Date(day).setHours(0, 0, 0, 0);
   const today = new Date().setHours(0, 0, 0, 0);
-  const index = Math.round((today - thisDay) / msPerDay) + PAST_BUFFER;
+  const index = Math.round((thisDay - today) / msPerDay) + PAST_BUFFER;
+  const reversedIndex = Math.round((today - thisDay) / msPerDay) + PAST_BUFFER;
   const newEventToday = (() => {
     if (!newEvent) return false;
 
@@ -96,16 +107,20 @@ export default function DayContainer({
     [handlePress],
   );
 
-  const getYofEventPress = (event: any) => {
-    const locationY = event.nativeEvent.locationY;
-    const offsetY = event.nativeEvent.offsetY;
-    return locationY ?? offsetY;
-  };
-
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: -scrollY.value }],
   }));
   const animatedAllDayStyle = useAnimatedStyle(() => ({ height: withTiming(currentAllDayHeight.value, { duration: 250 }) }));
+
+  const animatedDragEvent = useAnimatedStyle(() => {
+    if (dragStartDayIdx.value !== index || !isDraggingCreate.value) return { opacity: 0, height: 0, position: 'absolute', top: 0 };
+    return {
+      opacity: 0.5,
+      height: (hourHeight / 60.0) * Math.max(15, Math.abs(dragStartMin.value - dragCurrentDayMin.value)),
+      position: 'absolute',
+      top: (hourHeight / 60.0) * Math.min(dragStartMin.value, dragCurrentDayMin.value),
+    };
+  });
 
   return (
     <View
@@ -113,7 +128,7 @@ export default function DayContainer({
         styles.rootContainer,
         {
           width: dayWidth,
-          zIndex: index,
+          zIndex: reversedIndex,
           backgroundColor: theme.isDark
             ? isWeekend
               ? COLORS.background.elevatedDark
@@ -193,6 +208,7 @@ export default function DayContainer({
             newEvent={false}
           />
         ))}
+        {/* new Event */}
         {newEventToday && newEvent && (
           <EventContainer
             key={newEvent.id}
@@ -212,8 +228,18 @@ export default function DayContainer({
             newEvent={newEventToday}
           />
         )}
+        <Animated.View
+          style={[
+            animatedDragEvent,
+            eventStyles.newEvent,
+            {
+              zIndex: 2000,
+              width: dayWidth,
+            },
+          ]}
+        ></Animated.View>
 
-        <Pressable
+        {/* <Pressable
           onPress={(event) => {
             const y = getYofEventPress(event);
             const hour = Math.floor(y / hourHeight);
@@ -231,7 +257,7 @@ export default function DayContainer({
             handlePress(draftEvent, true, event);
           }}
           style={[StyleSheet.absoluteFill, styles.newEventButton, { height: hourHeight * 24 }]}
-        />
+        /> */}
       </Animated.View>
     </View>
   );

@@ -32,7 +32,10 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { getPositionsFromPointer } from '@/utility/drawerUtil';
+import { createEventObj } from '@/utility/eventUtils';
 import { getShortTimeZone } from '@/utility/timeZoneUtil';
+import { addDays, set } from 'date-fns';
+import { scheduleOnRN } from 'react-native-worklets';
 import { useCalendarEvents } from '../contexts/calendar-events-context';
 import { useCalendarIndex } from '../contexts/calendar-index-context';
 import { useCalendarRange } from '../contexts/calendar-range-context';
@@ -62,15 +65,17 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
   const { theme, sideBar } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;
 
-  // Dimensions
+  // ─── Dimensions ───────────────────────────────────────────────────────────
+
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, isWeb, fixedSidebar } = useScreenSize();
+
   const GRID_WIDTH = useMemo(() => {
     const rawWidth = SCREEN_WIDTH - HOUR_LABEL_WIDTH + 1;
     const webPadding = -1 * Number(isWeb) * WEB_X_PADDING;
     const sideBarPadding =
       fixedSidebar * Number(!(sideBar.isSidebarExpanded !== !sideBar.isSidebarLoading)) * (WEB_DRAWER_WIDTH + WEB_MUTED_PADDING);
     return rawWidth + webPadding - sideBarPadding;
-  }, [sideBar.isSidebarExpanded, sideBar.isSidebarLoading]);
+  }, [sideBar.isSidebarExpanded, sideBar.isSidebarLoading, SCREEN_WIDTH]);
 
   const dividers = calendarType.num || 3;
   const dayWidth = Math.round(GRID_WIDTH / dividers);
@@ -119,7 +124,7 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
 
   const handlePress = useCallback(
-    (event: EventObj | null, newEvent: boolean, e: any) => {
+    (event: EventObj | null, newEvent: boolean, coords: { x: number; y: number } | { e: any }, dragCreate: boolean = false) => {
       if (eventDetailsVisible || webDetailsVisible) {
         if (newEvent) {
           setSelectedEvent(event);
@@ -129,24 +134,37 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
         } else {
           setSelectedEvent(event);
           setNewEvent(null);
-          handleWebPress(e);
+          handleWebPress(coords);
         }
       } else {
         setSelectedEvent(event);
         if (isWeb) {
-          setWebDetailsVisible(true);
-          handleWebPress(e);
-        } else setEventDetailsVisible(true);
-
-        if (newEvent) setNewEvent(event);
-        else setNewEvent(null);
+          if (dragCreate) {
+            setWebDetailsVisible(true);
+            handleWebPress(coords);
+            if (newEvent) setNewEvent(event);
+            else setNewEvent(null);
+          }
+        } else {
+          setEventDetailsVisible(true);
+          if (newEvent) setNewEvent(event);
+          else setNewEvent(null);
+        }
       }
     },
     [eventDetailsVisible, webDetailsVisible, isWeb],
   );
 
-  const handleWebPress = (event: any) => {
-    const { pageX, pageY } = event.nativeEvent;
+  const handleWebPress = (coords: { x: number; y: number } | { e: any }) => {
+    let { pageX, pageY } = { pageX: 0, pageY: 0 };
+    if (coords && 'x' in coords) {
+      pageX = coords.x;
+      pageY = coords.y;
+    } else {
+      pageX = coords.e.NativeEvent.pageX;
+      pageY = coords.e.NativeEvent.pageY;
+    }
+
     getPositionsFromPointer(pageX, pageY, setMenuPos, webEventHeight, webEventWidth, SCREEN_WIDTH, SCREEN_HEIGHT);
   };
 
@@ -240,6 +258,103 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
       });
     });
 
+  // ─── Web Click and Drag ───────────────────────────────────────────────────────────
+
+  const isDraggingCreate = useSharedValue<boolean>(false);
+  const dragStartDayIdx = useSharedValue<number>(-1);
+  const dragStartMins = useSharedValue<number>(0);
+  const dragCurrentDayIdx = useSharedValue<number>(-1);
+  const dragCurrentMins = useSharedValue<number>(0);
+
+  // Capture final pointer offsets to place the creation menu
+  const dragEndPageX = useSharedValue<number>(0);
+  const dragEndPageY = useSharedValue<number>(0);
+
+  const createEventGesture = Gesture.Pan()
+    .activateAfterLongPress(isWeb ? 0 : 200)
+    .onBegin((e) => {
+      if (eventDetailsVisible || webDetailsVisible) return;
+      // Calculate Day Index (Horizontal Axis)
+      const relativeX = e.x;
+      const absoluteGridX = relativeX + scrollX.value;
+      const targetDayIdx = Math.floor(absoluteGridX / dayWidth);
+
+      // Calculate Minutes (Vertical Axis)
+      const headerOffset = DATE_HEADER_HEIGHT + (isWeb ? WEB_DATE_HEADER_PADDING * 2 : 0);
+      const relativeY = e.y - headerOffset;
+      const absoluteGridY = relativeY + scrollY.value;
+      if (absoluteGridY < 0) return; //not on grid
+      const targetMins = (absoluteGridY / hourHeight) * 60;
+
+      // Snap to nearest 15 minutes
+      const snappedMins = Math.max(0, Math.min(Math.floor(targetMins / 15) * 15, 24 * 60));
+
+      dragStartDayIdx.value = targetDayIdx;
+      dragStartMins.value = snappedMins;
+      dragCurrentDayIdx.value = targetDayIdx;
+      dragCurrentMins.value = snappedMins;
+      isDraggingCreate.value = true;
+    })
+    .onUpdate((e) => {
+      if (!isDraggingCreate.value) return;
+
+      // Horizontal changes (not used; might delete later)
+      const relativeX = Math.min(dayWidth * dividers, Math.max(0, e.x - HOUR_LABEL_WIDTH));
+      const absoluteGridX = relativeX + scrollX.value;
+      const targetDayIdx = Math.floor(absoluteGridX / dayWidth);
+
+      // Vertical changes
+      const headerOffset = DATE_HEADER_HEIGHT + (isWeb ? WEB_DATE_HEADER_PADDING * 2 : 0);
+      const relativeY = e.y - headerOffset;
+      const absoluteGridY = relativeY + scrollY.value;
+      const targetMins = (absoluteGridY / hourHeight) * 60;
+      const snappedMins = Math.max(0, Math.min(Math.floor(targetMins / 15) * 15, 24 * 60));
+
+      // Constrain inside bounds of the current dataset array length
+      dragCurrentDayIdx.value = Math.max(0, targetDayIdx);
+      dragCurrentMins.value = snappedMins;
+
+      // Track pointer positions for menu placement
+      dragEndPageX.value = e.absoluteX;
+      dragEndPageY.value = e.absoluteY;
+    })
+    .onFinalize((e) => {
+      if (!isDraggingCreate.value) return;
+      isDraggingCreate.value = false;
+
+      const endX = e.absoluteX;
+      const endY = e.absoluteY;
+
+      const baseDate = addDays(new Date(), dragStartDayIdx.value - PAST_BUFFER);
+      const startDate = set(baseDate, {
+        hours: Math.floor(Math.min(dragStartMins.value, dragCurrentMins.value) / 60),
+        minutes: Math.floor(Math.min(dragStartMins.value, dragCurrentMins.value) % 60),
+        seconds: 0,
+        milliseconds: 0,
+      });
+      const endDate = set(baseDate, {
+        hours: Math.floor(Math.max(dragStartMins.value, dragCurrentMins.value) / 60),
+        minutes: Math.floor(Math.max(dragStartMins.value, dragCurrentMins.value) % 60),
+        seconds: 0,
+        milliseconds: 0,
+      });
+
+      const draftEvent = createEventObj(
+        {
+          startDate: startDate,
+          endDate: endDate,
+          title: '',
+        },
+        timeZone,
+      );
+
+      scheduleOnRN(() => {
+        handlePress(draftEvent, true, { x: endX, y: endY }, true);
+      });
+    });
+
+  const finalGesture = isWeb ? createEventGesture : verticalPan;
+
   // ─── Fetching and Month Changing ───────────────────────────────────────────────────────────
 
   const { fetchForward, fetchBackward } = useCalendarEvents();
@@ -306,6 +421,10 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
         eventPool={eventPool}
         widthsDictionary={widthsDictionary}
         newEvent={newEvent}
+        dragStartDayIdx={dragStartDayIdx}
+        dragStartMin={dragStartMins}
+        dragCurrentDayMin={dragCurrentMins}
+        isDraggingCreate={isDraggingCreate}
       />
     ),
     [
@@ -337,29 +456,27 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
           return <AllDayPoolChip key={index} index={index} eventPool={eventPool} scrollX={scrollX} widthsDictionary={widthsDictionary} />;
         })} */}
       {/* <TextMeasurer extraLongAllday={extraLongAllday} setWidthsDictionary={setWidthsDictionary} widthsDictionary={widthsDictionary} /> */}
-      <GestureDetector gesture={verticalPan}>
-        <Animated.View ref={webContainerRef} style={{ flex: 1, overflow: 'visible' }}>
-          {/* Hour Guide */}
-          <View
-            style={{
-              flex: 1,
-              flexDirection: 'row',
-              overflow: 'hidden',
-            }}
-          >
-            <View style={styles.sideBarContainer}>
-              <View style={[styles.timeZone, { height: DATE_HEADER_HEIGHT + isWeb * WEB_DATE_HEADER_PADDING * 2 }]}>
-                <Text style={styles.timeZoneText}>{getShortTimeZone(new Date(), timeZone)}</Text>
-              </View>
-              <Animated.View
-                style={[animatedAllDayStyle, styles.allDay, { top: DATE_HEADER_HEIGHT + isWeb * WEB_DATE_HEADER_PADDING * 2 }]}
-              >
-                <Text style={styles.allDayText}>All-Day</Text>
-              </Animated.View>
-              <Animated.View style={[animatedHourGuideStyle, { zIndex: 8 }]}>
-                <HourGuide hourHeight={hourHeight} labelWidth={HOUR_LABEL_WIDTH} />
-              </Animated.View>
-            </View>
+      {/* Hour Guide */}
+      <View
+        style={{
+          flex: 1,
+          flexDirection: 'row',
+          overflow: 'hidden',
+        }}
+      >
+        <View style={styles.sideBarContainer}>
+          <View style={[styles.timeZone, { height: DATE_HEADER_HEIGHT + isWeb * WEB_DATE_HEADER_PADDING * 2 }]}>
+            <Text style={styles.timeZoneText}>{getShortTimeZone(new Date(), timeZone)}</Text>
+          </View>
+          <Animated.View style={[animatedAllDayStyle, styles.allDay, { top: DATE_HEADER_HEIGHT + isWeb * WEB_DATE_HEADER_PADDING * 2 }]}>
+            <Text style={styles.allDayText}>All-Day</Text>
+          </Animated.View>
+          <Animated.View style={[animatedHourGuideStyle, { zIndex: 8 }]}>
+            <HourGuide hourHeight={hourHeight} labelWidth={HOUR_LABEL_WIDTH} />
+          </Animated.View>
+        </View>
+        <GestureDetector gesture={finalGesture}>
+          <Animated.View ref={webContainerRef} style={{ flex: 1, overflow: 'visible' }}>
             {/* Flahlist*/}
             <AnimatedFlashList
               ref={listRef}
@@ -379,9 +496,9 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
               key={`timeline-width-${dayWidth}`}
               snapToAlignment={'start'}
             />
-          </View>
-        </Animated.View>
-      </GestureDetector>
+          </Animated.View>
+        </GestureDetector>
+      </View>
       <EventDetails event={selectedEvent} isVisible={eventDetailsVisible} onClose={() => setEventDetailsVisible(false)} />
       <WebEventDetails
         event={selectedEvent}

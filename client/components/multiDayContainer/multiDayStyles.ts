@@ -54,6 +54,17 @@ export const getEventCardStyles = (isDark: boolean) => {
       borderRadius: 4,
       padding: 4,
     },
+    newEvent: {
+      flex: 1,
+      borderRadius: 8,
+      padding: 4,
+      backgroundColor: isDark ? COLORS.primaryy.backgroundDark : COLORS.primaryy.backgroundLight,
+      borderLeftWidth: 4,
+      borderWidth: 4,
+      borderLeftColor: isDark ? COLORS.primaryy.light : COLORS.primaryy.dark,
+      borderColor: isDark ? COLORS.primaryy.light : COLORS.primaryy.dark,
+      opacity: 0.5,
+    },
     eventText: {
       ...baseText.caption,
     },
