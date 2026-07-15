@@ -1,9 +1,10 @@
 import { DATE_HEADER_HEIGHT, HEADER_HEIGHT, PAST_BUFFER, WEB_DATE_HEADER_PADDING, WEB_Y_PADDING } from '@/utility/constants';
+import { createEventObj } from '@/utility/eventUtils';
 import { COLORS } from '@/utility/theme';
 import { AllDayPool, EventObj, EventWithLayout } from '@/utility/types';
-import { isSameDay } from 'date-fns';
+import { addHours, isSameDay } from 'date-fns';
 import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { SharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import Svg, { Line } from 'react-native-svg';
 import { useScreenSize } from '../contexts/screen-size-context';
@@ -61,7 +62,7 @@ export default function DayContainer({
   day,
   dayWidth,
   hourHeight,
-  eventsWithLayout: eventsWithOffsets,
+  eventsWithLayout,
   allDayEvents,
   handlePress,
   scrollY,
@@ -106,6 +107,12 @@ export default function DayContainer({
     },
     [handlePress],
   );
+
+  const getYofEventPress = (event: any) => {
+    const locationY = event.nativeEvent.locationY;
+    const offsetY = event.nativeEvent.offsetY;
+    return locationY ?? offsetY;
+  };
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: -scrollY.value }],
@@ -172,12 +179,30 @@ export default function DayContainer({
                 isVisible={isVisible}
                 selectedEventId={selectedEventId}
                 isDummy={event.dummy}
-                scrollX={scrollX}
-                eventPool={eventPool}
-                widthsDictionary={widthsDictionary}
               />
             );
           })}
+
+          <Pressable
+            onPress={(event) => {
+              const startTime = new Date(day);
+              startTime.setHours(0, 0, 0);
+              const endTime = addHours(startTime, 24);
+              const draftEvent = createEventObj(
+                {
+                  startDate: startTime,
+                  endDate: endTime,
+                  title: '',
+                  allDay: true,
+                },
+                timeZone,
+              );
+
+              handlePress(draftEvent, true, event);
+            }}
+            onLongPress={() => {}}
+            style={[styles.newEventButton, { flex: 1 }]}
+          />
         </Animated.View>
       </View>
 
@@ -196,7 +221,7 @@ export default function DayContainer({
       >
         <HourTicks hourHeight={hourHeight} isDark={theme.isDark} />
         <TimeIndicator hourHeight={hourHeight} isToday={isToday} />
-        {eventsWithOffsets.map((item) => (
+        {eventsWithLayout.map((item) => (
           <EventContainer
             key={item.event.id}
             eventWithOffset={item}
@@ -230,8 +255,8 @@ export default function DayContainer({
         )}
         <Animated.View
           style={[
-            animatedDragEvent,
             eventStyles.newEvent,
+            animatedDragEvent,
             {
               zIndex: 2000,
               width: dayWidth,
@@ -239,12 +264,12 @@ export default function DayContainer({
           ]}
         ></Animated.View>
 
-        {/* <Pressable
+        <Pressable
           onPress={(event) => {
             const y = getYofEventPress(event);
-            const hour = Math.floor(y / hourHeight);
+            const minutes = Math.floor((y / hourHeight) * 4) * 15;
             const clickedTime = new Date(day);
-            clickedTime.setHours(hour, 0, 0, 0);
+            clickedTime.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
             const draftEvent = createEventObj(
               {
                 startDate: clickedTime,
@@ -256,8 +281,9 @@ export default function DayContainer({
 
             handlePress(draftEvent, true, event);
           }}
+          onLongPress={() => {}}
           style={[StyleSheet.absoluteFill, styles.newEventButton, { height: hourHeight * 24 }]}
-        /> */}
+        />
       </Animated.View>
     </View>
   );

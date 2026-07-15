@@ -1,6 +1,6 @@
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 
 import { getSettingBackgroundStyles } from '@/components/settingsContainer/settingsContainerStyles';
@@ -8,6 +8,7 @@ import { COLORS } from '@/utility/theme';
 import { useScreenSize } from '../contexts/screen-size-context';
 import { useUIContext } from '../contexts/ui-context';
 import AppearanceContainer from './appearance-container';
+import CalendarSettingsContainer from './calendar-settings-container';
 import Login from './login-container';
 
 interface Props {
@@ -75,7 +76,7 @@ export default function SettingsModal({ isVisible, onClose }: Props) {
   );
   const CalendarSettings = () => (
     <BottomSheetScrollView key={1} style={styles.scrollViewContainer}>
-      <Text>CalendarSettings</Text>
+      <CalendarSettingsContainer />
     </BottomSheetScrollView>
   );
 

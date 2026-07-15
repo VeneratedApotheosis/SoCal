@@ -39,7 +39,7 @@ export default function DraggableCalendar({
   const isDragging = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
   const { theme } = useUIContext();
-  const { viewMode, setViewMode, toggleTransparent, toggleIsolate } = useCalendarObjects();
+  const { calViewMode: viewMode, setCalViewMode: setViewMode, toggleTransparent, toggleIsolate } = useCalendarObjects();
 
   const gesture = Gesture.Pan()
     .activateAfterLongPress(250)

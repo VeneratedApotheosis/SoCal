@@ -1,9 +1,18 @@
-import { Text, View } from 'react-native';
+import { EventWithLayout } from '@/utility/types';
+import React from 'react';
+import { View } from 'react-native';
+import AllDayEvents from './all-day-events';
 
 // --- CONSTANTS ---
 const GRID_COLOR = '#f0f0f0';
+export interface DayBoxProps {
+  day: Date;
+  weekHeight: number;
+  dayWidth: number;
+  event: EventWithLayout[];
+}
 
-export default function DayBox({ day, weekHeight, dayWidth, key }: { day: Date; weekHeight: number; dayWidth: number; key: string }) {
+export default function DayBox({ day, weekHeight, dayWidth, event }: DayBoxProps) {
   return (
     <View
       style={{
@@ -13,9 +22,24 @@ export default function DayBox({ day, weekHeight, dayWidth, key }: { day: Date; 
         borderColor: GRID_COLOR,
         flex: 1,
       }}
-      key={key}
     >
-      <Text>{day.getDate()}</Text>
+      {event.map((event, idx) => {
+        const key = event && event.event ? event.event.id + day.toISOString() : idx + day.toISOString();
+        return (
+          <AllDayEvents
+            key={key}
+            event={event.event}
+            day={day}
+            layout={event}
+            handlePress={() => {}}
+            dayWidth={dayWidth}
+            isVisible={false}
+            selectedEventId={'selectedEventId'}
+            isDummy={event.dummy}
+            idx={idx}
+          />
+        );
+      })}
     </View>
   );
 }

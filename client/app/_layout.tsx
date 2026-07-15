@@ -9,6 +9,7 @@ import { GroupsProvider } from '@/components/contexts/calendar-groups-context';
 import { DateProvider } from '@/components/contexts/calendar-index-context';
 import { CalendarObjectsProvider } from '@/components/contexts/calendar-obj-context';
 import { RangeProvider } from '@/components/contexts/calendar-range-context';
+import { HourHeightProvider } from '@/components/contexts/hour-height-context';
 import { ScreenSizeProvider } from '@/components/contexts/screen-size-context';
 import { TimeZoneProvider } from '@/components/contexts/time-zone-context';
 import { UIProvider } from '@/components/contexts/ui-context';
@@ -30,27 +31,29 @@ export default function RootLayout() {
                   <GroupsProvider>
                     <RangeProvider>
                       <UIProvider>
-                        <BottomSheetModalProvider>
-                          <Drawer
-                            drawerContent={(props) => <CustomDrawerContent {...props} />}
-                            screenOptions={{
-                              drawerStyle: {},
-                              swipeEnabled: false,
-                            }}
-                          >
-                            <Drawer.Screen
-                              name="index"
-                              options={{
-                                headerShown: false,
-                                headerTransparent: false,
-                                headerTitle: 'Calender',
-                                drawerLabel: 'Calendar',
-                                drawerIcon: ({ size, color }) => <Ionicons name="home-outline" size={size} color={color} />,
+                        <HourHeightProvider>
+                          <BottomSheetModalProvider>
+                            <Drawer
+                              drawerContent={(props) => <CustomDrawerContent {...props} />}
+                              screenOptions={{
+                                drawerStyle: {},
+                                swipeEnabled: false,
                               }}
-                            />
-                          </Drawer>
-                          <PortalHost name={PORTAL_HOME_NAME} />
-                        </BottomSheetModalProvider>
+                            >
+                              <Drawer.Screen
+                                name="index"
+                                options={{
+                                  headerShown: false,
+                                  headerTransparent: false,
+                                  headerTitle: 'Calender',
+                                  drawerLabel: 'Calendar',
+                                  drawerIcon: ({ size, color }) => <Ionicons name="home-outline" size={size} color={color} />,
+                                }}
+                              />
+                            </Drawer>
+                            <PortalHost name={PORTAL_HOME_NAME} />
+                          </BottomSheetModalProvider>
+                        </HourHeightProvider>
                       </UIProvider>
                     </RangeProvider>
                   </GroupsProvider>

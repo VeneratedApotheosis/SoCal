@@ -9,8 +9,8 @@ export interface CalendarObjectsContextType {
   setCalendarObjs: Dispatch<SetStateAction<calendarObj[]>>;
   refetchCalendarList: () => Promise<void>;
   sharedCalendars: sharedObj[];
-  viewMode: 'default' | 'isolate' | 'transparent';
-  setViewMode: React.Dispatch<React.SetStateAction<'default' | 'isolate' | 'transparent'>>;
+  calViewMode: 'default' | 'isolate' | 'transparent';
+  setCalViewMode: React.Dispatch<React.SetStateAction<'default' | 'isolate' | 'transparent'>>;
   toggleCalendar: (id: string) => void;
   toggleTransparent: (id: string) => void;
   toggleIsolate: (id: string) => void;
@@ -27,15 +27,14 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
 
   const [sharedCalendars, setSharedCalendars] = useState<sharedObj[]>([]);
 
-  const [viewMode, setViewMode] = useState<'default' | 'isolate' | 'transparent'>('default');
+  const [calViewMode, setCalViewMode] = useState<'default' | 'isolate' | 'transparent'>('default');
 
   const refetchCalendarList = async () => {
     await refetch(sessionTokenString);
   };
 
-  // -------------------------------------------
-  // shared Calendars
-  // -------------------------------------------
+  // ─── Shared Calendars ───────────────────────────────────────────────────────────
+
   useEffect(() => {
     if (!sharedObjs || !familyProfiles?.parent?.email) return;
 
@@ -81,7 +80,7 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
 
   const toggleTransparent = useCallback(
     (id: string) => {
-      if (viewMode !== 'transparent') setViewMode('transparent');
+      if (calViewMode !== 'transparent') setCalViewMode('transparent');
 
       setCalendarObjs((prev) => {
         const next = prev.map((cal) =>
@@ -100,7 +99,7 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
 
   const toggleIsolate = useCallback(
     (id: string) => {
-      if (viewMode !== 'isolate') setViewMode('isolate');
+      if (calViewMode !== 'isolate') setCalViewMode('isolate');
 
       setCalendarObjs((prev) => {
         const next = prev.map((cal) =>
@@ -118,7 +117,7 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
   );
 
   const resetViewMode = useCallback(() => {
-    setViewMode('default');
+    setCalViewMode('default');
 
     setCalendarObjs((prev) =>
       prev.map((cal) => ({
@@ -135,8 +134,8 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
         refetchCalendarList,
         setCalendarObjs,
         sharedCalendars,
-        viewMode,
-        setViewMode,
+        calViewMode,
+        setCalViewMode,
         toggleCalendar,
         toggleTransparent,
         toggleIsolate,

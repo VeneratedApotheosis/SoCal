@@ -1,11 +1,11 @@
 // hooks/usePinchZoom.ts
-import { HOUR_HEIGHT } from '@/utility/constants';
+import { DEFAULT_HOUR_HEIGHT } from '@/utility/constants';
 import { useState } from 'react';
 import { Gesture } from 'react-native-gesture-handler';
 
 export const usePinchZoom = () => {
-  const [hourHeight, setHourHeight] = useState(HOUR_HEIGHT);
-  const [baseHeight, setBaseHeight] = useState(HOUR_HEIGHT);
+  const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT);
+  const [baseHeight, setBaseHeight] = useState(DEFAULT_HOUR_HEIGHT);
 
   const pinchGesture = Gesture.Pinch()
     .onUpdate((e) => {

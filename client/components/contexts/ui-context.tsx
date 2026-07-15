@@ -1,5 +1,6 @@
 import { useColorCache } from '@/hooks/useColorCache';
 import { useTheme } from '@/hooks/useTheme';
+import { DEFAULT_TRANSPARENCY } from '@/utility/constants';
 import { colorCache } from '@/utility/types';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { useCalendarObjects } from './calendar-obj-context';
@@ -30,6 +31,10 @@ interface UIContextType {
   };
   isSidebarExpanded: boolean;
   setSidebarExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+  transparentOpacity: number;
+  setTransparencyOpacity: React.Dispatch<React.SetStateAction<number>>;
+  multiDayInHeader: boolean;
+  setMultiDayInHeader: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const UIContext = createContext<UIContextType>({} as UIContextType);
@@ -43,6 +48,8 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
 
   const [isSidebarExpanded, setSidebarExpanded] = useState<boolean>(true);
   const [isSidebarLoading, setSidebarLoading] = useState<boolean>(true);
+  const [transparentOpacity, setTransparencyOpacity] = useState<number>(DEFAULT_TRANSPARENCY);
+  const [multiDayInHeader, setMultiDayInHeader] = useState<boolean>(true);
 
   // ─── Now ───────────────────────────────────────────────────────────
 
@@ -67,6 +74,10 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
           isSidebarLoading,
           setSidebarLoading,
         },
+        transparentOpacity,
+        setTransparencyOpacity,
+        multiDayInHeader,
+        setMultiDayInHeader,
       }}
     >
       {children}

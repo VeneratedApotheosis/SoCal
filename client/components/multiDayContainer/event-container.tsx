@@ -6,6 +6,7 @@ import { EventObj, EventWithLayout } from '@/utility/types';
 import React, { memo, useMemo } from 'react';
 import { Text, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
+import { useCalendarObjects } from '../contexts/calendar-obj-context';
 import { useUIContext } from '../contexts/ui-context';
 import { eventsAreEqual } from '../eventDetailsContainer/expanded-view';
 
@@ -22,22 +23,37 @@ export interface EventContainerProps {
 const lightStyles = getEventCardStyles(false);
 const darkStyles = getEventCardStyles(true);
 
-//TODO: MAKE THIS LOOK PRETTY
 function EventContainer({ eventWithOffset, dayWidth, hourHeight, onSelect, isVisible, selectedEventId, newEvent }: EventContainerProps) {
   const { event, offset, maxOffset } = eventWithOffset;
-  const { theme } = useUIContext();
+  const { calendarObjs, calViewMode } = useCalendarObjects();
+  const { theme, transparentOpacity } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;
 
-  //position on screen
+  //position
   const layout = useMemo(() => {
     return getEventLayout(eventWithOffset, offset, maxOffset, hourHeight, dayWidth);
   }, [event, offset, hourHeight, dayWidth]);
 
-  const selectedThisEvent = !!selectedEventId && isVisible && selectedEventId === event.id;
-  const totalOffset = selectedThisEvent ? 200 : offset + 100;
-
-  //color on screen
+  //color
   const { rawColor, borderColor, textColor } = useEventColors(event.calendarId, newEvent);
+
+  const opacity = useMemo(() => {
+    const calId = eventWithOffset.event.calendarId;
+    const cal = calendarObjs?.find((c) => c.calendarId === calId);
+    if (!cal) return 0;
+    const equalsViewMode = cal.visibility === calViewMode;
+    if (equalsViewMode && calViewMode === 'default') return 1;
+    else if (equalsViewMode && calViewMode === 'isolate') return 1;
+    else if (equalsViewMode && calViewMode === 'transparent') return transparentOpacity;
+    if (!equalsViewMode && calViewMode === 'default')
+      return 0; //shouldn't be possible anways
+    else if (!equalsViewMode && calViewMode === 'isolate') return transparentOpacity;
+    else if (!equalsViewMode && calViewMode === 'transparent') return 1;
+    return 0;
+  }, [calendarObjs, transparentOpacity]);
+
+  const selectedThisEvent = !!selectedEventId && isVisible && selectedEventId === event.id;
+  const totalOffset = selectedThisEvent ? 300 : offset + 100;
 
   return (
     <>
@@ -66,7 +82,8 @@ function EventContainer({ eventWithOffset, dayWidth, hourHeight, onSelect, isVis
             {
               ...layout,
               zIndex: totalOffset,
-              elevation: totalOffset, // Required for Android layering
+              elevation: totalOffset,
+              opacity: opacity,
             },
           ]}
           hitSlop={5}

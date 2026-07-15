@@ -13,16 +13,22 @@ export function useCalendar(jwtToken: string | null, timeZone: string, isTimeZon
   const [uniqueCalendars, setUniqueCalendars] = useState<CalendarData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [localTimeZone, setLocalTimeZone] = useState<string | null>(null);
 
   useEffect(() => {
     storage.get('calendar').then((c) => c && setCalendars(c));
   }, []);
 
+  const clearCalendarEvents = () => {
+    setCalendars(null);
+    setUniqueCalendars([]);
+    console.log('Cleared Calendar Events');
+  };
+
   const fetchUserEvents = useCallback(
     async (jwtToken: string | null, fetchStart: number | null, fetchEnd: number | null) => {
       if (!jwtToken || !isTimeZoneLoaded || !timeZone) {
-        setCalendars(null);
-        setUniqueCalendars([]);
+        clearCalendarEvents();
         return;
       }
       console.log('fetching calendar events');
@@ -31,8 +37,8 @@ export function useCalendar(jwtToken: string | null, timeZone: string, isTimeZon
       let fetchStartDate: Date = new Date();
       let fetchEndDate: Date = new Date();
       if (fetchStart && fetchEnd) {
-        //Failed fetch
-        setError('Cannot set both fetchStart and fetchEnd.');
+        fetchStartDate = addDays(fetchStartDate, fetchStart);
+        fetchEndDate = addDays(fetchEndDate, fetchEnd);
         return;
       } else if (!fetchStart && !fetchEnd) {
         //Starting fetch scheme
@@ -76,8 +82,8 @@ export function useCalendar(jwtToken: string | null, timeZone: string, isTimeZon
           const rawEvents = await fetchGivenCalendarRange(tokens.parent.accessToken, cal.id, rfcStart, rfcEnd, timeZone);
           const uniqueEvents = await fetchMultiGivenCalendarRange(tokens.parent.accessToken, cal.id, rfcStart, rfcEnd, timeZone);
 
-          const processedRaw = processCalendar(rawEvents, cal.id, cal.summary, newCalendarObj);
-          const proccessedUnique = processCalendar(uniqueEvents, cal.id, cal.summary, newCalendarObj);
+          const processedRaw = processCalendar(rawEvents, cal.id, cal.summary, timeZone);
+          const proccessedUnique = processCalendar(uniqueEvents, cal.id, cal.summary, timeZone);
           const recurringEvents: EventObj[] = proccessedUnique.filter((event) => event.recurrence != null);
 
           return {
@@ -140,6 +146,10 @@ export function useCalendar(jwtToken: string | null, timeZone: string, isTimeZon
   );
 
   useEffect(() => {
+    if (localTimeZone && localTimeZone !== timeZone) {
+      clearCalendarEvents();
+    }
+    setLocalTimeZone(timeZone);
     fetchUserEvents(jwtToken, null, null);
   }, [jwtToken, timeZone, isTimeZoneLoaded, fetchUserEvents]);
 

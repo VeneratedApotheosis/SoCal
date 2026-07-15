@@ -23,7 +23,7 @@ import DraggableCalendar from './drawer-draggable-calendar';
 export default function CustomDrawerContent(props: any) {
   const { jwtToken, calendarType, setCalendarType, familyProfiles } = useAuthContext();
   const { fixedSidebar, isWeb } = useScreenSize();
-  const { toggleCalendar, viewMode, resetViewMode } = useCalendarObjects();
+  const { toggleCalendar, calViewMode: viewMode, resetViewMode } = useCalendarObjects();
   const { calendarGroups } = useCalendarGroups();
   const { setLoginVisible, theme: uiTheme } = useUIContext();
   const hoverIndex = useSharedValue<number | null>(null);

@@ -1,3 +1,4 @@
+import { AllDayStyles, getAllDayChipStyles } from '@/components/multiDayContainer/multiDayStyles';
 import { useEventColors } from '@/hooks/useEventColor';
 import { EventObj, EventWithLayout } from '@/utility/types';
 import React, { memo, useMemo } from 'react';
@@ -6,9 +7,8 @@ import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanima
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
 import { useUIContext } from '../contexts/ui-context';
 import { eventsAreEqual } from '../eventDetailsContainer/expanded-view';
-import { AllDayStyles, getAllDayChipStyles } from './multiDayStyles';
 
-export interface AllDayChipProps {
+export interface Props {
   event: EventObj;
   day: Date;
   layout: EventWithLayout;
@@ -17,12 +17,13 @@ export interface AllDayChipProps {
   isVisible: boolean;
   selectedEventId: string | null;
   isDummy: boolean;
+  idx: number;
 }
 
 const darkStyles = getAllDayChipStyles(true);
 const lightStyles = getAllDayChipStyles(false);
 
-function AllDayChip({ event, day, layout, handlePress, dayWidth, isVisible, selectedEventId, isDummy }: AllDayChipProps) {
+function AllDayEvents({ event, day, layout, handlePress, dayWidth, isVisible, selectedEventId, isDummy, idx }: Props) {
   const { theme, transparentOpacity } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;
   const { calendarObjs, calViewMode } = useCalendarObjects();
@@ -86,8 +87,10 @@ function AllDayChip({ event, day, layout, handlePress, dayWidth, isVisible, sele
     return { opacity: 1, position: 'absolute', left: left };
   });
 
+  const key = event.id + ' ' + idx + ' ' + day.toISOString();
+
   return (
-    <View style={{ overflow: 'hidden' }}>
+    <View style={{ overflow: 'hidden' }} key={key}>
       {isDummy ? (
         <View
           style={[
@@ -146,22 +149,6 @@ function AllDayChip({ event, day, layout, handlePress, dayWidth, isVisible, sele
                   {event.title}
                 </Animated.Text>
               </Animated.View>
-              {/* --- end --- */}
-              {/* <Animated.Text
-                style={[
-                  styles.eventText,
-                  selectedThisEvent && { color: rawColor },
-                  //animatedEndStyle,
-                  {
-                    color: textColor,
-                    width: 1000,
-                    opacity: 0,
-                    zIndex: 1,
-                  },
-                ]}
-              >
-                {event.title}
-              </Animated.Text> */}
             </>
           )}
         </Pressable>
@@ -170,7 +157,7 @@ function AllDayChip({ event, day, layout, handlePress, dayWidth, isVisible, sele
   );
 }
 
-const areEqual = (prevProps: AllDayChipProps, nextProps: AllDayChipProps) => {
+const areEqual = (prevProps: Props, nextProps: Props) => {
   if (prevProps.dayWidth !== nextProps.dayWidth) return false;
   if (prevProps.isVisible !== nextProps.isVisible) return false;
   if (!eventsAreEqual(prevProps.event, nextProps.event)) return false;
@@ -183,4 +170,4 @@ const areEqual = (prevProps: AllDayChipProps, nextProps: AllDayChipProps) => {
   return true;
 };
 
-export default memo(AllDayChip, areEqual);
+export default memo(AllDayEvents, areEqual);

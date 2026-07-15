@@ -30,6 +30,7 @@ export const FetchStatusIcon = () => {
 
   // 3. Generic Error State (Any other error code)
   if (error !== null) {
+    console.log(error);
     return (
       <View>
         {/* A warning icon inside a cloud, or just a generic error cloud */}

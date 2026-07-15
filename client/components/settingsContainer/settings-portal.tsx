@@ -6,6 +6,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useUIContext } from '../contexts/ui-context';
 import AppearanceContainer from './appearance-container';
+import CalendarSettingsContainer from './calendar-settings-container';
 import Login from './login-container';
 
 export interface SettingsPortalProps {
@@ -65,6 +66,7 @@ export default function SettingsPortal({ isVisible, onClose }: SettingsPortalPro
           <View style={{ flexDirection: 'row' }}>
             <Login />
             <AppearanceContainer />
+            <CalendarSettingsContainer />
           </View>
         </ScrollView>
       </Animated.View>

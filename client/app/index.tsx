@@ -36,14 +36,14 @@ export default function Index() {
           {!!fixedSidebar && <FixedDrawer />}
           <View style={styles.roundedEdges}>
             {calendarType.type === 'D' && <MultiDayContainer calendarType={calendarType} events={allEvents} />}
-            {calendarType.type === 'W' && <MonthContainer numWeeks={6} />}
+            {calendarType.type === 'W' && <MonthContainer calendarType={calendarType} events={allEvents} />}
             <SettingsPortal isVisible={isLoginVisible} onClose={() => setLoginVisible(false)} />
           </View>
         </View>
       ) : (
         <View style={{ flex: 1 }}>
           {calendarType.type === 'D' && <MultiDayContainer calendarType={calendarType} events={allEvents} />}
-          {calendarType.type === 'W' && <MonthContainer numWeeks={6} />}
+          {calendarType.type === 'W' && <MonthContainer calendarType={calendarType} events={allEvents} />}
           <SettingsModal isVisible={isLoginVisible} onClose={() => setLoginVisible(false)} />
         </View>
       )}

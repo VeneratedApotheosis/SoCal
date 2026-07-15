@@ -65,7 +65,7 @@ export const COLORS = {
     mutedDark: '#4b5563',
   },
   text: {
-    main: '#333333',
+    dark: '#333333',
     light: '#EAEAEA',
     subtleLight: '#9ca3af', // gray-400
     subtleDark: '#6b7280', // gray-500

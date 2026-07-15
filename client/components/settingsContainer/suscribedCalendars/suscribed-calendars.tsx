@@ -62,7 +62,7 @@ export default function SuscribedCalendars() {
             <Text style={styles.emptyText}>No shared calendars found.</Text>
           ) : (
             suscribedCalendars.map((cal) => {
-              return <SuscribedCalendarIndividual cal={cal} />;
+              return <SuscribedCalendarIndividual cal={cal} key={cal.calendarId} />;
             })
           )}
         </View>

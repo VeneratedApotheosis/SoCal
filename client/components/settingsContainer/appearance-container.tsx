@@ -6,6 +6,8 @@ import { colorCache } from '@/utility/types';
 import { useMemo, useState } from 'react';
 import { Modal, Pressable, Text, TouchableOpacity, View } from 'react-native';
 import { useUIContext } from '../contexts/ui-context';
+import AppearanceHourHeight from './appearance/appearance-hour-height';
+import AppearanceTransparency from './appearance/appearance-transparency-slider';
 import { getSettingAppearanceStyles, getSettingBackgroundStyles } from './settingsContainerStyles';
 
 const ThemeButton = ({
@@ -50,7 +52,7 @@ export default function AppearanceContainer() {
   // UI States
   const [isModalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [isDebug, setDebug] = useState<boolean>(true);
+  const [isDebug, setDebug] = useState<boolean>(false);
 
   // --- temporary state ---
   // hold colors while editing
@@ -102,6 +104,8 @@ export default function AppearanceContainer() {
     <View style={rootStyles.tabContainer}>
       <AppearanceTheme />
       <AppearanceColorPalette />
+      <AppearanceHourHeight />
+      <AppearanceTransparency />
 
       {/* --- DEBUGGER --- */}
       {isDebug === true && (

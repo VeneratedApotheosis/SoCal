@@ -18,7 +18,7 @@ export const globalStyles = StyleSheet.create({
   },
   headerText: {
     fontSize: SIZES.l,
-    color: COLORS.text.main,
+    color: COLORS.text.dark,
     fontWeight: FONT_WEIGHTS.medium,
   },
   toggleButtonContainer: {
@@ -42,11 +42,11 @@ export const globalStyles = StyleSheet.create({
   },
   smallButtonText: {
     fontSize: SIZES.s,
-    color: COLORS.text.main,
+    color: COLORS.text.dark,
     fontWeight: FONT_WEIGHTS.light,
   },
   activeSmallButtonText: {
-    color: COLORS.text.main,
+    color: COLORS.text.dark,
     fontWeight: FONT_WEIGHTS.heavy,
   },
   bottomRightShadow: {
@@ -57,7 +57,7 @@ export const globalStyles = StyleSheet.create({
 
 export const getIconColor = (isDark: boolean, isMuted: boolean = false) => {
   if (isMuted) return isDark ? '#666' : '#ccc';
-  return isDark ? COLORS.text.light : COLORS.text.main;
+  return isDark ? COLORS.text.light : COLORS.text.dark;
 };
 
 export const getBasicThemeStyles = (isDark: boolean) =>
@@ -89,7 +89,7 @@ export const getBasicThemeStyles = (isDark: boolean) =>
   });
 
 export const getBasicTypographyStyles = (isDark: boolean) => {
-  const defaultColor = isDark ? COLORS.text.light : COLORS.text.main;
+  const defaultColor = isDark ? COLORS.text.light : COLORS.text.dark;
 
   return StyleSheet.create({
     title: {
@@ -118,7 +118,7 @@ export const getBasicTypographyStyles = (isDark: boolean) => {
       color: defaultColor,
     },
     defaultColor: {
-      color: isDark ? COLORS.text.light : COLORS.text.main,
+      color: isDark ? COLORS.text.light : COLORS.text.dark,
     },
     subtleColor: {
       color: isDark ? COLORS.text.subtleLight : COLORS.text.subtleDark,

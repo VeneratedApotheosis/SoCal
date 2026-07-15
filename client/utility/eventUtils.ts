@@ -1,6 +1,7 @@
 import { differenceInMinutes, getHours, getMinutes, parseISO } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { EVENT_GAP } from './constants';
-import { EventObj, EventWithLayout, calendarObj } from './types';
+import { EventObj, EventWithLayout } from './types';
 
 export function createEventObj(data: Partial<EventObj>, timeZone: string): EventObj {
   return {
@@ -45,16 +46,17 @@ export const convertToGoogleEvent = (eventObj: EventObj) => {
 // Parses a date string as LOCAL midnight instead of UTC midnight.
 // parseISO("2026-05-27") → UTC midnight → shifts to prev day in negative-offset timezones.
 // This fix ensures all-day event dates stay on the correct calendar day regardless of timezone.
-function parseDateString(dateStr: string, isAllDay: boolean): Date {
+function parseDateString(dateStr: string, isAllDay: boolean, timeZone: string): Date {
   if (isAllDay) {
     // "2026-05-27" → local midnight: new Date(2026, 4, 27, 0, 0, 0)
     const [year, month, day] = dateStr.split('-').map(Number);
     return new Date(year, month - 1, day, 0, 0, 0, 0);
   }
-  return parseISO(dateStr);
+  const absoluteDate = parseISO(dateStr);
+  return toZonedTime(absoluteDate, timeZone);
 }
 
-export const processEvent = (item: any, owner: string, calendarId: string): EventObj | null => {
+export const processEvent = (item: any, owner: string, calendarId: string, timeZone: string): EventObj | null => {
   try {
     if (!item || !item.organizer?.email || !item.summary) {
       return null;
@@ -69,8 +71,8 @@ export const processEvent = (item: any, owner: string, calendarId: string): Even
     const isAllday = !!item.start.date && !item.start.dateTime;
 
     // Fix: all-day date strings are parsed as local midnight, not UTC midnight
-    const formattedStart = parseDateString(startDateString, isAllday);
-    const formattedEnd = parseDateString(endDateString, isAllday);
+    const formattedStart = parseDateString(startDateString, isAllday, timeZone);
+    const formattedEnd = parseDateString(endDateString, isAllday, timeZone);
 
     const formattedDescription = item.description ?? '';
 
@@ -101,7 +103,7 @@ export const processEvent = (item: any, owner: string, calendarId: string): Even
   }
 };
 
-export const processCalendar = (calendar: any[], calendarId: string, owner: string, calendarObj: calendarObj): EventObj[] => {
+export const processCalendar = (calendar: any[], calendarId: string, owner: string, timeZone: string): EventObj[] => {
   if (!calendar || !Array.isArray(calendar)) {
     return [];
   }
@@ -111,7 +113,7 @@ export const processCalendar = (calendar: any[], calendarId: string, owner: stri
       const status = item.status?.toLowerCase().trim();
       return status !== 'cancelled';
     })
-    .map((item: any) => processEvent(item, owner, calendarId))
+    .map((item: any) => processEvent(item, owner, calendarId, timeZone))
     .filter((event: any): event is EventObj => event !== null)
     .sort(compareEvents);
 };

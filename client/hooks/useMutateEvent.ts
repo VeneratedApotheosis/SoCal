@@ -1,3 +1,4 @@
+import { useTimeZoneContext } from '@/components/contexts/time-zone-context';
 import { getEventInstancesFromGoogleCalendar } from '@/services/api';
 import { processEvent } from '@/utility/eventUtils';
 import { getValidAccessToken } from '@/utility/tokenUtils';
@@ -15,6 +16,7 @@ export const useMutateEvent = (
 ) => {
   const { apiEditEvent, apiCreateEvent, apiDeleteEvent, apiPatchRecurrenceEvent, isWriting, writeError } =
     useCalendarWrite(sessionTokenString);
+  const { timeZone } = useTimeZoneContext();
 
   const createEvent = async (event: EventObj) => {
     const rawResponse = await apiCreateEvent(event);
@@ -22,7 +24,7 @@ export const useMutateEvent = (
     const googleOwnerEmail = rawResponse?.organizer?.email || rawResponse?.creator?.email;
     const targetCalendarId = event.calendarId || googleOwnerEmail;
 
-    const baseNewEventObj = processEvent(rawResponse, event.organizer, targetCalendarId);
+    const baseNewEventObj = processEvent(rawResponse, event.organizer, targetCalendarId, timeZone);
     if (!baseNewEventObj) return null;
     const newEventObjs: EventObj[] = [];
 
@@ -48,7 +50,7 @@ export const useMutateEvent = (
         // Process each instance returned by Google
         if (instancesResponse && instancesResponse.items) {
           instancesResponse.items.forEach((instanceRaw: any) => {
-            const processedInstance = processEvent(instanceRaw, event.organizer, targetCalendarId);
+            const processedInstance = processEvent(instanceRaw, event.organizer, targetCalendarId, timeZone);
             if (processedInstance) {
               newEventObjs.push(processedInstance);
             }
@@ -194,7 +196,7 @@ export const useMutateEvent = (
         console.warn('Local state update aborted: Could not determine targetCalendarId.');
         return;
       }
-      const updatedMasterObj = processEvent(rawResponse, event.organizer, targetCalendarId);
+      const updatedMasterObj = processEvent(rawResponse, event.organizer, targetCalendarId, timeZone);
 
       setCalendars((prev) => {
         if (!prev) return prev;
@@ -245,7 +247,7 @@ export const useMutateEvent = (
     const googleOwnerEmail = rawResponse?.organizer?.email || rawResponse?.creator?.email;
     const targetCalendarId = event.calendarId || googleOwnerEmail;
 
-    const updatedEventObj = processEvent(rawResponse, event.organizer, targetCalendarId);
+    const updatedEventObj = processEvent(rawResponse, event.organizer, targetCalendarId, timeZone);
 
     if (updatedEventObj) {
       setCalendars((prev) => {
@@ -280,7 +282,7 @@ export const useMutateEvent = (
       const googleOwnerEmail = rawResponse?.organizer?.email || rawResponse?.creator?.email;
       const targetCalendarId = event.calendarId || googleOwnerEmail;
 
-      const updatedMasterEventObj = processEvent(rawResponse, event.organizer, targetCalendarId);
+      const updatedMasterEventObj = processEvent(rawResponse, event.organizer, targetCalendarId, timeZone);
 
       if (updatedMasterEventObj) {
         setCalendars((prev) => {

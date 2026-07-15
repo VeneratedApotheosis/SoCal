@@ -2,9 +2,9 @@
 import { useCalendar } from '@/hooks/useCalendar';
 import { useCalendarWrite } from '@/hooks/useCalendarWrite';
 import { useMutateEvent } from '@/hooks/useMutateEvent';
-import { FETCH_INITIAL_BUFFER } from '@/utility/constants';
+import { BUFFER_INCREMENT, FETCH_INITIAL_BUFFER } from '@/utility/constants';
 import { CalendarData, EventObj } from '@/utility/types';
-import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuthContext } from './auth-context';
 import { useCalendarObjects } from './calendar-obj-context';
 import { useTimeZoneContext } from './time-zone-context';
@@ -29,18 +29,14 @@ export interface EventsContextType {
   fetchBackward: (fetchEnd: number) => void;
   uniqueCalendars: CalendarData[];
   setUniqueCalendars: React.Dispatch<React.SetStateAction<CalendarData[]>>;
-  viewMode: 'default' | 'isolate' | 'transparent';
-  setViewMode: React.Dispatch<React.SetStateAction<'default' | 'isolate' | 'transparent'>>;
 }
 
 export const EventsContext = createContext<EventsContextType>({} as EventsContextType);
 
 export const EventsProvider = ({ children }: { children: ReactNode }) => {
-  const { jwtToken } = useAuthContext();
+  const { jwtToken, calendarType } = useAuthContext();
   const sessionTokenString = jwtToken?.sessionToken ?? null;
-
-  // TRACK STATES
-  const [viewMode, setViewMode] = useState<'default' | 'isolate' | 'transparent'>('default');
+  const [localCalType, setLocalCalType] = useState<'D' | 'W'>('D');
 
   // API WRITING HOOK
   const { isWriting, writeError } = useCalendarWrite(sessionTokenString);
@@ -51,7 +47,7 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   // ─── Calendar Object and Events Hooks ───────────────────────────────────────────────────────────
 
   // Calendar Object Hook
-  const { calendarObjs } = useCalendarObjects();
+  const { calendarObjs, calViewMode } = useCalendarObjects();
   // Calendar Event Hook
   const {
     calendars,
@@ -66,18 +62,37 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   // Visible Events
   const allEvents = useMemo(() => {
     if (!calendars || !calendarObjs) return [];
-    const visibleIds = new Set(calendarObjs.filter((c) => c.shown).map((c) => c.calendarId));
+    if (calViewMode === 'default') {
+      const visibleIds = new Set(calendarObjs.filter((c) => c.shown).map((c) => c.calendarId));
+      return (calendars.parent || []).filter((cal) => visibleIds.has(cal.id)).flatMap((cal) => cal.events);
+    } else if (calViewMode === 'isolate') {
+      const visibleIds = new Set(calendarObjs.filter((c) => c.visibility === 'isolate' || c.shown).map((c) => c.calendarId));
+      return (calendars.parent || []).filter((cal) => visibleIds.has(cal.id)).flatMap((cal) => cal.events);
+    }
 
+    const visibleIds = new Set(calendarObjs.filter((c) => c.shown).map((c) => c.calendarId));
     return (calendars.parent || []).filter((cal) => visibleIds.has(cal.id)).flatMap((cal) => cal.events);
-  }, [calendars, calendarObjs]);
+  }, [calendars, calendarObjs, calViewMode]);
 
   // ─── Event Mutation Hook ───────────────────────────────────────────────────────────
 
-  const [fetchEnd, setFetchEnd] = useState<number>(3 * FETCH_INITIAL_BUFFER);
-  const [fetchStart, setFetchStart] = useState<number>(-3 * FETCH_INITIAL_BUFFER);
+  const [fetchEnd, setFetchEnd] = useState<number>(2 * BUFFER_INCREMENT);
+  const [fetchStart, setFetchStart] = useState<number>(-2 * BUFFER_INCREMENT);
   const mutateEvent = useMutateEvent(sessionTokenString, uniqueCalendars, setCalendars, setUniqueCalendars, fetchStart, fetchEnd);
 
   // ─── Fetching ───────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!jwtToken) return;
+    if (calendarType.type !== localCalType) {
+      if (calendarType.type === 'W') {
+        refetchCalendar(jwtToken?.sessionToken, -8 * BUFFER_INCREMENT, 8 * BUFFER_INCREMENT);
+      }
+      setLocalCalType(calendarType.type);
+      setFetchEnd(Math.max(6 * BUFFER_INCREMENT, fetchEnd));
+      setFetchStart(Math.max(-6 * BUFFER_INCREMENT, fetchEnd));
+    }
+  }, [calendarType]);
 
   const fetchForward = (fetchEnd: number) => {
     if (!jwtToken) return;
@@ -105,8 +120,6 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
         fetchBackward,
         uniqueCalendars,
         setUniqueCalendars,
-        viewMode,
-        setViewMode,
       }}
     >
       {children}

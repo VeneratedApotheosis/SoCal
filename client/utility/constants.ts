@@ -1,6 +1,7 @@
 // --- CONSTANTS ---
 export const HEADER_HEIGHT = 80;
-export const HOUR_HEIGHT = 40;
+export const DEFAULT_HOUR_HEIGHT = 40;
+export const DEFAULT_TRANSPARENCY = 0.2;
 export const HOUR_LABEL_WIDTH = 50;
 export const DATE_HEADER_HEIGHT = 40;
 export const EVENT_GAP = 10;
