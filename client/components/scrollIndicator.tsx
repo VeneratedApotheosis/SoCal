@@ -13,7 +13,6 @@ export function useWebScrollbarStyle() {
     // 1. Pick colors based on current mode
     const trackColor = 'transparent';
     const thumbColor = theme.isDark ? COLORS.text.subtleDark : COLORS.text.subtleLight;
-    const arrowColor = theme.isDark ? COLORS.primaryy.dark : COLORS.primaryy.light;
     const backgroundColor = theme.isDark ? COLORS.background.dark : COLORS.background.light;
 
     // 2. Write the CSS string

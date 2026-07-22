@@ -3,32 +3,43 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useUIContext } from '../../contexts/ui-context';
 
 // Adjust these imports to match your actual file structure
+import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
 import DropdownCard from '@/components/dropdown-card';
 import { baseFlexStyles, getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 
-export default function MultiDayAppearanceToggle() {
+export default function CalendarSettingsToggles() {
   const { theme, multiDayInHeader, setMultiDayInHeader } = useUIContext();
+  const { calendarObjs, suppressOther, setSuppressOther, toggleSuppress } = useCalendarObjects();
   const styles = getToggleStyles(theme.isDark);
 
   const baseTheme = getBasicThemeStyles(theme.isDark);
 
   // Set initial position based on context value
-  const transformX = useRef(new Animated.Value(multiDayInHeader ? 20 : 0)).current;
+  const multiDayTransformX = useRef(new Animated.Value(multiDayInHeader ? 20 : 0)).current;
+  const suppressTransformX = useRef(new Animated.Value(!suppressOther ? 20 : 0)).current;
 
   // Animate the thumb when the toggle state changes
   useEffect(() => {
-    Animated.timing(transformX, {
+    Animated.timing(multiDayTransformX, {
       toValue: multiDayInHeader ? 20 : 0,
       duration: 200,
       useNativeDriver: true,
     }).start();
-  }, [multiDayInHeader, transformX]);
+  }, [multiDayInHeader, multiDayTransformX]);
+
+  useEffect(() => {
+    Animated.timing(suppressTransformX, {
+      toValue: !suppressOther ? 20 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [suppressOther, suppressTransformX]);
 
   return (
     <DropdownCard title="Multi-Day Events" iconName="calendar-outline" defaultExpanded={true}>
       <View style={styles.container}>
-        {/* Label and Custom Toggle */}
+        {/* multiDay Events Toggle */}
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
             <Text style={styles.labelText}>Show multi-day events in header</Text>
@@ -50,11 +61,34 @@ export default function MultiDayAppearanceToggle() {
             accessibilityRole="switch"
             accessibilityState={{ checked: multiDayInHeader }}
           >
-            <Animated.View style={[styles.customThumb, { transform: [{ translateX: transformX }] }]} />
+            <Animated.View style={[styles.customThumb, { transform: [{ translateX: multiDayTransformX }] }]} />
           </Pressable>
         </View>
+      </View>
+      <View style={styles.container}>
+        {/* Supression Toggle */}
+        <View style={styles.headerRow}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.labelText}>Show Suscribed Calendars</Text>
+            <Text style={styles.descriptionText}>
+              {!suppressOther ? 'All viewable calendars are shown.' : 'Only owned calendars are shown.'}
+            </Text>
+          </View>
 
-        {/* Dynamic Contextual Helper Text */}
+          <Pressable
+            onPress={() => toggleSuppress()}
+            style={[
+              styles.customSwitch,
+              !suppressOther
+                ? { ...baseTheme.backgroundBlue } // Assuming backgroundBlue exists in your baseTheme
+                : { backgroundColor: theme.isDark ? '#3a3a3a' : '#d1d1dd' },
+            ]}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: !suppressOther }}
+          >
+            <Animated.View style={[styles.customThumb, { transform: [{ translateX: suppressTransformX }] }]} />
+          </Pressable>
+        </View>
       </View>
     </DropdownCard>
   );

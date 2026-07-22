@@ -26,6 +26,10 @@ export type CalendarView = {
   num: number;
 };
 export type visibility = 'default' | 'transparent' | 'isolate';
+export type shown = {
+  displayed: boolean;
+  suppressed: boolean;
+}; //note, suppressed is the least visible
 
 export type accessRole = 'none' | 'freeBusyReader' | 'reader' | 'writer' | 'owner';
 
@@ -35,7 +39,7 @@ export interface calendarObj {
   calendarDefaultColor: string;
   owner: boolean;
   accessRole: accessRole;
-  shown: boolean;
+  shown: shown;
   visibility: visibility;
 }
 
@@ -85,8 +89,13 @@ export interface sharedObj {
 
 export interface calendarGroup {
   id: string;
-  calendars: calendarObj[];
+  userId: string;
+  calendars: GroupedCalendarObj[];
 }
+
+export type GroupedCalendarObj = calendarObj & {
+  isActive?: boolean;
+};
 
 export interface FamilyCalendarState {
   parent: CalendarData[];

@@ -74,7 +74,7 @@ export function useCalendar(jwtToken: string | null, timeZone: string, isTimeZon
             calendarId: cal.id,
             calendarDefaultColor: cal.backgroundColor || '#4285F4',
             owner: cal.accessRole === 'owner',
-            shown: true,
+            shown: { displayed: true, suppressed: false },
             visibility: 'default',
             accessRole: cal.accessRole,
           };

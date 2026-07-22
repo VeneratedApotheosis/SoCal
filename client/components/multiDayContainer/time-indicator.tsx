@@ -1,14 +1,17 @@
 import { COLORS } from '@/utility/theme';
+import { toZonedTime } from 'date-fns-tz';
 import { useContext } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useTimeZoneContext } from '../contexts/time-zone-context';
 import { UIContext } from '../contexts/ui-context';
 
 // Time Indicator
 export default function TimeIndicator({ hourHeight, isToday }: { hourHeight: number; isToday: boolean }) {
   const { now } = useContext(UIContext);
+  const { timeZone } = useTimeZoneContext();
 
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
+  const hours = toZonedTime(now, timeZone).getHours();
+  const minutes = toZonedTime(now, timeZone).getMinutes();
 
   // Logic: (Hours * height per hour) + (Minutes percentage of an hour)
   const topOffset = (hours + minutes / 60) * hourHeight;

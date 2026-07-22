@@ -42,7 +42,6 @@ export const UIContext = createContext<UIContextType>({} as UIContextType);
 export const UIProvider = ({ children }: { children: ReactNode }) => {
   const [isLoginVisible, setLoginVisible] = useState(false);
   const { calendarObjs } = useCalendarObjects();
-  const [now, setNow] = useState(new Date());
   const colorCache = useColorCache(calendarObjs);
   const theme = useTheme();
 
@@ -53,6 +52,7 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
 
   // ─── Now ───────────────────────────────────────────────────────────
 
+  const [now, setNow] = useState(new Date());
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(interval);

@@ -2,6 +2,7 @@
 import { useCalendarGroup } from '@/hooks/useCalendarGroup';
 import { calendarGroup, calendarObj } from '@/utility/types';
 import { createContext, ReactNode, useContext } from 'react';
+import { useAuthContext } from './auth-context';
 import { useCalendarObjects } from './calendar-obj-context';
 
 export interface GroupsContextType {
@@ -19,7 +20,8 @@ export const GroupsContext = createContext<GroupsContextType>({} as GroupsContex
 
 export const GroupsProvider = ({ children }: { children: ReactNode }) => {
   const { calendarObjs } = useCalendarObjects();
-  const calendarGroups = useCalendarGroup(calendarObjs);
+  const { familyProfiles } = useAuthContext();
+  const calendarGroups = useCalendarGroup(calendarObjs, familyProfiles && familyProfiles.parent ? familyProfiles.parent.id : null);
 
   return (
     <GroupsContext.Provider
@@ -32,7 +34,7 @@ export const GroupsProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export function useCalendarGroups() {
+export function useCalendarGroupsContext() {
   const ctx = useContext(GroupsContext);
   if (!ctx) throw new Error('useCalendarGroups must be within DateProvider');
   return ctx;

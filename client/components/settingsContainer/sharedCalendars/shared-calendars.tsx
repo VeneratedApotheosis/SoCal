@@ -7,7 +7,7 @@ import { Plus } from 'lucide-react-native';
 import { useMemo, useRef, useState } from 'react';
 import { Animated, LayoutAnimation, Pressable, Text, View } from 'react-native';
 import { getColorPaletteStyles, getSettingCardStyles, getSharedCalStyles } from '../settingsContainerStyles';
-import ShareModal, { shareModalRef } from './share-modal';
+import ShareModal from './share-modal';
 import SharedCalendarIndividual from './shared-calendar-individual';
 
 export default function SharedCalendars() {
@@ -42,11 +42,11 @@ export default function SharedCalendars() {
     outputRange: ['0deg', '180deg'],
   });
 
-  // -------------------------------------------
-  // Calendar View Modes and Expanded View
-  // -------------------------------------------
+  // ─── Calendar View Modes and Expanded View ───────────────────────────────────────────────────────────
+
   const [viewMode, setViewMode] = useState('users');
   const [expandedId, setExpandedId] = useState<string[]>([]);
+  const [isVisible, setVisible] = useState(false);
 
   const activeCalendars = useMemo(() => {
     return sharedCalendars.filter((cal) => cal.sharedIds && cal.sharedIds.length > 0);
@@ -69,7 +69,6 @@ export default function SharedCalendars() {
       });
     });
 
-    // THE FIX: Convert the Object back into an Array!
     return Object.values(userMap);
   }, [activeCalendars]);
 
@@ -96,7 +95,7 @@ export default function SharedCalendars() {
           <Text style={cardStyles.label}>Shared Calendars</Text>
         </View>
         <View style={cardStyles.triggerLeft}>
-          <Pressable hitSlop={10} style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => shareModalRef.current?.present()}>
+          <Pressable hitSlop={10} style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => setVisible(true)}>
             <Plus size={16} color={uiTheme.isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark} style={[themeStyles.plusIcon]} />
             <Text
               style={{
@@ -225,7 +224,7 @@ export default function SharedCalendars() {
           )}
         </View>
       )}
-      <ShareModal />
+      <ShareModal isVisible={isVisible} setVisible={setVisible} />
     </View>
   );
 }

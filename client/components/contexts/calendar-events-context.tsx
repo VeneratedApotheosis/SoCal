@@ -2,7 +2,7 @@
 import { useCalendar } from '@/hooks/useCalendar';
 import { useCalendarWrite } from '@/hooks/useCalendarWrite';
 import { useMutateEvent } from '@/hooks/useMutateEvent';
-import { BUFFER_INCREMENT, FETCH_INITIAL_BUFFER } from '@/utility/constants';
+import { BUFFER_INCREMENT } from '@/utility/constants';
 import { CalendarData, EventObj } from '@/utility/types';
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuthContext } from './auth-context';
@@ -47,7 +47,7 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   // ─── Calendar Object and Events Hooks ───────────────────────────────────────────────────────────
 
   // Calendar Object Hook
-  const { calendarObjs, calViewMode } = useCalendarObjects();
+  const { calendarObjs, calViewMode, suppressOther } = useCalendarObjects();
   // Calendar Event Hook
   const {
     calendars,
@@ -63,16 +63,18 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   const allEvents = useMemo(() => {
     if (!calendars || !calendarObjs) return [];
     if (calViewMode === 'default') {
-      const visibleIds = new Set(calendarObjs.filter((c) => c.shown).map((c) => c.calendarId));
+      const visibleIds = new Set(calendarObjs.filter((c) => c.shown.displayed && !c.shown.suppressed).map((c) => c.calendarId));
       return (calendars.parent || []).filter((cal) => visibleIds.has(cal.id)).flatMap((cal) => cal.events);
     } else if (calViewMode === 'isolate') {
-      const visibleIds = new Set(calendarObjs.filter((c) => c.visibility === 'isolate' || c.shown).map((c) => c.calendarId));
+      const visibleIds = new Set(
+        calendarObjs.filter((c) => c.visibility === 'isolate' || (c.shown.displayed && !c.shown.suppressed)).map((c) => c.calendarId),
+      );
       return (calendars.parent || []).filter((cal) => visibleIds.has(cal.id)).flatMap((cal) => cal.events);
     }
 
-    const visibleIds = new Set(calendarObjs.filter((c) => c.shown).map((c) => c.calendarId));
+    const visibleIds = new Set(calendarObjs.filter((c) => c.shown.displayed && !c.shown.suppressed).map((c) => c.calendarId));
     return (calendars.parent || []).filter((cal) => visibleIds.has(cal.id)).flatMap((cal) => cal.events);
-  }, [calendars, calendarObjs, calViewMode]);
+  }, [calendars, calendarObjs, calViewMode, suppressOther]);
 
   // ─── Event Mutation Hook ───────────────────────────────────────────────────────────
 

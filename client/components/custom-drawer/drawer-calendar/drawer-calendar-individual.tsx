@@ -30,13 +30,13 @@ export default function CalendarDrawerList({
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<View>(null);
   const [opacity, setOpacity] = useState(() => {
-    if (isolated === 'NA') return calendarObj.shown ? 1 : 0.5;
+    if (isolated === 'NA') return calendarObj.shown.displayed ? 1 : 0.5;
     else return isolated === 'true' ? 1 : 0.5;
   });
 
   useEffect(() => {
     setOpacity(() => {
-      if (isolated === 'NA') return calendarObj.shown ? 1 : 0.5;
+      if (isolated === 'NA') return calendarObj.shown.displayed ? 1 : 0.5;
       else return isolated === 'true' ? 1 : 0.5;
     });
   }, [calendarObj.shown, isolated]);
@@ -70,41 +70,43 @@ export default function CalendarDrawerList({
       </View>
 
       {/* --- BUTTONS --- */}
-      {isolated === 'NA' && (
-        <View style={{ flexDirection: 'row' }}>
-          {/* --- SETTINGS BUTTON --- */}
-          <View ref={buttonRef} collapsable={false}>
-            <Pressable
-              onPress={() => {
-                getPositions(buttonRef, setMenuPos, menuHeight, menuWidth, SCREEN_WIDTH, SCREEN_HEIGHT);
-                setVisible(true);
-              }}
-              style={({ pressed }) => [styles.iconButton, pressed && styles.pressedButton]}
-            >
-              <Ionicons name={'ellipsis-horizontal-outline'} size={14} color={iconColor} />
-            </Pressable>
-          </View>
-          {/* --- SETTINGS MODAL --- */}
-          <CalendarSettingsModal
-            isVisible={isVisible}
-            setVisible={setVisible}
-            calendar={calendarObj}
-            top={menuPos.top}
-            left={menuPos.left}
-          />
+      <View style={{ flexDirection: 'row' }}>
+        {isolated === 'NA' && (
+          <>
+            {/* --- SETTINGS BUTTON --- */}
+            <View ref={buttonRef} collapsable={false}>
+              <Pressable
+                onPress={() => {
+                  getPositions(buttonRef, setMenuPos, menuHeight, menuWidth, SCREEN_WIDTH, SCREEN_HEIGHT);
+                  setVisible(true);
+                }}
+                style={({ pressed }) => [styles.iconButton, pressed && styles.pressedButton]}
+              >
+                <Ionicons name={'ellipsis-horizontal-outline'} size={14} color={iconColor} />
+              </Pressable>
+            </View>
+            {/* --- SETTINGS MODAL --- */}
+            <CalendarSettingsModal
+              isVisible={isVisible}
+              setVisible={setVisible}
+              calendar={calendarObj}
+              top={menuPos.top}
+              left={menuPos.left}
+            />
+          </>
+        )}
 
-          {/* --- VISIBILITY TOGGLE --- */}
-          <Pressable
-            onPress={() => {
-              setOpacity(opacity === 0.5 ? 1 : 0.5);
-              onToggle(calendarObj.calendarId);
-            }}
-            style={({ pressed }) => [styles.iconButton, pressed && styles.pressedButton]}
-          >
-            <Ionicons name={calendarObj.shown ? 'eye-outline' : 'eye-off-outline'} size={14} color={iconColor} />
-          </Pressable>
-        </View>
-      )}
+        {/* --- VISIBILITY TOGGLE --- */}
+        <Pressable
+          onPress={() => {
+            setOpacity(opacity === 0.5 ? 1 : 0.5);
+            onToggle(calendarObj.calendarId);
+          }}
+          style={({ pressed }) => [styles.iconButton, pressed && styles.pressedButton]}
+        >
+          <Ionicons name={calendarObj.shown.displayed ? 'eye-outline' : 'eye-off-outline'} size={14} color={iconColor} />
+        </Pressable>
+      </View>
     </View>
   );
 }

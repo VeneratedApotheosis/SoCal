@@ -246,6 +246,19 @@ const getAllData = async (tableName) => {
   return res.rows;
 };
 
+// params: supabase auth user id, provider refresh token
+// do: updates the refresh token for an existing user
+const updateToken = async (userId, refreshToken) => {
+  const query = `
+    UPDATE "userInfo" 
+    SET "refreshToken" = $1 
+    WHERE id = $2
+    RETURNING id;
+  `;
+  const res = await pool.query(query, [refreshToken, userId]);
+  return res.rowCount > 0; // Returns true if a row was updated
+};
+
 module.exports = { 
   getUserProfile, 
   getChildrenProfiles, 
@@ -264,5 +277,7 @@ module.exports = {
   getInvitationsByInvitee,
   getInvitationsByHost,
 
-  getAllData
+  getAllData,
+
+  updateToken,
 };

@@ -56,6 +56,10 @@ function parseDateString(dateStr: string, isAllDay: boolean, timeZone: string): 
   return toZonedTime(absoluteDate, timeZone);
 }
 
+export function shiftDate(date: Date, timeZone: string): Date {
+  return toZonedTime(date, timeZone);
+}
+
 export const processEvent = (item: any, owner: string, calendarId: string, timeZone: string): EventObj | null => {
   try {
     if (!item || !item.organizer?.email || !item.summary) {

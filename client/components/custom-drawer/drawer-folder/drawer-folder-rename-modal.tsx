@@ -1,4 +1,4 @@
-import { useCalendarGroups } from '@/components/contexts/calendar-groups-context';
+import { useCalendarGroupsContext } from '@/components/contexts/calendar-groups-context';
 import { useUIContext } from '@/components/contexts/ui-context';
 import { useEffect, useRef, useState } from 'react';
 import { Keyboard, Modal, Pressable, Text, TextInput, View } from 'react-native';
@@ -23,7 +23,7 @@ export default function FolderSettingsRenameModal({
 }: FolderSettingsRenameModalInterface) {
   const [newName, setNewName] = useState(calId || '');
   const inputRef = useRef<TextInput>(null);
-  const { calendarGroups } = useCalendarGroups();
+  const { calendarGroups } = useCalendarGroupsContext();
   const { theme } = useUIContext();
   const styles = getFolderRenameModal(theme.isDark);
 

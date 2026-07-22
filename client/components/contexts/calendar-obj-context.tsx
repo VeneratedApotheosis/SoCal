@@ -15,6 +15,9 @@ export interface CalendarObjectsContextType {
   toggleTransparent: (id: string) => void;
   toggleIsolate: (id: string) => void;
   resetViewMode: () => void;
+  suppressOther: boolean;
+  setSuppressOther: Dispatch<SetStateAction<boolean>>;
+  toggleSuppress: () => void;
 }
 
 export const CalendarObjectsContext = createContext<CalendarObjectsContextType>({} as CalendarObjectsContextType);
@@ -61,6 +64,25 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
     setSharedCalendars(processedCalendars);
   }, [sharedObjs, familyProfiles]);
 
+  // ─── Shown Mutators ───────────────────────────────────────────────────────────
+
+  const [suppressOther, setSuppressOther] = useState<boolean>(false);
+
+  const toggleSuppress = useCallback(() => {
+    const isEnablingSuppression = !suppressOther;
+
+    setCalendarObjs((prev) =>
+      prev.map((cal) => ({
+        ...cal,
+        shown: {
+          ...cal.shown,
+          suppressed: isEnablingSuppression ? cal.accessRole !== 'owner' : false,
+        },
+      })),
+    );
+    setSuppressOther(isEnablingSuppression);
+  }, [suppressOther, setCalendarObjs]);
+
   const toggleCalendar = useCallback(
     (id: string) => {
       setCalendarObjs((prev) => {
@@ -68,7 +90,7 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
           cal.calendarId === id
             ? {
                 ...cal,
-                shown: !cal.shown,
+                shown: { displayed: !cal.shown.displayed, suppressed: cal.shown.suppressed },
               }
             : cal,
         );
@@ -77,6 +99,8 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
     },
     [setCalendarObjs],
   );
+
+  // ─── Visiblity Mutators ───────────────────────────────────────────────────────────
 
   const toggleTransparent = useCallback(
     (id: string) => {
@@ -140,6 +164,9 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
         toggleTransparent,
         toggleIsolate,
         resetViewMode,
+        suppressOther,
+        setSuppressOther,
+        toggleSuppress,
       }}
     >
       {children}

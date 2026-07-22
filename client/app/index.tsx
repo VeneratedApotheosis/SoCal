@@ -15,7 +15,7 @@ import { useScreenSize } from '@/components/contexts/screen-size-context';
 import { useUIContext } from '@/components/contexts/ui-context';
 import FixedDrawer from '@/components/custom-drawer/drawer-web';
 import { useWebScrollbarStyle } from '@/components/scrollIndicator';
-import SettingsPortal from '@/components/settingsContainer/settings-portal';
+import WebSettingsPortal from '@/components/settingsContainer/web-settings-portal';
 import { WEB_MUTED_PADDING, WEB_WHITE_X_PADDING, WEB_WHITE_Y_PADDING } from '@/utility/constants';
 import { getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
 import { AuthContext } from '../components/contexts/auth-context';
@@ -37,7 +37,7 @@ export default function Index() {
           <View style={styles.roundedEdges}>
             {calendarType.type === 'D' && <MultiDayContainer calendarType={calendarType} events={allEvents} />}
             {calendarType.type === 'W' && <MonthContainer calendarType={calendarType} events={allEvents} />}
-            <SettingsPortal isVisible={isLoginVisible} onClose={() => setLoginVisible(false)} />
+            <WebSettingsPortal isVisible={isLoginVisible} onClose={() => setLoginVisible(false)} />
           </View>
         </View>
       ) : (

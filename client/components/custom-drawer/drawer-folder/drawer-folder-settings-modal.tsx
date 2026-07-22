@@ -1,4 +1,4 @@
-import { useCalendarGroups } from '@/components/contexts/calendar-groups-context';
+import { useCalendarGroupsContext } from '@/components/contexts/calendar-groups-context';
 import { useScreenSize } from '@/components/contexts/screen-size-context';
 import { useUIContext } from '@/components/contexts/ui-context';
 import { getPositions } from '@/utility/drawerUtil';
@@ -24,7 +24,7 @@ export default function FolderSettingsModal({ isVisible, setVisible, calId, top,
   const buttonRef = useRef<View>(null);
   const [isColorsVisible, setColorsVisible] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
-  const { calendarGroups } = useCalendarGroups();
+  const { calendarGroups } = useCalendarGroupsContext();
   const { theme } = useUIContext();
   const styles = getFolderModal(theme.isDark, menuWidth, menuHeight);
   const iconColor = getIconColor(theme.isDark);

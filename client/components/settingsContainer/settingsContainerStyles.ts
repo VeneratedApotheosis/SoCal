@@ -520,11 +520,16 @@ export const getShareModalStyles = (isDark: boolean) => {
   const baseText = getBasicTypographyStyles(isDark);
 
   return StyleSheet.create({
-    modalBackground: {
+    backDrop: {
+      ...StyleSheet.absoluteFillObject,
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    },
+    container: {
+      position: 'absolute',
       ...baseTheme.background,
-      borderRadius: 24,
-      boxShadow: '0px -4px 10px rgba(0, 0, 0, 0.1)',
-      elevation: 5,
+      borderRadius: 16,
+      padding: 16,
     },
     headerContainer: {
       ...baseFlexStyles.rowBetween,
@@ -550,9 +555,7 @@ export const getShareModalStyles = (isDark: boolean) => {
       ...baseText.title,
       marginBottom: 12,
     },
-    scrollContent: {
-      padding: 24,
-    },
+    scrollContent: { padding: 8 },
     emptyText: {
       ...baseText.subtleColor,
       fontStyle: 'italic',
@@ -610,6 +613,39 @@ export const getShareModalStyles = (isDark: boolean) => {
       backgroundColor: isDark ? COLORS.green.backgroundDark : COLORS.green.backgroundLight,
       padding: 4,
       borderRadius: 8,
+    },
+  });
+};
+
+export const settingsPortalStyles = (isDark: boolean) => {
+  const baseTheme = getBasicThemeStyles(isDark);
+  const baseText = getBasicTypographyStyles(isDark);
+
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      zIndex: 999,
+      elevation: 10,
+    },
+    header: {
+      padding: 16,
+      paddingLeft: 24,
+      ...baseTheme.backgroundMuted,
+      ...baseFlexStyles.rowLeft,
+      gap: 16,
+    },
+    headerText: {
+      ...baseText.title,
+      fontSize: 24,
+    },
+    rowDivider: {
+      height: 0,
+      borderTopWidth: 1,
+      ...baseTheme.borderMuted,
+    },
+    scrollViewContainer: {
+      flex: 1,
+      ...baseTheme.backgroundMuted,
     },
   });
 };

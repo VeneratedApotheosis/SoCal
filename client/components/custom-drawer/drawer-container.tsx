@@ -13,7 +13,7 @@ import { toTitleCase } from '@/utility/drawerUtil';
 import { globalParameterStyles } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { Plus } from 'lucide-react-native';
-import { useCalendarGroups } from '../contexts/calendar-groups-context';
+import { useCalendarGroupsContext } from '../contexts/calendar-groups-context';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
 import { useScreenSize } from '../contexts/screen-size-context';
 import { getColorPaletteStyles } from '../settingsContainer/settingsContainerStyles';
@@ -22,9 +22,11 @@ import DraggableCalendar from './drawer-draggable-calendar';
 
 export default function CustomDrawerContent(props: any) {
   const { jwtToken, calendarType, setCalendarType, familyProfiles } = useAuthContext();
+  const userId = familyProfiles && familyProfiles.parent ? familyProfiles.parent.id : null;
   const { fixedSidebar, isWeb } = useScreenSize();
-  const { toggleCalendar, calViewMode: viewMode, resetViewMode } = useCalendarObjects();
-  const { calendarGroups } = useCalendarGroups();
+  const { toggleCalendar, calViewMode: viewMode, resetViewMode, suppressOther } = useCalendarObjects();
+  const { calendarGroups } = useCalendarGroupsContext();
+
   const { setLoginVisible, theme: uiTheme } = useUIContext();
   const hoverIndex = useSharedValue<number | null>(null);
   const activeIndex = useSharedValue<number | null>(null);
@@ -36,13 +38,29 @@ export default function CustomDrawerContent(props: any) {
 
   //Both Folders and Calendars are mapped to Draggable Flatlist in flatData
   const flatData = useMemo(() => {
-    return calendarGroups.groupedCalendars.flatMap((group) => [
+    if (calendarGroups.groupedCalendars.length === 0)
+      return [] as {
+        id: string;
+        folder: boolean;
+        calendar: calendarObj | null;
+      }[];
+
+    const filtered = calendarGroups.groupedCalendars.map((group) => {
+      const filteredCals = group.calendars.filter((c) => !c.shown.suppressed);
+      return {
+        id: group.id,
+        calendars: filteredCals,
+        userId: group.userId,
+      };
+    });
+
+    return filtered.flatMap((group) => [
       { id: group.id, folder: true, calendar: null as calendarObj | null },
       ...group.calendars.map((cal) => {
         return { id: group.id, folder: false, calendar: cal as calendarObj | null };
       }),
     ]);
-  }, [calendarGroups.groupedCalendars]);
+  }, [calendarGroups.groupedCalendars, suppressOther]);
 
   const getButtonStyle = (option: CalendarView, pressed: boolean) => [
     styles.viewButton,
@@ -56,6 +74,8 @@ export default function CustomDrawerContent(props: any) {
     setLoginVisible(true);
     if (!fixedSidebar) props.navigation.closeDrawer();
   };
+
+  // ─── Math to Calculate where to put Calendar Object ───────────────────────────────────────────────────────────
 
   const handleDrop = (thisIndex: number, newIndex: number): void => {
     const movingItem = flatData[thisIndex];
@@ -121,13 +141,15 @@ export default function CustomDrawerContent(props: any) {
     // Update the Context
     if (sourceGroup.id === destGroup.id) {
       calendarGroups.updateSingleGroup(destGroup.id, updatedDestCals);
-    } else {
+    } else if (userId) {
       calendarGroups.updateMultipleGroups([
-        { id: sourceGroup.id, calendars: updatedSourceCals },
-        { id: destGroup.id, calendars: updatedDestCals },
+        { id: sourceGroup.id, userId: userId, calendars: updatedSourceCals },
+        { id: destGroup.id, userId: userId, calendars: updatedDestCals },
       ]);
     }
   };
+
+  // ─── Smth is being expanded but i have no clue what ───────────────────────────────────────────────────────────
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [contentHeight, setContentHeight] = useState(35);

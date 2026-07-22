@@ -67,9 +67,7 @@ const googleFetch = async (endpoint, method, token, body = null) => {
   return response.status === 204 ? null : response.json();
 };
 
-// ===========================================================
-// AUTHENTICATION FUNCTIONS
-// ===========================================================
+// ─── Authentication Functions ───────────────────────────────────────────────────────────
 
 const authenticate = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1]; // "Bearer <token>"
@@ -163,6 +161,28 @@ app.post('/api/get-family-access-tokens', authenticate, handleRoute('Failed to g
     children: await Promise.all(childrenData.map(c => fetchAndFormatUserToken(c.id, c.refreshToken, c.id)))
   });
 }));
+
+app.post('/api/update-token', async (req, res) => {
+  const { userId, refreshToken } = req.body;
+
+  if (!userId || !refreshToken) {
+    return res.status(400).json({ error: 'Missing userId or refreshToken' });
+  }
+
+  try {
+    const success = await updateToken(userId, refreshToken);
+    
+    if (success) {
+      res.status(200).json({ message: 'Token saved successfully' });
+    } else {
+      // If this happens, the Supabase trigger might not have created the user yet
+      res.status(404).json({ error: 'User profile not found' });
+    }
+  } catch (err) {
+    console.error('Error updating token:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // ===========================================================
 // SHARING FUNCTIONS

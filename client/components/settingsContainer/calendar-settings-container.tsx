@@ -1,7 +1,7 @@
 import { getSettingBackgroundStyles } from '@/components/settingsContainer/settingsContainerStyles';
 import { View } from 'react-native';
 import { useUIContext } from '../contexts/ui-context';
-import MultiDayAppearanceToggle from './calendarSettings/multi-day-event-toggle';
+import CalendarSettingsToggles from './calendarSettings/multi-day-event-toggle';
 import TimeZoneSelector from './calendarSettings/set-time-zone';
 
 export default function CalendarSettingsContainer() {
@@ -11,7 +11,7 @@ export default function CalendarSettingsContainer() {
   return (
     <View style={rootStyles.tabContainer}>
       <TimeZoneSelector />
-      <MultiDayAppearanceToggle />
+      <CalendarSettingsToggles />
     </View>
   );
 }
