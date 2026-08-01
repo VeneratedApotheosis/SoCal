@@ -8,8 +8,14 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
   const [isStorageLoaded, setIsStorageLoaded] = useState(false);
 
   const currentUserGroups = useMemo(() => {
-    if (!userId) return [] as calendarGroup[];
-    return groupedCalendars.filter((g) => g.userId === userId);
+    if (!userId) return [];
+
+    return groupedCalendars
+      .filter((g) => g.userId === userId)
+      .map((g) => ({
+        ...g,
+        calendars: g.calendars.filter((c) => c.isActive === true),
+      }));
   }, [groupedCalendars, userId]);
 
   // ─── Storage Functions ───────────────────────────────────────────────────────────
@@ -84,10 +90,17 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
         group.calendars.push({ ...cal, isActive: true });
       });
 
+      const customGroups = updatedUserGroups.filter((g) => g.id !== 'owner' && g.id !== 'other');
+      const ownerGroup = updatedUserGroups.filter((g) => g.id === 'owner');
+      const otherGroup = updatedUserGroups.filter((g) => g.id === 'other');
+
+      // 2. Recombine them in order: Custom -> Owner -> Other
+      const sortedUserGroups = [...customGroups, ...ownerGroup, ...otherGroup];
+
       // Merge the active user's groups back with the rest of the users
-      return [...otherUserGroups, ...updatedUserGroups];
+      return [...otherUserGroups, ...sortedUserGroups];
     });
-  }, [calendarObjs]);
+  }, [calendarObjs, userId, isStorageLoaded]);
 
   // -------------------------------------------
   // Helper Functions

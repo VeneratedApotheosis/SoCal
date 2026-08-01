@@ -28,7 +28,7 @@ export const lightenColor = (hex: string, type: string, isDark: boolean = false)
 };
 
 // Helper: Converts Hex to HSV
-const hexToHSV = (hex: string) => {
+export const hexToHSV = (hex: string) => {
   let r = parseInt(hex.slice(1, 3), 16) / 255;
   let g = parseInt(hex.slice(3, 5), 16) / 255;
   let b = parseInt(hex.slice(5, 7), 16) / 255;
@@ -59,7 +59,7 @@ const hexToHSV = (hex: string) => {
 };
 
 // Helper: Converts HSV to Hex
-const hsvToHex = (h: number, s: number, v: number): string => {
+export const hsvToHex = (h: number, s: number, v: number): string => {
   s /= 100;
   v /= 100;
   const i = Math.floor(h / 60);

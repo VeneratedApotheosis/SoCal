@@ -48,6 +48,13 @@ export const fetchPlacesAutocomplete = (t: string, input: string) =>
 
 export const fetchPlacesDetails = (t: string, placeId: string) => bReq(`/places/details?placeId=${placeId}`, 'GET', t);
 
+export const postUpdateToken = (userId: string, provider_referesh_token: string) => {
+  bReq('/update-token', 'POST', undefined, {
+    userId: userId,
+    refreshToken: provider_referesh_token,
+  });
+};
+
 // ─── Google API Event & Calendar Fetches ───────────────────────────────────────────────────────────
 
 export const fetchGivenCalendarRange = async (t: string, calId = 'primary', timeMin?: string, timeMax?: string, timeZone?: string) => {

@@ -3,22 +3,25 @@ import {
   getSettingCardStyles,
   getSettingProfileStyles,
 } from '@/components/settingsContainer/settingsContainerStyles';
+import { useAuth } from '@/hooks/useAuth';
 import { toTitleCase } from '@/utility/drawerUtil';
 import { globalStyles } from '@/utility/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { Image, Pressable, Text, View } from 'react-native';
 import { useAuthContext } from '../contexts/auth-context';
+import { useProfileContext } from '../contexts/profile-context';
 import { useUIContext } from '../contexts/ui-context';
 import SharedCalendars from './sharedCalendars/shared-calendars';
 import SuscribedCalendars from './suscribedCalendars/suscribed-calendars';
 
 export default function Login() {
   const authProps = useAuthContext();
-  const familyProfiles = authProps.familyProfiles;
+  const { familyProfiles } = useProfileContext();
   const { theme } = useUIContext();
   const cardStyles = getSettingCardStyles(theme.isDark);
   const rootStyles = getSettingBackgroundStyles(theme.isDark);
   const profileStyles = getSettingProfileStyles(theme.isDark);
+  const { handleLogout } = useAuth();
 
   return (
     <View style={rootStyles.tabContainer}>
@@ -40,10 +43,10 @@ export default function Login() {
         </View>
         {/* --- logout button --- */}
         <View style={profileStyles.buttonContainer}>
-          {authProps.jwtToken && (
+          {authProps.validJwt && (
             <Pressable
               style={({ pressed }) => [profileStyles.button, pressed && globalStyles.pressedButton]}
-              onPress={() => authProps.logout && authProps.logout()}
+              onPress={() => handleLogout()}
             >
               <Ionicons name={'log-out-outline'} style={profileStyles.buttonText} size={20} />
               <Text style={profileStyles.buttonText}>Log Out</Text>

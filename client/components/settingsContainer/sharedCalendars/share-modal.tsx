@@ -1,7 +1,9 @@
 import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
+import { useProfileContext } from '@/components/contexts/profile-context';
 import { useScreenSize } from '@/components/contexts/screen-size-context';
 import { useUIContext } from '@/components/contexts/ui-context';
 import { useShareCalendar } from '@/hooks/sharingCalendars/useShareCalendar';
+import { useAuth } from '@/hooks/useAuth';
 import { globalParameterStyles } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { accessRole } from '@/utility/types';
@@ -9,7 +11,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Keyboard, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { useAuthContext } from '../../contexts/auth-context';
 import { getShareModalStyles } from '../settingsContainerStyles';
 
 const maxWidth = 400;
@@ -20,14 +21,32 @@ export interface ShareModalProps {
 }
 
 export default function ShareModal({ isVisible, setVisible }: ShareModalProps) {
-  const { familyProfiles } = useAuthContext();
+  const { familyProfiles } = useProfileContext();
   const { calendarObjs = [] } = useCalendarObjects();
   const { share, isLoading } = useShareCalendar();
-  const { jwtToken } = useAuthContext();
+  const { getValidJwt } = useAuth();
 
   const { theme } = useUIContext();
   const styles = getShareModalStyles(theme.isDark);
   const globalStyles = globalParameterStyles(theme.isDark);
+
+  const [email, setEmail] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [accessRole, setAccessRole] = useState<accessRole>('reader');
+  const [status, setStatus] = useState<'success' | 'error' | null>(null);
+
+  const SafeTextInput = Platform.OS === 'web' ? TextInput : BottomSheetTextInput;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // ─── Dimensions ───────────────────────────────────────────────────────────
+
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
+  const width = Math.min(SCREEN_WIDTH * 0.8, maxWidth);
+  const height = SCREEN_HEIGHT * 0.8;
+  const top = (SCREEN_HEIGHT - height) / 2;
+  const left = (SCREEN_WIDTH - width) / 2;
+
+  // ─── Owned Calendars calculation ───────────────────────────────────────────────────────────
 
   const [email, setEmail] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -61,6 +80,7 @@ export default function ShareModal({ isVisible, setVisible }: ShareModalProps) {
   };
 
   const handleShareClick = async () => {
+    const jwtToken = await getValidJwt();
     if (!email || selectedIds.length === 0 || !jwtToken) return;
 
     setStatus(null);
@@ -70,7 +90,7 @@ export default function ShareModal({ isVisible, setVisible }: ShareModalProps) {
 
     //send POST req to share
     for (const id of selectedIds) {
-      const result = await share(id, email, jwtToken.sessionToken, accessRole);
+      const result = await share(id, email, jwtToken, accessRole);
 
       if (!result.success) allSuccess = false;
     }

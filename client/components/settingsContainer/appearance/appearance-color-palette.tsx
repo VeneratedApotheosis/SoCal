@@ -1,29 +1,29 @@
 import DropDownCard from '@/components/dropdown-card';
-import { lightenColor } from '@/utility/eventColorUtil';
+import { hexToHSV, hsvToHex, lightenColor } from '@/utility/eventColorUtil';
 import { COLORS } from '@/utility/theme';
 import { Plus } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
+import ColorPicker, { ColorFormatsObject, HueSlider } from 'reanimated-color-picker';
 import { useUIContext } from '../../contexts/ui-context';
 import { getColorEditStyles, getColorPaletteStyles } from '../settingsContainerStyles';
 
 export default function AppearanceColorPalette() {
   const { theme: uiTheme } = useUIContext();
-  const { colorCache } = useUIContext();
   const themeStyles = getColorPaletteStyles(uiTheme.isDark);
   const editStyles = getColorEditStyles(uiTheme.isDark);
 
-  // -------------------------------------------
-  // bruh
-  // -------------------------------------------
+  // ─── Color Palettes ───────────────────────────────────────────────────────────
+
+  // Global Palette
+  const { colorCache } = useUIContext();
+  const [palettes, setPalettes] = useState(colorCache.allCaches); //local version of colorCache
+  const [selectedIndex] = useState(colorCache.activeCacheId);
+
+  // Modified Palette
   const [isEditing, setIsEditing] = useState(false);
-  const [hexInput, setHexInput] = useState<string>('');
-
-  const [pickingColorIndex, setPickingColorIndex] = useState<number | null>(null);
-
-  // Palettes and palette ID's
-  const [palettes, setPalettes] = useState(colorCache.allCaches);
-  const [selectedIndex, setSelectedIndex] = useState(colorCache.activeCacheId);
+  const [hexInput, setHexInput] = useState<string>(''); //specific color being modified
+  const [pickingColorIndex, setPickingColorIndex] = useState<number | null>(null); //specific color idx being modified
   const [tempColors, setTempColors] = useState<string[]>([]);
 
   // Start Editing: Copy real colors into the sandbox
@@ -136,32 +136,16 @@ export default function AppearanceColorPalette() {
                 ]}
               />
             ))}
-            {displayColors.length < 12 && (
-              <Pressable style={editStyles.addCircle} onPress={() => setTempColors([...tempColors, '#CCCCCC'])}>
-                <Plus size={20} color={uiTheme.isDark ? COLORS.border.mutedDark : COLORS.border.mutedLight} />
-              </Pressable>
-            )}
+            <Pressable style={editStyles.addCircle} onPress={() => setTempColors([...tempColors, '#ffdede'])}>
+              <Plus size={20} color={uiTheme.isDark ? COLORS.border.mutedDark : COLORS.border.mutedLight} />
+            </Pressable>
           </View>
 
           {/* HEX Editor & Preview */}
           {pickingColorIndex !== null && (
-            <View style={editStyles.editorCard}>
+            <View style={[editStyles.editorCard, { flexDirection: 'column', gap: 16 }]}>
               <Text style={editStyles.inputLabel}>Hex Color</Text>
               <View style={editStyles.inputRow}>
-                <TextInput
-                  style={editStyles.textInput}
-                  value={hexInput}
-                  onChangeText={setHexInput}
-                  placeholder="#FFFFFF"
-                  placeholderTextColor="#666"
-                  onBlur={() => {
-                    if (/^#[0-9A-F]{6}$/i.test(hexInput)) {
-                      const newColors = [...tempColors];
-                      newColors[pickingColorIndex] = hexInput;
-                      setTempColors(newColors);
-                    }
-                  }}
-                />
                 <Pressable
                   style={editStyles.removeBtn}
                   onPress={() => {
@@ -171,11 +155,63 @@ export default function AppearanceColorPalette() {
                 >
                   <Text style={editStyles.removeBtnText}>Remove</Text>
                 </Pressable>
+                <Pressable
+                  style={[editStyles.removeBtn, editStyles.revertBtn]}
+                  onPress={() => {
+                    setTempColors((prev) => {
+                      return prev.map((hex, index) => {
+                        if (index !== pickingColorIndex) return hex;
+                        return palettes[selectedIndex].palette[index];
+                      });
+                    });
+                    setHexInput(() => {
+                      return palettes[selectedIndex].palette[pickingColorIndex];
+                    });
+                  }}
+                >
+                  <Text style={[editStyles.removeBtnText, editStyles.revertBtnText]}>Revert</Text>
+                </Pressable>
+                <TextInput
+                  style={editStyles.hueInput}
+                  placeholder="Set Hue"
+                  placeholderTextColor={uiTheme.isDark ? COLORS.text.subtleDark : COLORS.text.subtleLight}
+                  value={Math.round(hexToHSV(hexInput).h).toString()}
+                  onChangeText={(text: string) => {
+                    setTempColors((prev) => {
+                      const newColors = [...prev];
+                      const color = hexToHSV(newColors[pickingColorIndex]);
+                      newColors[pickingColorIndex] = hsvToHex(Number(text), Number(color.s), Number(color.v));
+                      return newColors;
+                    });
+                    setHexInput((prev) => {
+                      const color = hexToHSV(prev);
+                      return hsvToHex(Number(text), Number(color.s), Number(color.v));
+                    });
+                  }}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="numeric"
+                />
               </View>
+              <ColorPicker
+                style={{ width: '100%' }}
+                value={hexInput}
+                onComplete={(colors: ColorFormatsObject) => {
+                  if (/^#[0-9A-F]{6}$/i.test(colors.hex)) {
+                    setTempColors((prev) => {
+                      const newColors = [...prev];
+                      newColors[pickingColorIndex] = colors.hex;
+                      return newColors;
+                    });
+                    setHexInput(colors.hex);
+                  }
+                }}
+                boundedThumb={true}
+              >
+                <HueSlider />
+              </ColorPicker>
 
-              <View style={{ marginVertical: 8 }}>
-                {/* <Text style={editStyles.inputLabel}>Event Preview</Text> */}
-
+              <View style={{}}>
                 {/* --- EVENT LEFT BAR --- */}
                 <View
                   style={[

@@ -2,7 +2,6 @@ import { COLORS } from '@/utility/theme';
 import React, { useEffect, useState } from 'react';
 import { FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { usePlacesAutocomplete } from '../../hooks/usePlacesAutocomplete';
-import { useAuthContext } from '../contexts/auth-context';
 import { useUIContext } from '../contexts/ui-context';
 import { locationStyles } from './eventDetailsStyles';
 
@@ -14,7 +13,6 @@ export interface LocationContainerProps {
 }
 
 export default function LocationContainer({ initialValue, onLocationSelect, editable, inputColor }: LocationContainerProps) {
-  const { jwtToken } = useAuthContext();
   const { theme } = useUIContext();
   const styles = locationStyles(theme.isDark);
   const listColor = theme.isDark ? COLORS.text.lightGray : COLORS.text.darkGray;
@@ -25,11 +23,7 @@ export default function LocationContainer({ initialValue, onLocationSelect, edit
     setInputValue(initialValue);
   }, [initialValue]);
 
-  // Extract token string safely or fallback to null
-  const tokenString = jwtToken?.sessionToken || null;
-
   const { predictions, getPredictions, selectPlace } = usePlacesAutocomplete({
-    jwtToken: tokenString,
     onLocationSelect,
   });
   const handleTextChange = (text: string) => {

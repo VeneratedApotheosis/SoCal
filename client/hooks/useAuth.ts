@@ -1,51 +1,106 @@
 import { useAuthContext } from '@/components/contexts/auth-context';
-import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
-import { useEffect, useState } from 'react';
-
-WebBrowser.maybeCompleteAuthSession();
+import { supabase } from '@/lib/supabase';
+import { postUpdateToken } from '@/services/api';
+import { storage } from '@/services/storage';
+import { useCallback, useEffect, useState } from 'react';
 
 export const useAuth = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { jwtToken, loginWithCode } = useAuthContext();
+  const { setValidJwt } = useAuthContext();
 
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID || '',
-      scopes: [
-        'openid',
-        'https://www.googleapis.com/auth/calendar',
-        'https://www.googleapis.com/auth/userinfo.email',
-        'https://www.googleapis.com/auth/userinfo.profile',
-      ],
-      responseType: 'code',
-      usePKCE: true,
-      extraParams: { access_type: 'offline', prompt: 'consent' },
-      redirectUri: window.location.origin + window.location.pathname,
-    },
-    {
-      authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-      tokenEndpoint: 'https://oauth2.googleapis.com/token',
-      revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
-    },
-  );
+  const handleLogout = useCallback(async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error('Error logging out:', error.message);
+    }
+    if (setValidJwt) setValidJwt(false);
+    await storage.clearAll();
+  }, [setValidJwt]);
+
+  const getValidJwt = useCallback(async (): Promise<string | null> => {
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+
+    if (error || !session) {
+      return null;
+    }
+    return session.access_token;
+  }, []);
 
   useEffect(() => {
-    if (response?.type === 'success' && request?.codeVerifier) {
-      setIsLoading(true);
-      setError(null);
-      try {
-        loginWithCode(response.params.code, request.codeVerifier, request.redirectUri);
-      } catch {
-        setError('Login failed');
-      } finally {
-        setIsLoading(false);
+    // Initial load check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setValidJwt(true);
       }
-    } else if (response?.type === 'error') {
-      setError(response.error?.message || 'Authentication error');
-    }
-  }, [response, request, loginWithCode]);
+      setIsLoading(false);
+    });
 
-  return { jwtToken, isLoading, error, promptAsync };
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        setIsLoading(false);
+
+        if (session) {
+          setValidJwt(true);
+
+          // Only update the backend if Google gave us a new refresh token
+          if (session.provider_refresh_token) {
+            try {
+              await postUpdateToken(session.user.id, session.provider_refresh_token);
+            } catch (err) {
+              console.error('Failed to send refresh token to backend:', err);
+            }
+          }
+        }
+      }
+
+      if (event === 'SIGNED_OUT') {
+        setValidJwt(false);
+      }
+
+      // Note: Supabase also emits a 'TOKEN_REFRESHED' event,
+      // but because we are fetching on-demand now, we don't need to manually catch it.
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [setValidJwt]);
+
+  const promptAsync = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          // Supabase uses a space-separated string for scopes
+          scopes:
+            'openid https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          // Supabase automatically uses your site URL, but you can force it here:
+          redirectTo: window.location.origin + window.location.pathname,
+        },
+      });
+
+      if (error) throw error;
+
+      // Note: Code execution stops here on Web because the browser redirects to Google
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+      setIsLoading(false);
+    }
+  };
+
+  return { getValidJwt, isLoading, error, promptAsync, handleLogout };
 };

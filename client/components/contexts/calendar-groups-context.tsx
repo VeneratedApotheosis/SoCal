@@ -4,6 +4,7 @@ import { calendarGroup, calendarObj } from '@/utility/types';
 import { createContext, ReactNode, useContext } from 'react';
 import { useAuthContext } from './auth-context';
 import { useCalendarObjects } from './calendar-obj-context';
+import { useProfileContext } from './profile-context';
 
 export interface GroupsContextType {
   calendarGroups: {
@@ -20,7 +21,7 @@ export const GroupsContext = createContext<GroupsContextType>({} as GroupsContex
 
 export const GroupsProvider = ({ children }: { children: ReactNode }) => {
   const { calendarObjs } = useCalendarObjects();
-  const { familyProfiles } = useAuthContext();
+  const { familyProfiles } = useProfileContext();
   const calendarGroups = useCalendarGroup(calendarObjs, familyProfiles && familyProfiles.parent ? familyProfiles.parent.id : null);
 
   return (

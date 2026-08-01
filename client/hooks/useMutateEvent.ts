@@ -5,18 +5,18 @@ import { getValidAccessToken } from '@/utility/tokenUtils';
 import { CalendarData, EventObj, FamilyCalendarState } from '@/utility/types';
 import { RRule, rrulestr } from 'rrule';
 import { useCalendarWrite } from './useCalendarWrite';
+import { useAuth } from './useAuth';
 
 export const useMutateEvent = (
-  sessionTokenString: string | null,
   uniqueCalendars: CalendarData[],
   setCalendars: React.Dispatch<React.SetStateAction<FamilyCalendarState | null>>,
   setUniqueCalendars: React.Dispatch<React.SetStateAction<CalendarData[]>>,
   fetchStart: number,
   fetchEnd: number,
 ) => {
-  const { apiEditEvent, apiCreateEvent, apiDeleteEvent, apiPatchRecurrenceEvent, isWriting, writeError } =
-    useCalendarWrite(sessionTokenString);
+  const { apiEditEvent, apiCreateEvent, apiDeleteEvent, apiPatchRecurrenceEvent, isWriting, writeError } = useCalendarWrite();
   const { timeZone } = useTimeZoneContext();
+  const { getValidJwt } = useAuth();
 
   const createEvent = async (event: EventObj) => {
     const rawResponse = await apiCreateEvent(event);
@@ -30,6 +30,7 @@ export const useMutateEvent = (
 
     if (baseNewEventObj?.recurrence && baseNewEventObj.recurrence.length > 0) {
       try {
+        const sessionTokenString = await getValidJwt();
         if (!sessionTokenString) throw new Error('useMutateEvent, createEvent error: No token');
         const {
           parent: { accessToken },

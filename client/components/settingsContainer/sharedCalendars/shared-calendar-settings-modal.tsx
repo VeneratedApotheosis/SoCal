@@ -1,9 +1,9 @@
 import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
 import { useUIContext } from '@/components/contexts/ui-context';
 import { useUnshareCalendar } from '@/hooks/sharingCalendars/useUnshareCalendar';
+import { useAuth } from '@/hooks/useAuth';
 import { getModalStyles, globalStyles } from '@/utility/globalStyles';
 import { Keyboard, Modal, Pressable, Text, View } from 'react-native';
-import { useAuthContext } from '../../contexts/auth-context';
 
 export const sharedSettingsModalHeight = 50;
 export const sharedSettingsModalWidth = 100;
@@ -19,13 +19,14 @@ export interface ShareCalendarSettingsModalProps {
 export default function SharedCalendarSettingsModal({ isVisible, setVisible, top, left, calId, email }: ShareCalendarSettingsModalProps) {
   const { unshare, isLoading, error, clearError } = useUnshareCalendar();
   const { refetchCalendarList } = useCalendarObjects();
-  const { jwtToken } = useAuthContext();
   const { theme } = useUIContext();
   const styles = getModalStyles(theme.isDark, sharedSettingsModalWidth, sharedSettingsModalHeight);
+  const { getValidJwt } = useAuth();
 
   const handleUnshare = async () => {
+    const jwtToken = await getValidJwt();
     if (!email || !calId || !jwtToken) return;
-    const result = await unshare(calId, email, jwtToken.sessionToken);
+    const result = await unshare(calId, email, jwtToken);
     if (result.success) {
       refetchCalendarList();
     }

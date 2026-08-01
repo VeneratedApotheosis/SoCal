@@ -78,7 +78,12 @@ export const calendarObjViewStyles = (isDark: boolean) => {
 
   return StyleSheet.create({
     listRow: {
-      ...baseFlexStyles.rowCenter,
+      flex: 1,
+      ...baseFlexStyles.rowBetween,
+      gap: 10,
+    },
+    leftRow: {
+      ...baseFlexStyles.rowLeft,
       gap: 10,
     },
     calDot: {
@@ -89,7 +94,6 @@ export const calendarObjViewStyles = (isDark: boolean) => {
       marginRight: 1,
     },
     listText: {
-      flex: 1,
       ...baseText.subtitle,
       fontWeight: '400',
     },

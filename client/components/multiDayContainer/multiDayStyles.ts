@@ -31,6 +31,15 @@ export const getAllDayChipStyles = (isDark: boolean) => {
       padding: AllDayStyles.padding,
       justifyContent: 'center',
     },
+    newEvent: {
+      padding: 4,
+      backgroundColor: isDark ? COLORS.primaryy.backgroundDark : COLORS.primaryy.backgroundLight,
+      borderLeftColor: isDark ? COLORS.primaryy.light : COLORS.primaryy.dark,
+      borderColor: isDark ? COLORS.primaryy.light : COLORS.primaryy.dark,
+      borderTopWidth: 4,
+      borderBottomWidth: 4,
+      opacity: 0.5,
+    },
     eventText: {
       ...baseText.caption,
     },

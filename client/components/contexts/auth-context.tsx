@@ -1,7 +1,6 @@
-import { useProfiles } from '@/hooks/useProfile';
 import { fetchJwtToken } from '@/services/api';
 import { storage } from '@/services/storage';
-import { CalendarView, FamilyProfileObjs, JwtTokenObj } from '@/utility/types';
+import { CalendarView, JwtTokenObj } from '@/utility/types';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { useScreenSize } from './screen-size-context';
 
@@ -9,23 +8,22 @@ export interface AuthContextType {
   jwtToken: JwtTokenObj | null;
   setJwtToken: (jwtToken: JwtTokenObj | null) => void;
 
+  validJwt: boolean;
+  setValidJwt: React.Dispatch<React.SetStateAction<boolean>>;
+
   calendarType: CalendarView;
   setCalendarType: (calendarType: CalendarView) => void;
 
-  familyProfiles: FamilyProfileObjs | null;
-
   loginWithCode: (code: string, codeVerifier?: string, redirectUri?: string) => Promise<JwtTokenObj | undefined>;
-  logout: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [jwtToken, setJwtToken] = useState<JwtTokenObj | null>(null);
-  const sessionTokenString = jwtToken?.sessionToken ?? null;
+  const [validJwt, setValidJwt] = useState<boolean>(false);
 
   //PROFILE HOOK
-  const { familyProfiles } = useProfiles(sessionTokenString);
   const { isWeb } = useScreenSize();
   const [calendarType, setCalendarType] = useState<CalendarView>({ type: 'D', num: isWeb ? 7 : 3 });
 
@@ -61,11 +59,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = async () => {
-    await storage.clearAll();
-    setJwtToken(null);
-  };
-
   if (!isHydrated) return null;
 
   return (
@@ -73,11 +66,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         jwtToken,
         setJwtToken,
+        validJwt,
+        setValidJwt,
         calendarType,
         setCalendarType,
-        familyProfiles,
         loginWithCode,
-        logout,
       }}
     >
       {children}

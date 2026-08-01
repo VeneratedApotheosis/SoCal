@@ -5,6 +5,7 @@ const { OAuth2Client } = require('google-auth-library');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const db = require('./db.js');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 app.use(cors());
@@ -22,6 +23,11 @@ app.use(express.json());
 
 const oAuth2ClientWeb = new OAuth2Client(process.env.CLIENT_ID, process.env.CLIENT_SECRET, process.env.REDIRECT_URI);
 const oAuth2ClientMobile = new OAuth2Client(process.env.CLIENT_ID, process.env.CLIENT_SECRET, "");
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_PUBLISHABLE_KEY // or SUPABASE_SERVICE_ROLE_KEY
+);
 
 // Stores: Map<userId: string, {accessToken: string, expiryDate: integer}>
 const accessTokenCache = new Map();
@@ -69,15 +75,35 @@ const googleFetch = async (endpoint, method, token, body = null) => {
 
 // ─── Authentication Functions ───────────────────────────────────────────────────────────
 
-const authenticate = (req, res, next) => {
+// const authenticate = (req, res, next) => {
+//   const token = req.headers['authorization']?.split(' ')[1]; // "Bearer <token>"
+//   if (!token) return res.sendStatus(401);
+
+//   jwt.verify(token, process.env.SUPABASE_JWT_SECRET, (err, decoded) => {
+//     if (err) {
+//       console.error('JWT Verification Error:', err.message);
+//       return res.sendStatus(403);
+//     }
+//     req.userId = decoded.userId; 
+//     next();
+//   });
+// };
+
+const authenticate = async (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1]; // "Bearer <token>"
   if (!token) return res.sendStatus(401);
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) return res.sendStatus(403);
-    req.userId = decoded.userId; 
-    next();
-  });
+  // Validate the JWT directly with Supabase
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+
+  if (error || !user) {
+    console.error('Supabase Auth Error:', error?.message);
+    return res.sendStatus(403);
+  }
+
+  // Attach user UUID to request
+  req.userId = user.id; 
+  next();
 };
 
 const getAccessToken = async (userId, refreshToken) => {
@@ -118,9 +144,7 @@ const fetchAndFormatUserToken = async (userId, refreshToken, id) => {
   return { id, accessToken, expiryDate };
 };
 
-// ===========================================================
-// MAIN API ROUTES
-// ===========================================================
+// ─── Main API Routes ───────────────────────────────────────────────────────────
 
 app.post('/api/google-exchange', handleRoute('Failed to exchange code', async (req, res) => {
   console.log('/api/google-exchange called');
@@ -146,8 +170,8 @@ app.post('/api/google-exchange', handleRoute('Failed to exchange code', async (r
 app.post('/api/get-family-profiles', authenticate, handleRoute('Failed to get family data', async (req, res) => {
   console.log('/api/get-family-profiles called');
   res.json({
-    parent: db.getUserProfile(req.userId),
-    children: db.getChildrenProfiles(req.userId)
+    parent: await db.getUserProfile(req.userId),
+    children: await db.getChildrenProfiles(req.userId)
   });
 }));
 
@@ -170,7 +194,7 @@ app.post('/api/update-token', async (req, res) => {
   }
 
   try {
-    const success = await updateToken(userId, refreshToken);
+    const success = await db.updateToken(userId, refreshToken);
     
     if (success) {
       res.status(200).json({ message: 'Token saved successfully' });

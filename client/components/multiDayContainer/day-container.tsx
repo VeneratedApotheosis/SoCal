@@ -1,4 +1,11 @@
-import { DATE_HEADER_HEIGHT, HEADER_HEIGHT, PAST_BUFFER, WEB_DATE_HEADER_PADDING, WEB_Y_PADDING } from '@/utility/constants';
+import {
+  ALL_DAY_HEIGHT,
+  DATE_HEADER_HEIGHT,
+  HEADER_HEIGHT,
+  PAST_BUFFER,
+  WEB_DATE_HEADER_PADDING,
+  WEB_Y_PADDING,
+} from '@/utility/constants';
 import { createEventObj } from '@/utility/eventUtils';
 import { COLORS } from '@/utility/theme';
 import { AllDayPool, EventObj, EventWithLayout } from '@/utility/types';
@@ -15,6 +22,49 @@ import DateHeader from './date-header';
 import EventContainer from './event-container';
 import { getDayContainerStyles, getEventCardStyles } from './multiDayStyles';
 import TimeIndicator from './time-indicator';
+
+interface EventDayBounds {
+  newEventToday: boolean;
+  newEventAllDay: boolean;
+  newEventStartDate: Date;
+  newEventEndDate: Date;
+}
+
+export const getEventDayBounds = (newEvent: EventObj | null | undefined, day: Date): EventDayBounds => {
+  if (!newEvent) {
+    return {
+      newEventToday: false,
+      newEventAllDay: false,
+      newEventStartDate: new Date(),
+      newEventEndDate: new Date(),
+    };
+  }
+
+  const msPerDay = 86400000;
+
+  const startOfDay = new Date(day);
+  startOfDay.setHours(0, 0, 0, 0);
+  const thisDay = startOfDay.getTime(); // Replaces external dependency
+
+  const endOfDay = new Date(day);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const eventStartTime = newEvent.startDate.getTime();
+  const eventEndTime = newEvent.endDate.getTime();
+
+  const startsToday = eventStartTime >= thisDay && eventStartTime < thisDay + msPerDay;
+  const startsBeforeToday = eventStartTime < thisDay;
+  const endsToday = eventEndTime >= thisDay && eventEndTime < thisDay + msPerDay;
+  const endsTodayOrLater = eventEndTime >= thisDay;
+  const endsAfterToday = eventEndTime > thisDay;
+
+  return {
+    newEventToday: startsToday || (startsBeforeToday && endsTodayOrLater),
+    newEventAllDay: Boolean(newEvent.allDay && (startsToday || (startsBeforeToday && endsAfterToday))),
+    newEventStartDate: startsToday ? newEvent.startDate : startOfDay,
+    newEventEndDate: endsToday ? newEvent.endDate : endOfDay,
+  };
+};
 
 const HourTicks = ({ hourHeight, isDark }: { hourHeight: number; isDark: boolean }) => (
   <Svg height={hourHeight * 24} width="100%" style={StyleSheet.absoluteFill}>
@@ -40,7 +90,6 @@ export interface DayContainerProps {
   allDayEvents: EventWithLayout[];
   handlePress: (event: EventObj | null, newEvent: boolean, e: any) => void;
   scrollY: SharedValue<number>;
-  scrollX: SharedValue<number>;
   isVisible: boolean;
   selectedEventId: string | null;
   currentAllDayHeight: SharedValue<number>;
@@ -66,7 +115,6 @@ export default function DayContainer({
   allDayEvents,
   handlePress,
   scrollY,
-  scrollX,
   isVisible,
   selectedEventId,
   currentAllDayHeight,
@@ -91,15 +139,7 @@ export default function DayContainer({
   const today = new Date().setHours(0, 0, 0, 0);
   const index = Math.round((thisDay - today) / msPerDay) + PAST_BUFFER;
   const reversedIndex = Math.round((today - thisDay) / msPerDay) + PAST_BUFFER;
-  const newEventToday = (() => {
-    if (!newEvent) return false;
-
-    const eventTime = newEvent.startDate.getTime();
-    const after = eventTime >= thisDay;
-    const before = eventTime - thisDay < msPerDay;
-
-    return after && before;
-  })();
+  const { newEventToday, newEventAllDay, newEventStartDate, newEventEndDate } = getEventDayBounds(newEvent, day);
 
   const handleEventSelect = useCallback(
     (event: EventObj, e: any) => {
@@ -128,6 +168,8 @@ export default function DayContainer({
       top: (hourHeight / 60.0) * Math.min(dragStartMin.value, dragCurrentDayMin.value),
     };
   });
+
+  const newAllDayAnimatedStyle = useAnimatedStyle(() => ({ top: currentAllDayHeight.value - ALL_DAY_HEIGHT * (1 + allDayEvents.length) }));
 
   return (
     <View
@@ -182,6 +224,29 @@ export default function DayContainer({
               />
             );
           })}
+          {newEvent && newEventAllDay && (
+            <Animated.View style={[newAllDayAnimatedStyle]}>
+              <AllDayChip
+                key={newEvent.id + day.toISOString}
+                event={newEvent}
+                day={day}
+                layout={{
+                  event: newEvent,
+                  maxOffset: allDayEvents.length + 1,
+                  offset: allDayEvents.length + 1,
+                  startDate: newEvent.startDate,
+                  endDate: newEvent.endDate,
+                  dummy: false,
+                }}
+                handlePress={handleEventSelect}
+                dayWidth={dayWidth}
+                isVisible={isVisible}
+                selectedEventId={selectedEventId}
+                isDummy={false}
+                newEvent={true}
+              />
+            </Animated.View>
+          )}
 
           <Pressable
             onPress={(event) => {
@@ -234,15 +299,15 @@ export default function DayContainer({
           />
         ))}
         {/* new Event */}
-        {newEventToday && newEvent && (
+        {newEventToday && newEvent && !newEventAllDay && !newEvent.allDay && (
           <EventContainer
             key={newEvent.id}
             eventWithOffset={{
               event: newEvent,
               offset: 0,
               maxOffset: 0,
-              startDate: newEvent.startDate,
-              endDate: newEvent.endDate,
+              startDate: newEventStartDate,
+              endDate: newEventEndDate,
               dummy: false,
             }}
             dayWidth={dayWidth}

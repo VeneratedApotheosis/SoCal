@@ -28,7 +28,7 @@ export const getValidAccessToken = async (jwtToken: string) => {
     _currentJwtToken = jwtToken;
   }
 
-  // 1. Check ultra-fast in-memory cache first
+  //1. Check ultra-fast in-memory cache first
   if (_cachedTokens?.parent) {
     const isExpired = Date.now() + 600000 > +_cachedTokens.parent.expiryDate;
     if (!isExpired) return _cachedTokens;

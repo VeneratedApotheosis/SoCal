@@ -413,7 +413,6 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
         hourHeight={hourHeight}
         handlePress={handlePress}
         scrollY={scrollY}
-        scrollX={scrollX}
         isVisible={eventDetailsVisible || webDetailsVisible}
         selectedEventId={selectedEvent?.id ? selectedEvent?.id : null}
         currentAllDayHeight={currentAllDayHeight}
@@ -437,7 +436,7 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
       webDetailsVisible,
       selectedEvent,
       currentAllDayHeight,
-      scrollX,
+      newEvent,
     ],
   );
 
@@ -506,6 +505,7 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
         setVisible={setWebDetailsVisible}
         top={menuPos.top}
         left={menuPos.left}
+        setNewEvent={setNewEvent}
       />
     </View>
   );

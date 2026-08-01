@@ -15,13 +15,15 @@ import { COLORS } from '@/utility/theme';
 import { Plus } from 'lucide-react-native';
 import { useCalendarGroupsContext } from '../contexts/calendar-groups-context';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
+import { useProfileContext } from '../contexts/profile-context';
 import { useScreenSize } from '../contexts/screen-size-context';
 import { getColorPaletteStyles } from '../settingsContainer/settingsContainerStyles';
 import { getDrawerStyles } from './customDrawer';
 import DraggableCalendar from './drawer-draggable-calendar';
 
 export default function CustomDrawerContent(props: any) {
-  const { jwtToken, calendarType, setCalendarType, familyProfiles } = useAuthContext();
+  const { validJwt, calendarType, setCalendarType } = useAuthContext();
+  const { familyProfiles } = useProfileContext();
   const userId = familyProfiles && familyProfiles.parent ? familyProfiles.parent.id : null;
   const { fixedSidebar, isWeb } = useScreenSize();
   const { toggleCalendar, calViewMode: viewMode, resetViewMode, suppressOther } = useCalendarObjects();
@@ -170,7 +172,7 @@ export default function CustomDrawerContent(props: any) {
     toggleExpand(contentHeight);
   }, [viewMode]);
 
-  if (!jwtToken) return null;
+  if (!validJwt) return null;
 
   return (
     <SafeAreaView style={[styles.headerContainer, { padding: fixedSidebar ? 0 : 20 }]}>

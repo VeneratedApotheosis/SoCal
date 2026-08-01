@@ -3,9 +3,11 @@ import { globalStyles } from '@/utility/globalStyles';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import { useAuthContext } from './contexts/auth-context';
 
 export default function WelcomeScreen() {
-  const { promptAsync, isLoading, jwtToken } = useAuth();
+  const { promptAsync, isLoading } = useAuth();
+  const { validJwt } = useAuthContext();
   console.log(isLoading);
 
   return (
@@ -32,7 +34,7 @@ export default function WelcomeScreen() {
         >
           {isLoading ? (
             <Text style={styles.buttonText}>Loading...</Text>
-          ) : jwtToken ? (
+          ) : validJwt ? (
             <Text style={styles.buttonText}>Welcome Back</Text>
           ) : (
             <Text style={styles.buttonText}>Sign in with Google</Text>

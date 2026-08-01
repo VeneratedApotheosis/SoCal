@@ -1,7 +1,9 @@
+import { useAuthContext } from '@/components/contexts/auth-context';
 import { fetchCalendarList, getCalendarSharingSettings } from '@/services/api';
 import { getValidAccessToken } from '@/utility/tokenUtils';
 import { calendarObj, sharedObj } from '@/utility/types';
 import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from './useAuth';
 
 // 1. Abstracted synchronous formatter
 const formatCalendar = (cal: any): calendarObj => ({
@@ -30,13 +32,16 @@ const fetchSharingSettings = async (cal: any, token: string): Promise<sharedObj 
   };
 };
 
-export function useCalendarList(jwtToken: string | null) {
+export function useCalendarList() {
   const [calendarObjs, setCalendarObjs] = useState<calendarObj[]>([]);
   const [sharedObjs, setSharedObjs] = useState<sharedObj[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { validJwt } = useAuthContext();
   const [error, setError] = useState<string | null>(null);
+  const { getValidJwt } = useAuth();
 
-  const fetchUserEvents = useCallback(async (jwtToken: string | null) => {
+  const fetchUserEvents = useCallback(async () => {
+    const jwtToken = await getValidJwt();
     if (!jwtToken) {
       console.log('clearing calendar object data');
       setCalendarObjs([]);
@@ -67,11 +72,11 @@ export function useCalendarList(jwtToken: string | null) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [getValidJwt]);
 
   useEffect(() => {
-    fetchUserEvents(jwtToken);
-  }, [fetchUserEvents, jwtToken]);
+    fetchUserEvents();
+  }, [fetchUserEvents, validJwt]);
 
   //const [reference, setReference] = useState<calendarObj[]>(referenceCalendarObjects);;
 

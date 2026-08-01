@@ -5,6 +5,7 @@ import { TabBar, TabView } from 'react-native-tab-view';
 
 import { getSettingBackgroundStyles, settingsPortalStyles } from '@/components/settingsContainer/settingsContainerStyles';
 import { PORTAL_HOME_NAME } from '@/utility/constants';
+import { getIconColor } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Portal } from '@gorhom/portal';
@@ -23,6 +24,8 @@ export default function SettingsModal({ isVisible, onClose }: Props) {
   const { theme } = useUIContext();
   const styles = getSettingBackgroundStyles(theme.isDark);
   const portalStyles = settingsPortalStyles(theme.isDark);
+
+  const iconColor = getIconColor(theme.isDark);
 
   useEffect(() => {
     if (isVisible) {
@@ -116,13 +119,14 @@ export default function SettingsModal({ isVisible, onClose }: Props) {
       >
         <View style={portalStyles.header}>
           <Pressable style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name={'arrow-back-outline'} size={24} onPress={onClose} />
+            <Ionicons name={'arrow-back-outline'} size={24} onPress={onClose} color={iconColor} />
           </Pressable>
           <Text style={portalStyles.headerText}>Settings</Text>
         </View>
         <View style={portalStyles.rowDivider}></View>
         <View style={{ flex: 1 }}>
           <TabView
+            swipeEnabled={false}
             navigationState={{ index, routes: routes }}
             renderScene={renderScene}
             onIndexChange={setIndex}

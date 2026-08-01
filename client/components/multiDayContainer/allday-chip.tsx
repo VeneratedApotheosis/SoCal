@@ -1,8 +1,9 @@
 import { useEventColors } from '@/hooks/useEventColor';
+import { ALL_DAY_HEIGHT } from '@/utility/constants';
 import { EventObj, EventWithLayout } from '@/utility/types';
 import React, { memo, useMemo } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
 import { useUIContext } from '../contexts/ui-context';
 import { eventsAreEqual } from '../eventDetailsContainer/expanded-view';
@@ -17,18 +18,19 @@ export interface AllDayChipProps {
   isVisible: boolean;
   selectedEventId: string | null;
   isDummy: boolean;
+  newEvent?: boolean;
 }
 
 const darkStyles = getAllDayChipStyles(true);
 const lightStyles = getAllDayChipStyles(false);
 
-function AllDayChip({ event, day, layout, handlePress, dayWidth, isVisible, selectedEventId, isDummy }: AllDayChipProps) {
+function AllDayChip({ event, day, layout, handlePress, dayWidth, isVisible, selectedEventId, isDummy, newEvent }: AllDayChipProps) {
   const { theme, transparentOpacity } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;
   const { calendarObjs, calViewMode } = useCalendarObjects();
 
   const selectedThisEvent = !!selectedEventId && isVisible && selectedEventId === event.id;
-  const { rawColor, borderColor, textColor } = useEventColors(event.calendarId);
+  const { rawColor, borderColor, textColor } = useEventColors(event.calendarId, newEvent);
 
   const { isStart, isEnd, isMiddle } = useMemo(() => {
     let isStart = false;
@@ -59,10 +61,7 @@ function AllDayChip({ event, day, layout, handlePress, dayWidth, isVisible, sele
   const msPerDay = 86400000;
   const startMs = new Date(layout.startDate).setHours(0, 0, 0, 0);
   const endMs = layout.endDate ? new Date(layout.endDate).setHours(0, 0, 0, 0) : startMs;
-  const today = new Date().setHours(0, 0, 0, 0);
-  const isRegistered = useSharedValue<boolean>(false);
   const currentMs = new Date(day).setHours(0, 0, 0, 0);
-  const xOffset = Math.round((today - startMs) / msPerDay) * dayWidth;
 
   let totalDays = Math.max(1, Math.round((endMs - startMs) / msPerDay) + 1);
   if (event.allDay) totalDays--;
@@ -87,17 +86,42 @@ function AllDayChip({ event, day, layout, handlePress, dayWidth, isVisible, sele
   });
 
   return (
-    <View style={{ overflow: 'hidden' }}>
-      {isDummy ? (
-        <View
-          style={[
-            styles.eventContainer,
-            {
-              width: dayWidth - AllDayStyles.marginHorizontalTotal * 2,
-              marginLeft: AllDayStyles.marginLeft,
-            },
-          ]}
-        ></View>
+    <View style={{ overflow: 'hidden', height: ALL_DAY_HEIGHT }}>
+      {isDummy || newEvent ? (
+        <>
+          {newEvent ? (
+            <View
+              style={[
+                styles.eventContainer,
+                {
+                  width: width,
+                  marginLeft: marginLeft,
+                  backgroundColor: 'blue',
+                },
+                styles.newEvent,
+                isStart && {
+                  borderRadius: 8,
+                  borderLeftWidth: 4,
+                },
+                isEnd && {
+                  borderTopRightRadius: 8,
+                  borderBottomRightRadius: 8,
+                  borderRightWidth: 4,
+                },
+              ]}
+            ></View>
+          ) : (
+            <View
+              style={[
+                styles.eventContainer,
+                {
+                  width: dayWidth - AllDayStyles.marginHorizontalTotal * 2,
+                  marginLeft: AllDayStyles.marginLeft,
+                },
+              ]}
+            ></View>
+          )}
+        </>
       ) : (
         <Pressable
           onPress={(e: any) => handlePress(event, e)}
@@ -146,22 +170,6 @@ function AllDayChip({ event, day, layout, handlePress, dayWidth, isVisible, sele
                   {event.title}
                 </Animated.Text>
               </Animated.View>
-              {/* --- end --- */}
-              {/* <Animated.Text
-                style={[
-                  styles.eventText,
-                  selectedThisEvent && { color: rawColor },
-                  //animatedEndStyle,
-                  {
-                    color: textColor,
-                    width: 1000,
-                    opacity: 0,
-                    zIndex: 1,
-                  },
-                ]}
-              >
-                {event.title}
-              </Animated.Text> */}
             </>
           )}
         </Pressable>

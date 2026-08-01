@@ -7,13 +7,15 @@ import { getValidAccessToken } from '@/utility/tokenUtils';
 import { CalendarData, calendarObj, EventObj, FamilyCalendarState } from '@/utility/types';
 import { addDays } from 'date-fns';
 import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from './useAuth';
 
-export function useCalendar(jwtToken: string | null, timeZone: string, isTimeZoneLoaded: boolean) {
+export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean) {
   const [calendars, setCalendars] = useState<FamilyCalendarState | null>(null);
   const [uniqueCalendars, setUniqueCalendars] = useState<CalendarData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [localTimeZone, setLocalTimeZone] = useState<string | null>(null);
+  const { getValidJwt } = useAuth();
 
   useEffect(() => {
     storage.get('calendar').then((c) => c && setCalendars(c));
@@ -26,7 +28,8 @@ export function useCalendar(jwtToken: string | null, timeZone: string, isTimeZon
   };
 
   const fetchUserEvents = useCallback(
-    async (jwtToken: string | null, fetchStart: number | null, fetchEnd: number | null) => {
+    async (fetchStart: number | null, fetchEnd: number | null) => {
+      const jwtToken = await getValidJwt();
       if (!jwtToken || !isTimeZoneLoaded || !timeZone) {
         clearCalendarEvents();
         return;
@@ -150,8 +153,8 @@ export function useCalendar(jwtToken: string | null, timeZone: string, isTimeZon
       clearCalendarEvents();
     }
     setLocalTimeZone(timeZone);
-    fetchUserEvents(jwtToken, null, null);
-  }, [jwtToken, timeZone, isTimeZoneLoaded, fetchUserEvents]);
+    fetchUserEvents(null, null);
+  }, [timeZone, isTimeZoneLoaded, fetchUserEvents]);
 
   return { calendars, setCalendars, isLoading, error, uniqueCalendars, setUniqueCalendars, refetch: fetchUserEvents };
 }

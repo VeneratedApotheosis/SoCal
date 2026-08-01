@@ -256,12 +256,22 @@ export const getColorEditStyles = (isDark: boolean) => {
       borderColor: isDark ? COLORS.border.dark : COLORS.border.light,
     },
     inputLabel: {
-      marginBottom: 8,
       ...baseText.subtitle,
     },
     inputRow: {
-      gap: 8,
+      gap: 16,
       ...baseFlexStyles.rowLeft,
+      flex: 1,
+      width: '100%',
+    },
+    hueInput: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 8,
+      minWidth: 0,
+      ...baseTheme.backgroundMuted,
+      ...baseText.input,
+      textAlign: 'center',
     },
     textInput: {
       flex: 1,
@@ -293,13 +303,17 @@ export const getColorEditStyles = (isDark: boolean) => {
     },
     cancelBtnText: { ...baseText.subtitle, ...baseText.subtleColor },
     removeBtn: {
-      backgroundColor: 'rgba(239, 44, 44, 0.1)',
-      paddingHorizontal: 8,
-      paddingVertical: 0,
+      backgroundColor: isDark ? COLORS.secondary.backgroundDark : COLORS.secondary.backgroundLight,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
       ...baseFlexStyles.centerAll,
       borderRadius: 8,
     },
-    removeBtnText: { ...baseText.subtitle, color: COLORS.secondary.backgroundLight },
+    removeBtnText: { ...baseText.subtitle, color: isDark ? COLORS.secondary.textLight : COLORS.secondary.textDark },
+    revertBtn: {
+      backgroundColor: isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight,
+    },
+    revertBtnText: { ...baseText.subtitle, color: isDark ? COLORS.text.light : COLORS.text.dark },
 
     // Event Card
     event: {
@@ -307,7 +321,6 @@ export const getColorEditStyles = (isDark: boolean) => {
       borderRadius: 12,
       padding: 10,
       height: 100,
-      marginHorizontal: 60,
     },
     eventText: {
       ...baseText.title,

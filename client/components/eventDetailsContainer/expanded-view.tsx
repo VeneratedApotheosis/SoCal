@@ -18,22 +18,20 @@ interface ExpandedViewProps {
   initialEvent: EventObj;
   bottomSheetModalRef: React.RefObject<BottomSheetModal | null>;
   onClose: () => void;
+  setNewEvent: React.Dispatch<React.SetStateAction<EventObj | null>>;
 }
 
 export function eventsAreEqual(a: EventObj, b: EventObj): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose }: ExpandedViewProps) => {
+export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, setNewEvent }: ExpandedViewProps) => {
   const { mutateEvent, uniqueCalendars } = useCalendarEvents();
   const { isWeb } = useScreenSize();
   const { theme } = useUIContext();
   const { calendarObjs } = useCalendarObjects();
   const styles = eventViewStyles(theme.isDark);
   const inputColor = theme.isDark ? COLORS.text.subtleDark : COLORS.text.lightGray;
-
-  const [titleHeight, setTitleHeight] = useState(36);
-  const [descriptionHeight, setDescriptionHeight] = useState(36);
 
   const [event, setEvent] = useState<EventObj>(initialEvent);
   const [creatingEvent, setCreatingEvent] = useState<boolean>(initialEvent.id === '');
@@ -75,6 +73,10 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose }
 
   const updateField = (field: keyof EventObj, value: any) => {
     setEvent((prev) => ({ ...prev, [field]: value }));
+    setNewEvent((prev) => {
+      if (!prev) return prev;
+      return { ...prev, [field]: value };
+    });
   };
 
   const closeModal = () => {
@@ -93,6 +95,13 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose }
   const handleCalendarObjectSelect = (calendarId: string) => {
     updateField('calendarId', calendarId);
   };
+
+  // ─── Title and Description Heigth Calc ───────────────────────────────────────────────────────────
+
+  const [titleHeight, setTitleHeight] = useState(36);
+  const [descriptionHeight, setDescriptionHeight] = useState(36);
+  const titleInputRef = useRef<any>(null);
+  const descriptionInputRef = useRef<any>(null);
 
   const handleWebTitleChange = (event: any) => {
     if (Platform.OS === 'web') {
@@ -115,6 +124,29 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose }
       setDescriptionHeight(nextHeight);
     }
   };
+
+  //update height when base event changes
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      // Resize Title
+      if (titleInputRef.current) {
+        const el = titleInputRef.current;
+        el.style.height = '0px';
+        const nextHeight = Math.max(40, el.scrollHeight);
+        el.style.height = `${nextHeight}px`;
+        setTitleHeight(nextHeight);
+      }
+
+      // Resize Description (if you have one)
+      if (descriptionInputRef.current) {
+        const el = descriptionInputRef.current;
+        el.style.height = '0px';
+        const nextHeight = Math.max(40, el.scrollHeight);
+        el.style.height = `${nextHeight}px`;
+        setDescriptionHeight(nextHeight);
+      }
+    }
+  }, [event.title]);
 
   // ─── Delete & Edit handlers ───────────────────────────────────────────────────────────
 
@@ -165,6 +197,7 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose }
         {/* Title */}
         <View style={styles.card}>
           <TextInput
+            ref={titleInputRef}
             style={[styles.titleInput, { height: titleHeight }, event.title.length === 0 && { fontStyle: 'italic' }]}
             value={event.title}
             onChangeText={(text) => updateField('title', text)}
@@ -206,6 +239,7 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose }
               },
               event.description.length === 0 && { fontStyle: 'italic' },
             ]}
+            ref={descriptionInputRef}
             value={event.description}
             onChangeText={(text) => updateField('description', text)}
             onChange={Platform.OS === 'web' ? handleWebDescriptionChange : undefined}

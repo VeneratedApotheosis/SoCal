@@ -2,7 +2,7 @@
 import { useCalendarList } from '@/hooks/useCalendarList';
 import { calendarObj, sharedObj, visibility } from '@/utility/types';
 import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useEffect, useState } from 'react';
-import { useAuthContext } from './auth-context';
+import { useProfileContext } from './profile-context';
 
 export interface CalendarObjectsContextType {
   calendarObjs: calendarObj[] | null;
@@ -23,17 +23,15 @@ export interface CalendarObjectsContextType {
 export const CalendarObjectsContext = createContext<CalendarObjectsContextType>({} as CalendarObjectsContextType);
 
 export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) => {
-  const { jwtToken, familyProfiles } = useAuthContext();
-  const sessionTokenString = jwtToken?.sessionToken ?? null;
-
-  const { calendarObjs, setCalendarObjs, sharedObjs, refetch, error } = useCalendarList(sessionTokenString);
+  const { familyProfiles } = useProfileContext();
+  const { calendarObjs, setCalendarObjs, sharedObjs, refetch, error } = useCalendarList();
 
   const [sharedCalendars, setSharedCalendars] = useState<sharedObj[]>([]);
 
   const [calViewMode, setCalViewMode] = useState<'default' | 'isolate' | 'transparent'>('default');
 
   const refetchCalendarList = async () => {
-    await refetch(sessionTokenString);
+    await refetch();
   };
 
   // ─── Shared Calendars ───────────────────────────────────────────────────────────

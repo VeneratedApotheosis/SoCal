@@ -13,7 +13,7 @@ import CalendarTypePicker from './calendar-type';
 import { FetchStatusIcon } from './fetch-status-icon';
 
 export default function CalendarHeader() {
-  const { jwtToken } = useAuthContext();
+  const { validJwt } = useAuthContext();
   const navigation = useNavigation();
   const { currentMonthText } = useCalendarIndex();
   const { now, theme, sideBar, setLoginVisible } = useUIContext();
@@ -39,7 +39,7 @@ export default function CalendarHeader() {
 
   return (
     <SafeAreaView edges={['top']} style={{ zIndex: 10 }}>
-      {jwtToken && (
+      {validJwt && (
         <View style={[styles.headerContainer, { paddingHorizontal: 16 + isWeb * WEB_MUTED_PADDING }]}>
           {/* --- Waffle --- */}
           <View style={{ justifyContent: 'center' }}>

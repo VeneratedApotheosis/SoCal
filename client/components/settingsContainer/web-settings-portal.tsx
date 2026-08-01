@@ -1,4 +1,5 @@
 import { PORTAL_HOME_NAME } from '@/utility/constants';
+import { getIconColor } from '@/utility/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { Portal } from '@gorhom/portal';
 import React, { useEffect, useRef, useState } from 'react';
@@ -17,6 +18,7 @@ export interface SettingsPortalProps {
 export default function WebSettingsPortal({ isVisible, onClose }: SettingsPortalProps) {
   const { theme } = useUIContext();
   const styles = settingsPortalStyles(theme.isDark);
+  const iconColor = getIconColor(theme.isDark);
 
   // ─── Fade Animations ───────────────────────────────────────────────────────────
 
@@ -57,7 +59,7 @@ export default function WebSettingsPortal({ isVisible, onClose }: SettingsPortal
       >
         <View style={styles.header}>
           <Pressable style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name={'arrow-back-outline'} size={24} onPress={onClose} />
+            <Ionicons name={'arrow-back-outline'} size={24} onPress={onClose} color={iconColor} />
           </Pressable>
           <Text style={styles.headerText}>Settings</Text>
         </View>

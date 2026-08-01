@@ -24,7 +24,7 @@ export interface EventsContextType {
   };
   isWriting: boolean;
   writeError: string | null;
-  refetchCalendar: (jwtToken: string | null, fetchStart: number | null, fetchEnd: number | null) => Promise<void>;
+  refetchCalendar: (fetchStart: number | null, fetchEnd: number | null) => Promise<void>;
   fetchForward: (fetchEnd: number) => void;
   fetchBackward: (fetchEnd: number) => void;
   uniqueCalendars: CalendarData[];
@@ -34,12 +34,11 @@ export interface EventsContextType {
 export const EventsContext = createContext<EventsContextType>({} as EventsContextType);
 
 export const EventsProvider = ({ children }: { children: ReactNode }) => {
-  const { jwtToken, calendarType } = useAuthContext();
-  const sessionTokenString = jwtToken?.sessionToken ?? null;
+  const { calendarType } = useAuthContext();
   const [localCalType, setLocalCalType] = useState<'D' | 'W'>('D');
 
   // API WRITING HOOK
-  const { isWriting, writeError } = useCalendarWrite(sessionTokenString);
+  const { isWriting, writeError } = useCalendarWrite();
 
   // TIME ZONE HOOK
   const { timeZone, setTimeZone, isStorageLoaded: isTimeZoneLoaded } = useTimeZoneContext();
@@ -57,7 +56,7 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
     uniqueCalendars,
     setUniqueCalendars,
     refetch: refetchCalendar,
-  } = useCalendar(sessionTokenString, timeZone, isTimeZoneLoaded);
+  } = useCalendar(timeZone, isTimeZoneLoaded);
 
   // Visible Events
   const allEvents = useMemo(() => {
@@ -80,15 +79,14 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
 
   const [fetchEnd, setFetchEnd] = useState<number>(2 * BUFFER_INCREMENT);
   const [fetchStart, setFetchStart] = useState<number>(-2 * BUFFER_INCREMENT);
-  const mutateEvent = useMutateEvent(sessionTokenString, uniqueCalendars, setCalendars, setUniqueCalendars, fetchStart, fetchEnd);
+  const mutateEvent = useMutateEvent(uniqueCalendars, setCalendars, setUniqueCalendars, fetchStart, fetchEnd);
 
   // ─── Fetching ───────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!jwtToken) return;
     if (calendarType.type !== localCalType) {
       if (calendarType.type === 'W') {
-        refetchCalendar(jwtToken?.sessionToken, -8 * BUFFER_INCREMENT, 8 * BUFFER_INCREMENT);
+        refetchCalendar(-8 * BUFFER_INCREMENT, 8 * BUFFER_INCREMENT);
       }
       setLocalCalType(calendarType.type);
       setFetchEnd(Math.max(6 * BUFFER_INCREMENT, fetchEnd));
@@ -97,14 +95,12 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   }, [calendarType]);
 
   const fetchForward = (fetchEnd: number) => {
-    if (!jwtToken) return;
-    refetchCalendar(jwtToken?.sessionToken, null, fetchEnd);
+    refetchCalendar(null, fetchEnd);
     setFetchEnd(fetchEnd);
   };
 
   const fetchBackward = (fetchStart: number) => {
-    if (!jwtToken) return;
-    refetchCalendar(jwtToken?.sessionToken, fetchStart, null);
+    refetchCalendar(fetchStart, null);
     setFetchStart(fetchStart);
   };
 

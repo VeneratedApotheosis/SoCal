@@ -21,14 +21,14 @@ import { getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalS
 import { AuthContext } from '../components/contexts/auth-context';
 
 export default function Index() {
-  const { calendarType, jwtToken } = useContext(AuthContext);
+  const { calendarType, validJwt } = useContext(AuthContext);
   const { allEvents } = useContext(EventsContext);
   const { isLoginVisible, setLoginVisible, theme } = useUIContext();
   const styles = indexStyles(theme.isDark);
   const { isWeb, fixedSidebar } = useScreenSize();
   useWebScrollbarStyle();
 
-  return jwtToken ? (
+  return validJwt ? (
     <>
       <CalendarHeader />
       {isWeb ? (
