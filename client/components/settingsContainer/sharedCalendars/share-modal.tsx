@@ -30,22 +30,6 @@ export default function ShareModal({ isVisible, setVisible }: ShareModalProps) {
   const styles = getShareModalStyles(theme.isDark);
   const globalStyles = globalParameterStyles(theme.isDark);
 
-  const [email, setEmail] = useState('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [accessRole, setAccessRole] = useState<accessRole>('reader');
-  const [status, setStatus] = useState<'success' | 'error' | null>(null);
-
-  const SafeTextInput = Platform.OS === 'web' ? TextInput : BottomSheetTextInput;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  // ─── Dimensions ───────────────────────────────────────────────────────────
-
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
-  const width = Math.min(SCREEN_WIDTH * 0.8, maxWidth);
-  const height = SCREEN_HEIGHT * 0.8;
-  const top = (SCREEN_HEIGHT - height) / 2;
-  const left = (SCREEN_WIDTH - width) / 2;
-
   // ─── Owned Calendars calculation ───────────────────────────────────────────────────────────
 
   const [email, setEmail] = useState('');
