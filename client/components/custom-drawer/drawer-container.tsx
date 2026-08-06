@@ -1,5 +1,5 @@
 import { calendarObj, CalendarView } from '@/utility/types';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSharedValue, withSpring } from 'react-native-reanimated';
@@ -33,6 +33,7 @@ export default function CustomDrawerContent(props: any) {
   const hoverIndex = useSharedValue<number | null>(null);
   const activeIndex = useSharedValue<number | null>(null);
   const isHovering = useSharedValue<boolean>(false);
+  const drawerScrollViewRef = useRef<ScrollView>(null);
 
   const themeStyles = getColorPaletteStyles(uiTheme.isDark);
   const styles = getDrawerStyles(uiTheme.isDark);
@@ -190,7 +191,7 @@ export default function CustomDrawerContent(props: any) {
           </Pressable>
         </View>
       )}
-      <ScrollView>
+      <ScrollView ref={drawerScrollViewRef}>
         {/* --- CALENDAR TYPE TOGGLE --- */}
         {!isWeb && (
           <View style={styles.viewToggleContainer}>
@@ -233,6 +234,7 @@ export default function CustomDrawerContent(props: any) {
                 hoverIndex={hoverIndex}
                 activeIndex={activeIndex}
                 isHovering={isHovering}
+                drawerScrollViewRef={drawerScrollViewRef}
               />
             ))}
           </View>

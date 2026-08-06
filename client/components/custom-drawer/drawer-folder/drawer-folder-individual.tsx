@@ -8,7 +8,7 @@ import { Pressable, Text, View } from 'react-native';
 import { getFolderIndividual } from '../customDrawer';
 import FolderSettingsModal from './drawer-folder-settings-modal';
 
-const menuHeight = 82;
+const menuHeight = 150;
 const menuWidth = 150;
 
 export default function FolderIndividual({ calId }: { calId: string }) {

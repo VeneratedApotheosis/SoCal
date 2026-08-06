@@ -42,7 +42,6 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean) {
       if (fetchStart && fetchEnd) {
         fetchStartDate = addDays(fetchStartDate, fetchStart);
         fetchEndDate = addDays(fetchEndDate, fetchEnd);
-        return;
       } else if (!fetchStart && !fetchEnd) {
         //Starting fetch scheme
         fetchStartDate = addDays(fetchStartDate, -2 * BUFFER_INCREMENT);

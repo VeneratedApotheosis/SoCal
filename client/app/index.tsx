@@ -11,9 +11,11 @@ import WelcomeScreen from '@/components/welcome-screen';
 //Global Contexts
 import CalendarHeader from '@/components/calendarHeader/calendar-header';
 import { EventsContext } from '@/components/contexts/calendar-events-context';
+import { useCalendarGroupsContext } from '@/components/contexts/calendar-groups-context';
 import { useScreenSize } from '@/components/contexts/screen-size-context';
 import { useUIContext } from '@/components/contexts/ui-context';
 import FixedDrawer from '@/components/custom-drawer/drawer-web';
+import { FetchStatusPill } from '@/components/multiDayContainer/loading-icon';
 import { useWebScrollbarStyle } from '@/components/scrollIndicator';
 import WebSettingsPortal from '@/components/settingsContainer/web-settings-portal';
 import { WEB_MUTED_PADDING, WEB_WHITE_X_PADDING, WEB_WHITE_Y_PADDING } from '@/utility/constants';
@@ -26,10 +28,11 @@ export default function Index() {
   const { isLoginVisible, setLoginVisible, theme } = useUIContext();
   const styles = indexStyles(theme.isDark);
   const { isWeb, fixedSidebar } = useScreenSize();
+  const { calendarGroups } = useCalendarGroupsContext();
   useWebScrollbarStyle();
 
   return validJwt ? (
-    <>
+    <View style={styles.container}>
       <CalendarHeader />
       {isWeb ? (
         <View style={[styles.web]}>
@@ -38,6 +41,7 @@ export default function Index() {
             {calendarType.type === 'D' && <MultiDayContainer calendarType={calendarType} events={allEvents} />}
             {calendarType.type === 'W' && <MonthContainer calendarType={calendarType} events={allEvents} />}
             <WebSettingsPortal isVisible={isLoginVisible} onClose={() => setLoginVisible(false)} />
+            <FetchStatusPill />
           </View>
         </View>
       ) : (
@@ -45,9 +49,10 @@ export default function Index() {
           {calendarType.type === 'D' && <MultiDayContainer calendarType={calendarType} events={allEvents} />}
           {calendarType.type === 'W' && <MonthContainer calendarType={calendarType} events={allEvents} />}
           <SettingsModal isVisible={isLoginVisible} onClose={() => setLoginVisible(false)} />
+          <FetchStatusPill />
         </View>
       )}
-    </>
+    </View>
   ) : (
     <WelcomeScreen />
   );
@@ -58,6 +63,11 @@ export const indexStyles = (isDark: boolean) => {
   const baseText = getBasicTypographyStyles(isDark);
 
   return StyleSheet.create({
+    container: {
+      flex: 1,
+      height: '100%',
+      overflow: 'hidden', // Prevents outer page dragging
+    },
     web: {
       flex: 1,
       padding: WEB_MUTED_PADDING,

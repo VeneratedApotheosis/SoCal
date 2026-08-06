@@ -1,12 +1,12 @@
 import { COLORS } from '@/utility/theme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 import { useCalendarEvents } from '../contexts/calendar-events-context';
 import { useUIContext } from '../contexts/ui-context';
 
 export const FetchStatusIcon = () => {
-  const { isLoading, error } = useCalendarEvents();
+  const { isLoading, error, reloadCalendar } = useCalendarEvents();
   const { theme } = useUIContext();
   const iconColor = theme.isDark ? COLORS.border.mutedLight : COLORS.border.mutedDark;
 
@@ -41,8 +41,8 @@ export const FetchStatusIcon = () => {
 
   // 4. Success State: Done loading, no errors
   return (
-    <View>
-      <Ionicons name="cloud-done-outline" size={24} color={iconColor} />
-    </View>
+    <Pressable onPress={reloadCalendar}>
+      <Ionicons name="refresh-outline" size={24} color={iconColor} />
+    </Pressable>
   );
 };

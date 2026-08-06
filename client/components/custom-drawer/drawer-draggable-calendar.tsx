@@ -4,7 +4,7 @@ import { calendarObj } from '@/utility/types';
 import { COLORS } from '@/utility/theme';
 import { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler';
 import Animated, { SharedValue, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
@@ -24,6 +24,7 @@ export interface DraggableCalendarProps {
   hoverIndex: SharedValue<number | null>;
   activeIndex: SharedValue<number | null>;
   isHovering: SharedValue<boolean>;
+  drawerScrollViewRef?: React.RefObject<ScrollView | null>;
 }
 
 //Each Individual Calendar
@@ -35,6 +36,7 @@ export default function DraggableCalendar({
   hoverIndex,
   activeIndex,
   isHovering,
+  drawerScrollViewRef,
 }: DraggableCalendarProps) {
   const isDragging = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
@@ -69,6 +71,10 @@ export default function DraggableCalendar({
         }
       });
     });
+
+  if (drawerScrollViewRef) {
+    gesture.simultaneousWithExternalGesture(drawerScrollViewRef as any);
+  }
 
   //for animated view
   const animatedStyle = useAnimatedStyle(() => {

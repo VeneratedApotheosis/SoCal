@@ -66,9 +66,9 @@ export const getEventDayBounds = (newEvent: EventObj | null | undefined, day: Da
   };
 };
 
-const HourTicks = ({ hourHeight, isDark }: { hourHeight: number; isDark: boolean }) => (
-  <Svg height={hourHeight * 24} width="100%" style={StyleSheet.absoluteFill}>
-    {Array.from({ length: 24 }).map((_, i) => (
+const HourTicks = ({ hourHeight, isWeb, isDark }: { hourHeight: number; isWeb: number; isDark: boolean }) => (
+  <Svg height={hourHeight * (isWeb ? 24 : 25)} width="100%" style={StyleSheet.absoluteFill}>
+    {Array.from({ length: isWeb ? 24 : 25 }).map((_, i) => (
       <Line
         key={i}
         x1="0"
@@ -252,7 +252,7 @@ export default function DayContainer({
             onPress={(event) => {
               const startTime = new Date(day);
               startTime.setHours(0, 0, 0);
-              const endTime = addHours(startTime, 24);
+              const endTime = addHours(startTime, isWeb ? 24 : 25);
               const draftEvent = createEventObj(
                 {
                   startDate: startTime,
@@ -279,12 +279,12 @@ export default function DayContainer({
           animatedStyle,
           {
             width: dayWidth,
-            height: hourHeight * 24,
+            height: hourHeight * (isWeb ? 24 : 25),
           },
         ]}
         pointerEvents="box-none"
       >
-        <HourTicks hourHeight={hourHeight} isDark={theme.isDark} />
+        <HourTicks hourHeight={hourHeight} isDark={theme.isDark} isWeb={isWeb} />
         <TimeIndicator hourHeight={hourHeight} isToday={isToday} />
         {eventsWithLayout.map((item) => (
           <EventContainer

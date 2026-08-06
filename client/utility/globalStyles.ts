@@ -283,8 +283,8 @@ export const getHeaderStyles = (isDark: boolean) => {
       flexDirection: 'row',
       alignItems: 'stretch',
       ...baseTheme.backgroundMuted,
-      paddingVertical: 16,
       gap: 10,
+      zIndex: 10,
     },
     waffle: {
       alignSelf: 'flex-start',

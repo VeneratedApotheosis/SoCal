@@ -23,6 +23,9 @@ export const getSettingBackgroundStyles = (isDark: boolean) => {
       elevation: 0,
       boxShadow: '0px 0px 0px rgba(0, 0, 0, 0)',
       fontSize: 12,
+      paddingBottom: 16,
+      borderTopWidth: 1,
+      borderColor: isDark ? COLORS.border.mutedDark : COLORS.border.mutedLight,
     },
     indicator: {
       ...baseTheme.background,
@@ -186,14 +189,15 @@ export const getColorPaletteStyles = (isDark: boolean) => {
     },
     viewModeButton: {
       width: '100%',
+      marginTop: 16,
       paddingVertical: 8,
       borderRadius: 12,
       ...baseFlexStyles.rowCenter,
-      backgroundColor: isDark ? COLORS.secondary.backgroundDark : COLORS.secondary.backgroundLight,
+      backgroundColor: isDark ? COLORS.secondary.textDark : COLORS.secondary.textLight,
     },
     viewModeText: {
       ...baseText.subtitle,
-      color: isDark ? COLORS.secondary.textDark : COLORS.secondary.textLight,
+      color: 'white',
     },
     actionButtonPressed: {
       backgroundColor: isDark ? '#2a2a2a' : '#f3f4f6', // Hover simulation

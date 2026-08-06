@@ -1,13 +1,17 @@
 import { useAuth } from '@/hooks/useAuth'; // Adjust this path to wherever useAuth lives
-import { globalStyles } from '@/utility/globalStyles';
+import { baseFlexStyles, getBasicThemeStyles, getBasicTypographyStyles, globalStyles } from '@/utility/globalStyles';
+import { COLORS } from '@/utility/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useAuthContext } from './contexts/auth-context';
+import { useUIContext } from './contexts/ui-context';
 
 export default function WelcomeScreen() {
   const { promptAsync, isLoading } = useAuth();
   const { validJwt } = useAuthContext();
+  const { theme } = useUIContext();
+  const styles = welcomeScreenStyles(theme.isDark);
   console.log(isLoading);
 
   return (
@@ -15,14 +19,14 @@ export default function WelcomeScreen() {
       {/* --- calendar icon --- */}
       <View style={styles.logoContainer}>
         <Animated.View entering={FadeInUp.duration(600).delay(600)} style={styles.iconCircle}>
-          <MaterialCommunityIcons name="calendar-month" size={60} color="#4285F4" />
+          <MaterialCommunityIcons name="calendar-month" size={60} color={theme.isDark ? COLORS.primaryy.light : COLORS.primaryy.dark} />
         </Animated.View>
         <Animated.View entering={FadeInUp.duration(600).delay(400)}>
-          <Text style={styles.appName}>Calendar App</Text>
+          <Text style={styles.appName}>SoCal</Text>
         </Animated.View>
-        <Animated.View entering={FadeInUp.duration(600).delay(400)}>
+        {/* <Animated.View entering={FadeInUp.duration(600).delay(400)}>
           <Text style={styles.appDescription}>insert description</Text>
-        </Animated.View>
+        </Animated.View> */}
       </View>
 
       {/* --- login button --- */}
@@ -45,54 +49,56 @@ export default function WelcomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  homepg: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    padding: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 60,
-  },
-  iconCircle: {
-    width: 100,
-    height: 100,
-    backgroundColor: '#ebf4ff',
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
-  },
-  appName: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#1A1A1A',
-    letterSpacing: -0.5,
-  },
-  appDescription: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 8,
-  },
-  buttonContainer: {
-    width: '100%',
-    maxWidth: 280,
-  },
-  button: {
-    paddingVertical: 16,
-    backgroundColor: '#4285F4',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-});
+const welcomeScreenStyles = (isDark: boolean) => {
+  const baseTheme = getBasicThemeStyles(isDark);
+  const baseText = getBasicTypographyStyles(isDark);
+
+  return StyleSheet.create({
+    homepg: {
+      flex: 1,
+      ...baseTheme.background,
+      padding: 24,
+      ...baseFlexStyles.centerAll,
+    },
+    logoContainer: {
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    iconCircle: {
+      width: 100,
+      height: 100,
+      backgroundColor: isDark ? COLORS.primaryy.backgroundDark : COLORS.primaryy.backgroundLight,
+      borderRadius: 30,
+      ...baseFlexStyles.centerAll,
+      marginBottom: 20,
+      boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+      elevation: 3,
+    },
+    appName: {
+      fontSize: 32,
+      fontWeight: '800',
+      ...baseText.defaultColor,
+      letterSpacing: -0.5,
+    },
+    appDescription: {
+      fontSize: 16,
+      color: '#666',
+      marginTop: 8,
+    },
+    buttonContainer: {
+      width: '100%',
+      maxWidth: 280,
+    },
+    button: {
+      paddingVertical: 16,
+      borderRadius: 12,
+      backgroundColor: isDark ? COLORS.primaryy.light : COLORS.primaryy.dark,
+      ...baseFlexStyles.centerAll,
+    },
+    buttonText: {
+      color: 'white',
+      fontSize: 16,
+      fontWeight: '700',
+    },
+  });
+};

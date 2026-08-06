@@ -2,7 +2,6 @@
 import { useCalendarGroup } from '@/hooks/useCalendarGroup';
 import { calendarGroup, calendarObj } from '@/utility/types';
 import { createContext, ReactNode, useContext } from 'react';
-import { useAuthContext } from './auth-context';
 import { useCalendarObjects } from './calendar-obj-context';
 import { useProfileContext } from './profile-context';
 
@@ -14,6 +13,7 @@ export interface GroupsContextType {
     addGroup: (groupName: string | null) => void;
     renameGroup: (groupOldName: string, groupNewName: string) => void;
     deleteGroup: (groupName: string) => void;
+    moveGroup: (groupName: string, direction: 'up' | 'down') => void;
   };
 }
 

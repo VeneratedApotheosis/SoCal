@@ -9,6 +9,34 @@ export function useWebScrollbarStyle() {
   useEffect(() => {
     // Escape hatch: Only run this on the web
     if (Platform.OS !== 'web') return;
+    const headerBgColor = theme.isDark ? COLORS.background.dark : COLORS.background.light;
+
+    // 1. Ensure viewport has `viewport-fit=cover`
+    let viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta) {
+      let content = viewportMeta.getAttribute('content') || '';
+      if (!content.includes('viewport-fit=cover')) {
+        viewportMeta.setAttribute('content', `${content}, viewport-fit=cover`);
+      }
+    }
+
+    // 2. Set theme-color for Safari UI
+    let themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (!themeMeta) {
+      themeMeta = document.createElement('meta');
+      themeMeta.name = 'theme-color';
+      document.head.appendChild(themeMeta);
+    }
+    themeMeta.content = headerBgColor;
+
+    // 3. Allow app canvas to extend under iOS status bar
+    let appleMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (!appleMeta) {
+      appleMeta = document.createElement('meta');
+      appleMeta.name = 'apple-mobile-web-app-status-bar-style';
+      document.head.appendChild(appleMeta);
+    }
+    appleMeta.content = 'black-translucent';
 
     // 1. Pick colors based on current mode
     const trackColor = 'transparent';
@@ -17,6 +45,16 @@ export function useWebScrollbarStyle() {
 
     // 2. Write the CSS string
     const css = `
+      /* 2. Prevent Safari rubber-banding */
+      html, body, #root {
+        height: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        overscroll-behavior: none !important;
+        touch-action: pan-x pan-y !important;
+      }
       /* 1. Overall thickness */
       ::-webkit-scrollbar {
         width: 14px; 

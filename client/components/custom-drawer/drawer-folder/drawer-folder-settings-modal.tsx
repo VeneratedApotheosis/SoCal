@@ -9,7 +9,7 @@ import { Keyboard, Modal, Pressable, Text, View } from 'react-native';
 import { getFolderModal } from '../customDrawer';
 import FolderSettingsRenameModal from './drawer-folder-rename-modal';
 
-const menuHeight = 82;
+const menuHeight = 150;
 const menuWidth = 150;
 
 export interface CalendarSettingsModal {
@@ -25,6 +25,7 @@ export default function FolderSettingsModal({ isVisible, setVisible, calId, top,
   const [isColorsVisible, setColorsVisible] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const { calendarGroups } = useCalendarGroupsContext();
+  const index = calendarGroups.groupedCalendars.findIndex((cal) => cal.id == calId);
   const { theme } = useUIContext();
   const styles = getFolderModal(theme.isDark, menuWidth, menuHeight);
   const iconColor = getIconColor(theme.isDark);
@@ -84,6 +85,24 @@ export default function FolderSettingsModal({ isVisible, setVisible, calId, top,
 
           <Pressable style={styles.menuItem} onPress={() => calendarGroups.deleteGroup(calId)}>
             <Text style={styles.menuText}>Remove</Text>
+          </Pressable>
+          <Pressable
+            style={styles.menuItem}
+            onPress={() => {
+              calendarGroups.moveGroup(calId, 'up');
+              setVisible(false);
+            }}
+          >
+            <Text style={styles.menuText}>Move Up</Text>
+          </Pressable>
+          <Pressable
+            style={styles.menuItem}
+            onPress={() => {
+              calendarGroups.moveGroup(calId, 'down');
+              setVisible(false);
+            }}
+          >
+            <Text style={styles.menuText}>Move Down</Text>
           </Pressable>
         </View>
       </Modal>

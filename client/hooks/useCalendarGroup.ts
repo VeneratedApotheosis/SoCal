@@ -1,5 +1,4 @@
 import { storage } from '@/services/storage';
-import { CALENDAR_GROUPS_KEY } from '@/utility/constants';
 import { calendarGroup, calendarObj } from '@/utility/types';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -20,37 +19,56 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
 
   // ─── Storage Functions ───────────────────────────────────────────────────────────
 
+  const getUserStorageKey = (id: string) => `@calendar_groups_${id}`;
+
   // Load Color Cache from storage
   useEffect(() => {
+    if (!userId) {
+      setGroupedCalendars([]);
+      setIsStorageLoaded(false);
+      return;
+    }
+
+    let isMounted = true;
+    setIsStorageLoaded(false);
+
     const loadFromStorage = async () => {
       try {
-        const savedCalendarGroups = await storage.get(CALENDAR_GROUPS_KEY);
+        // Load ONLY this specific user's groups directly
+        const userGroups: calendarGroup[] = (await storage.get(getUserStorageKey(userId))) || [];
 
-        if (savedCalendarGroups) setGroupedCalendars(savedCalendarGroups);
+        if (isMounted) {
+          setGroupedCalendars(userGroups);
+          setIsStorageLoaded(true);
+        }
       } catch (e) {
-        console.error('Failed to load color cache from storage', e);
-      } finally {
-        setIsStorageLoaded(true);
+        console.error('Failed to load user calendar groups from storage', e);
       }
     };
 
     loadFromStorage();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userId]);
 
   //save to storage
   useEffect(() => {
-    if (!isStorageLoaded) return;
+    // Guard: Only save if storage is loaded and userId exists
+    if (!isStorageLoaded || !userId || groupedCalendars.length === 0) return;
 
     const saveToStorage = async () => {
       try {
-        await storage.save(CALENDAR_GROUPS_KEY, groupedCalendars);
+        // Save directly to the user's isolated storage key
+        await storage.save(getUserStorageKey(userId), groupedCalendars);
       } catch (e) {
-        console.error('Failed to save color cache to storage', e);
+        console.error('Failed to save user calendar groups to storage', e);
       }
     };
 
     saveToStorage();
-  }, [groupedCalendars, isStorageLoaded]);
+  }, [groupedCalendars, isStorageLoaded, userId]);
 
   // ─── Update Function ───────────────────────────────────────────────────────────
 
@@ -59,7 +77,6 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
 
     setGroupedCalendars((prevGroups) => {
       const userGroups = prevGroups.filter((g) => g.userId === userId);
-      const otherUserGroups = prevGroups.filter((g) => g.userId !== userId);
 
       const latestCalsMap = new Map(calendarObjs.map((c) => [c.calendarId, c]));
 
@@ -90,21 +107,14 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
         group.calendars.push({ ...cal, isActive: true });
       });
 
-      const customGroups = updatedUserGroups.filter((g) => g.id !== 'owner' && g.id !== 'other');
-      const ownerGroup = updatedUserGroups.filter((g) => g.id === 'owner');
-      const otherGroup = updatedUserGroups.filter((g) => g.id === 'other');
-
-      // 2. Recombine them in order: Custom -> Owner -> Other
-      const sortedUserGroups = [...customGroups, ...ownerGroup, ...otherGroup];
+      const sortedUserGroups = [...updatedUserGroups];
 
       // Merge the active user's groups back with the rest of the users
-      return [...otherUserGroups, ...sortedUserGroups];
+      return [...sortedUserGroups];
     });
   }, [calendarObjs, userId, isStorageLoaded]);
 
-  // -------------------------------------------
-  // Helper Functions
-  // -------------------------------------------
+  // ─── Helper Functions ───────────────────────────────────────────────────────────
 
   const updateSingleGroup = (groupId: string, newCalendars: calendarObj[]) => {
     if (!userId) return;
@@ -194,6 +204,33 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
     });
   };
 
+  const moveGroup = (groupName: string, direction: 'up' | 'down') => {
+    if (!userId) {
+      return;
+    }
+    setGroupedCalendars((prev) => {
+      const index = prev.findIndex((cal) => cal.id === groupName);
+      if (index === -1) {
+        return prev;
+      }
+      if (index === 0 && direction === 'up') {
+        return prev;
+      }
+      if (index === prev.length - 1 && direction === 'down') {
+        return prev;
+      }
+
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      const newGroups = [...prev];
+
+      const temp = newGroups[index];
+      newGroups[index] = newGroups[targetIndex];
+      newGroups[targetIndex] = temp;
+      console.log(index, targetIndex);
+      return [...newGroups]; //
+    });
+  };
+
   return {
     groupedCalendars: currentUserGroups,
     updateSingleGroup,
@@ -201,5 +238,6 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
     addGroup,
     renameGroup,
     deleteGroup,
+    moveGroup,
   };
 };

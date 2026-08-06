@@ -209,7 +209,13 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
   // ─── Vertical SCroll ───────────────────────────────────────────────────────────
 
   const maxScrollLimit = (isWeb: number, hourHeight: number): number => {
-    return hourHeight * 24 - SCREEN_HEIGHT + HEADER_HEIGHT + DATE_HEADER_HEIGHT + isWeb * (WEB_Y_PADDING + WEB_DATE_HEADER_PADDING * 2);
+    return (
+      hourHeight * (isWeb ? 24 : 25) -
+      SCREEN_HEIGHT +
+      HEADER_HEIGHT +
+      DATE_HEADER_HEIGHT +
+      isWeb * (WEB_Y_PADDING + WEB_DATE_HEADER_PADDING * 2)
+    );
   };
 
   const webContainerRef = useRef<any>(null);

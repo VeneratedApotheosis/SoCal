@@ -4,7 +4,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { DrawerActions } from '@react-navigation/native';
 import { useNavigation } from 'expo-router';
 import { DeviceEventEmitter, Pressable, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthContext } from '../contexts/auth-context';
 import { useCalendarIndex } from '../contexts/calendar-index-context';
 import { useScreenSize } from '../contexts/screen-size-context';
@@ -38,8 +37,8 @@ export default function CalendarHeader() {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={{ zIndex: 10 }}>
-      {validJwt && (
+    <>
+      {validJwt ? (
         <View style={[styles.headerContainer, { paddingHorizontal: 16 + isWeb * WEB_MUTED_PADDING }]}>
           {/* --- Waffle --- */}
           <View style={{ justifyContent: 'center' }}>
@@ -70,7 +69,9 @@ export default function CalendarHeader() {
             </View>
           </View>
         </View>
+      ) : (
+        <></>
       )}
-    </SafeAreaView>
+    </>
   );
 }

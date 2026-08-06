@@ -27,6 +27,7 @@ export interface EventsContextType {
   refetchCalendar: (fetchStart: number | null, fetchEnd: number | null) => Promise<void>;
   fetchForward: (fetchEnd: number) => void;
   fetchBackward: (fetchEnd: number) => void;
+  reloadCalendar: () => void;
   uniqueCalendars: CalendarData[];
   setUniqueCalendars: React.Dispatch<React.SetStateAction<CalendarData[]>>;
 }
@@ -104,6 +105,10 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
     setFetchStart(fetchStart);
   };
 
+  const reloadCalendar = () => {
+    refetchCalendar(fetchStart, fetchEnd);
+  };
+
   return (
     <EventsContext.Provider
       value={{
@@ -116,6 +121,7 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
         refetchCalendar,
         fetchForward,
         fetchBackward,
+        reloadCalendar,
         uniqueCalendars,
         setUniqueCalendars,
       }}
