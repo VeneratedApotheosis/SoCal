@@ -1,6 +1,6 @@
 import { DRAWER_DRAGGABLE_HEIGHT } from '@/utility/constants';
 import { baseFlexStyles, getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
-import { SIZES } from '@/utility/theme';
+import { COLORS, SIZES } from '@/utility/theme';
 import { StyleSheet } from 'react-native';
 
 export const getDrawerStyles = (isDark: boolean) => {
@@ -138,12 +138,12 @@ export const getFolderRenameModal = (isDark: boolean) => {
       marginBottom: 12,
     },
     input: {
-      borderWidth: 1,
-      ...baseTheme.borderMuted,
+      ...baseTheme.backgroundMuted,
       borderRadius: 6,
       paddingHorizontal: 10,
       paddingVertical: 8,
       ...baseText.input,
+      ...baseText.noBorder,
     },
     buttonRow: {
       paddingTop: 6,
@@ -163,6 +163,12 @@ export const getFolderRenameModal = (isDark: boolean) => {
     saveText: {
       ...baseTheme.blueAccentColor,
       fontWeight: '600',
+    },
+    inputError: {
+      backgroundColor: isDark ? COLORS.secondary.backgroundDark : COLORS.secondary.backgroundLight,
+      borderWidth: 1,
+      borderColor: isDark ? COLORS.secondary.textLight : COLORS.secondary.textDark,
+      color: isDark ? COLORS.secondary.textLight : COLORS.secondary.textDark,
     },
   });
 };

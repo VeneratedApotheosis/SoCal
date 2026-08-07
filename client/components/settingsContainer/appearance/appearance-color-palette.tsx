@@ -7,6 +7,7 @@ import { Pressable, Text, TextInput, View } from 'react-native';
 import ColorPicker, { ColorFormatsObject, HueSlider } from 'reanimated-color-picker';
 import { useUIContext } from '../../contexts/ui-context';
 import { getColorEditStyles, getColorPaletteStyles } from '../settingsContainerStyles';
+import AppearanceColorSortModal from './appearance-color-sort-modal';
 
 export default function AppearanceColorPalette() {
   const { theme: uiTheme } = useUIContext();
@@ -23,8 +24,13 @@ export default function AppearanceColorPalette() {
   // Modified Palette
   const [isEditing, setIsEditing] = useState(false);
   const [hexInput, setHexInput] = useState<string>(''); //specific color being modified
+  const [hueValue, setHueValue] = useState<number>(0);
+  const [validHue, setValidHue] = useState<boolean>(true);
   const [pickingColorIndex, setPickingColorIndex] = useState<number | null>(null); //specific color idx being modified
   const [tempColors, setTempColors] = useState<string[]>([]);
+
+  const [sortModal, setSortModal] = useState<boolean>(false);
+  const [startHue, setStartHue] = useState<number>(270);
 
   // Start Editing: Copy real colors into the sandbox
   const handleModify = () => {
@@ -54,6 +60,8 @@ export default function AppearanceColorPalette() {
     } else {
       setPickingColorIndex(index);
       setHexInput(color);
+      setHueValue(Math.round(hexToHSV(color).h));
+      setValidHue(true);
     }
   };
 
@@ -68,13 +76,26 @@ export default function AppearanceColorPalette() {
     [uiTheme.isDark, lightenColor],
   );
 
+  const handleSort = (startHue: number) => {
+    setTempColors((prev) => {
+      const getOffsetHue = (hex: string) => {
+        const rawHue = Math.round(Number(hexToHSV(hex).h) || 0);
+
+        // Shift rawHue so startHue becomes 0, wrapping around smoothly
+        return (rawHue - startHue + 360) % 360;
+      };
+      return [...prev].sort((a, b) => getOffsetHue(a) - getOffsetHue(b));
+    });
+    setPickingColorIndex(null);
+  };
+
   return (
     <DropDownCard title={'Color Palette'} iconName={'color-palette-outline'} defaultExpanded={true}>
       {!isEditing ? (
         <>
           {/* Header Row: Label + Modify Button */}
           <View style={themeStyles.headerRow}>
-            <Text style={themeStyles.subLabel}>Default Palette</Text>
+            <Text style={themeStyles.subLabel}> </Text>
             <Pressable hitSlop={10} onPress={() => handleModify()}>
               <Text style={themeStyles.modifyText}>Modify</Text>
             </Pressable>
@@ -108,7 +129,9 @@ export default function AppearanceColorPalette() {
         <View style={{ gap: 16 }}>
           {/* Header Row: Label + Modify Button */}
           <View style={editStyles.headerRow}>
-            <Text style={editStyles.editLabel}>Editing: Default Palette</Text>
+            <Pressable style={[editStyles.removeBtn, editStyles.revertBtn]} onPress={() => setSortModal(true)}>
+              <Text style={editStyles.cancelBtnText}>Sort</Text>
+            </Pressable>
             <View style={editStyles.buttonGroup}>
               <Pressable style={editStyles.cancelBtn} onPress={() => handleCancelEdit()}>
                 <Text style={editStyles.cancelBtnText}>Cancel</Text>
@@ -167,26 +190,34 @@ export default function AppearanceColorPalette() {
                     setHexInput(() => {
                       return palettes[selectedIndex].palette[pickingColorIndex];
                     });
+                    setHueValue(Math.round(Number(hexToHSV(palettes[selectedIndex].palette[pickingColorIndex]).h)));
                   }}
                 >
                   <Text style={[editStyles.removeBtnText, editStyles.revertBtnText]}>Revert</Text>
                 </Pressable>
                 <TextInput
-                  style={editStyles.hueInput}
+                  style={[editStyles.hueInput, !validHue && [editStyles.hueError, editStyles.hueTextError]]}
                   placeholder="Set Hue"
                   placeholderTextColor={uiTheme.isDark ? COLORS.text.subtleDark : COLORS.text.subtleLight}
-                  value={Math.round(hexToHSV(hexInput).h).toString()}
+                  value={hueValue.toString()}
                   onChangeText={(text: string) => {
-                    setTempColors((prev) => {
-                      const newColors = [...prev];
-                      const color = hexToHSV(newColors[pickingColorIndex]);
-                      newColors[pickingColorIndex] = hsvToHex(Number(text), Number(color.s), Number(color.v));
-                      return newColors;
-                    });
-                    setHexInput((prev) => {
-                      const color = hexToHSV(prev);
-                      return hsvToHex(Number(text), Number(color.s), Number(color.v));
-                    });
+                    if (Number(text) < 360) {
+                      setTempColors((prev) => {
+                        const newColors = [...prev];
+                        const color = hexToHSV(newColors[pickingColorIndex]);
+                        newColors[pickingColorIndex] = hsvToHex(Number(text) % 360, Number(color.s), Number(color.v));
+                        return newColors;
+                      });
+                      setHexInput((prev) => {
+                        const color = hexToHSV(prev);
+                        return hsvToHex(Number(text) % 360, Number(color.s), Number(color.v));
+                      });
+                      setHueValue(Number(text) % 360);
+                      setValidHue(true);
+                    } else {
+                      setValidHue(false);
+                      setHueValue(Number(text));
+                    }
                   }}
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -204,6 +235,7 @@ export default function AppearanceColorPalette() {
                       return newColors;
                     });
                     setHexInput(colors.hex);
+                    setHueValue(Math.round(Number(hexToHSV(colors.hex).h)));
                   }
                 }}
                 boundedThumb={true}
@@ -230,6 +262,13 @@ export default function AppearanceColorPalette() {
               </View>
             </View>
           )}
+          <AppearanceColorSortModal
+            isVisible={sortModal}
+            setVisible={setSortModal}
+            handleSort={handleSort}
+            startHue={startHue}
+            setStartHue={setStartHue}
+          />
         </View>
       )}
     </DropDownCard>

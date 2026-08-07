@@ -275,7 +275,17 @@ export const getColorEditStyles = (isDark: boolean) => {
       minWidth: 0,
       ...baseTheme.backgroundMuted,
       ...baseText.input,
+      ...baseText.noBorder,
       textAlign: 'center',
+    },
+
+    hueError: {
+      backgroundColor: isDark ? COLORS.secondary.backgroundDark : COLORS.secondary.backgroundLight,
+      borderWidth: 1,
+      borderColor: isDark ? COLORS.secondary.textLight : COLORS.secondary.textDark,
+    },
+    hueTextError: {
+      color: isDark ? COLORS.secondary.textLight : COLORS.secondary.textDark,
     },
     textInput: {
       flex: 1,
@@ -297,7 +307,7 @@ export const getColorEditStyles = (isDark: boolean) => {
     saveBtn: {
       backgroundColor: isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark,
       paddingHorizontal: 12,
-      paddingVertical: 6,
+      paddingVertical: 8,
       borderRadius: 8,
     },
     saveBtnText: { ...baseText.subtitle, color: COLORS.white },

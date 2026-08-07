@@ -14,7 +14,8 @@ export default function AppearanceHourHeight() {
   const { theme: uiTheme } = useUIContext();
   const { hourHeight, setHourHeight, minHeight } = useHourHeightContext();
   const styles = getHourHeightStyles(uiTheme.isDark);
-  const [localValue, setLocalValue] = useState<number>();
+  const [localValue, setLocalValue] = useState<number>(hourHeight);
+
   useEffect(() => {
     setLocalValue(hourHeight);
   }, [hourHeight]);
@@ -27,6 +28,8 @@ export default function AppearanceHourHeight() {
   for (let i = sliderMin; i <= sliderMax; i += stepSize) {
     ticks.push(i);
   }
+
+  const snapToStep = (val: number) => Math.round(val / stepSize) * stepSize;
 
   return (
     <DropdownCard title="Hour Height" iconName="resize-outline" defaultExpanded={true}>
@@ -46,9 +49,13 @@ export default function AppearanceHourHeight() {
             minimumValue={sliderMin}
             maximumValue={sliderMax}
             step={stepSize}
-            value={hourHeight}
-            onValueChange={setLocalValue}
-            onSlidingComplete={setHourHeight}
+            value={localValue}
+            onValueChange={(val) => setLocalValue(snapToStep(val))}
+            onSlidingComplete={(val) => {
+              const finalVal = snapToStep(val);
+              setLocalValue(finalVal);
+              setHourHeight(finalVal);
+            }}
             minimumTrackTintColor={uiTheme.isDark ? COLORS.primaryy.light : COLORS.primaryy.dark}
             maximumTrackTintColor={uiTheme.isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight}
             thumbTintColor={uiTheme.isDark ? COLORS.primaryy.light : COLORS.primaryy.dark}
@@ -59,7 +66,6 @@ export default function AppearanceHourHeight() {
             {ticks.map((tick) => (
               <View key={tick} style={styles.tickWrapper}>
                 <View style={styles.tickMark} />
-                {/* Only render text for the first and last ticks to avoid crowding */}
                 {(tick === sliderMin || tick === sliderMax || tick === DEFAULT_HOUR_HEIGHT) && <Text style={styles.tickText}>{tick}</Text>}
               </View>
             ))}
