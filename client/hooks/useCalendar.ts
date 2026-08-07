@@ -79,6 +79,7 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean) {
             shown: { displayed: true, suppressed: false },
             visibility: 'default',
             accessRole: cal.accessRole,
+            dataOwner: cal.dataOwner,
           };
 
           const rawEvents = await fetchGivenCalendarRange(tokens.parent.accessToken, cal.id, rfcStart, rfcEnd, timeZone);

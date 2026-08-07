@@ -6,7 +6,7 @@ import { calendarObj } from '@/utility/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { getSubscribedCalStyles } from '../settingsContainerStyles';
+import { getSharedCalIndividualStyles, getSubscribedCalStyles } from '../settingsContainerStyles';
 import SuscribedSettingsModal, { suscribedSettingsModalHeight, suscribedSettingsModalWidth } from './suscribed-settings-modal';
 
 export interface SharedCalIndividualProps {
@@ -19,12 +19,15 @@ export default function SuscribedCalendarIndividual({ cal }: SharedCalIndividual
   const buttonRef = useRef<View>(null);
   const { theme } = useUIContext();
   const styles = getSubscribedCalStyles(theme.isDark);
+
+  const shareStyles = getSharedCalIndividualStyles(theme.isDark);
   const iconColor = getIconColor(theme.isDark);
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
 
   return (
-    <View key={cal.calendarId} style={styles.accordionContainer}>
-      <Text style={styles.accordionTitle}>{cal.calendarName}</Text>
+    <View key={cal.calendarId} style={shareStyles.detailRow}>
+      <Text style={shareStyles.detailRole}>{cal.accessRole}</Text>
+      <Text style={shareStyles.detailName}>{cal.calendarName}</Text>
 
       {/* --- SETTINGS BUTTON --- */}
       <View ref={buttonRef} collapsable={false}>
@@ -33,7 +36,7 @@ export default function SuscribedCalendarIndividual({ cal }: SharedCalIndividual
             getPositions(buttonRef, setMenuPos, suscribedSettingsModalHeight, suscribedSettingsModalWidth, SCREEN_WIDTH, SCREEN_HEIGHT);
             setVisible(true);
           }}
-          style={({ pressed }) => [pressed && globalStyles.pressedButton]}
+          style={({ pressed }) => [shareStyles.iconButton, pressed && globalStyles.pressedButton]}
         >
           <Ionicons name={'ellipsis-horizontal-circle-outline'} size={20} color={iconColor} />
         </Pressable>

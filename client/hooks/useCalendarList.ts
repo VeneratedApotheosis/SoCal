@@ -6,15 +6,28 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from './useAuth';
 
 // 1. Abstracted synchronous formatter
-const formatCalendar = (cal: any): calendarObj => ({
-  calendarName: cal.summary,
-  calendarId: cal.id,
-  calendarDefaultColor: cal.backgroundColor || '#4285F4',
-  owner: cal.accessRole === 'owner',
-  shown: { displayed: true, suppressed: false },
-  visibility: 'default',
-  accessRole: cal.accessRole,
-});
+const formatCalendar = (cal: any): calendarObj => {
+  let owner = cal.dataOwner || cal.organizer?.email;
+
+  if (!owner && cal.id?.includes('@') && !cal.id.endsWith('@group.calendar.google.com')) {
+    owner = cal.id;
+  }
+
+  if (!owner) {
+    owner = 'Other';
+  }
+
+  return {
+    calendarName: cal.summary,
+    calendarId: cal.id,
+    calendarDefaultColor: cal.backgroundColor || '#4285F4',
+    owner: cal.accessRole === 'owner',
+    dataOwner: owner,
+    shown: { displayed: true, suppressed: false },
+    visibility: 'default',
+    accessRole: cal.accessRole,
+  };
+};
 
 // 2. Abstracted async fetcher
 const fetchSharingSettings = async (cal: any, token: string): Promise<sharedObj | null> => {
@@ -56,6 +69,7 @@ export function useCalendarList() {
       const tokens = await getValidAccessToken(jwtToken);
       const accessToken = tokens.parent.accessToken;
       const { items: parentCalendars = [] } = await fetchCalendarList(accessToken);
+      console.log(parentCalendars);
 
       // Map synchronously without mutation
       const parentCalendarObjs = parentCalendars.map(formatCalendar);

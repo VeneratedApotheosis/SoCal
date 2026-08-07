@@ -41,6 +41,7 @@ export interface calendarObj {
   accessRole: accessRole;
   shown: shown;
   visibility: visibility;
+  dataOwner: string;
 }
 
 //Processed calendar data

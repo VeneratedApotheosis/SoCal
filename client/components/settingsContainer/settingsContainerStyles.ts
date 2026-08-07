@@ -392,7 +392,7 @@ export const getSubscribedCalStyles = (isDark: boolean) => {
     },
     listContainer: {
       flex: 1,
-      gap: 0,
+      gap: 12,
     },
     emptyText: {
       ...baseText.emptyText,
@@ -500,11 +500,8 @@ export const getSharedCalStyles = (isDark: boolean) => {
       color: '#FFF',
     },
     accordionContent: {
-      padding: 16,
-      paddingTop: 0,
-      paddingBottom: 10,
-      borderBottomLeftRadius: 12,
-      borderBottomRightRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: isDark ? COLORS.border.mutedDark : COLORS.border.mutedLight,
     },
