@@ -96,7 +96,9 @@ export const getCalendarIndividual = (isDark: boolean) => {
       fontSize: 12,
     },
     iconButton: {
-      padding: 4,
+      padding: 6,
+      borderRadius: 999,
+      ...baseFlexStyles.centerAll,
     },
     pressedButton: {
       transform: [{ scale: 0.96 }],
@@ -220,20 +222,15 @@ export const getCalendarColorModal = (isDark: boolean) => {
       ...baseTheme.background,
       borderRadius: 8,
       padding: 6,
-      width: 150,
-
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 6,
+      width: 200,
+      ...baseFlexStyles.centerAll,
       boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)',
-
-      // Android Settings
       elevation: 10,
     },
     colorButton: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
+      width: 30,
+      height: 30,
+      borderRadius: 999,
     },
     pressedButton: {
       transform: [{ scale: 0.9 }],

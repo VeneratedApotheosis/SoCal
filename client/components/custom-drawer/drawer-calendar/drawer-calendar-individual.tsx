@@ -70,7 +70,7 @@ export default function CalendarDrawerList({
       </View>
 
       {/* --- BUTTONS --- */}
-      <View style={{ flexDirection: 'row' }}>
+      <View style={{ flexDirection: 'row', gap: 2 }}>
         {isolated === 'NA' && (
           <>
             {/* --- SETTINGS BUTTON --- */}
@@ -80,7 +80,7 @@ export default function CalendarDrawerList({
                   getPositions(buttonRef, setMenuPos, menuHeight, menuWidth, SCREEN_WIDTH, SCREEN_HEIGHT);
                   setVisible(true);
                 }}
-                style={({ pressed }) => [styles.iconButton, pressed && styles.pressedButton]}
+                style={({ pressed }) => [styles.iconButton, pressed && styles.pressedButton, isVisible && { backgroundColor: 'white' }]}
               >
                 <Ionicons name={'ellipsis-horizontal-outline'} size={14} color={iconColor} />
               </Pressable>
