@@ -100,6 +100,9 @@ export const getCalendarIndividual = (isDark: boolean) => {
       borderRadius: 999,
       ...baseFlexStyles.centerAll,
     },
+    selectedIcon: {
+      ...baseTheme.background,
+    },
     pressedButton: {
       transform: [{ scale: 0.96 }],
     },
@@ -234,6 +237,10 @@ export const getCalendarColorModal = (isDark: boolean) => {
     },
     pressedButton: {
       transform: [{ scale: 0.9 }],
+    },
+    selectedColor: {
+      transform: [{ scale: 1.1 }],
+      boxShadow: isDark ? '0px 0px 5px rgba(255, 255, 255, 0.4)' : '0px 0px 5px rgba(0, 0, 0, 0.5)',
     },
   });
 };

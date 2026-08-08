@@ -80,7 +80,7 @@ export default function CalendarDrawerList({
                   getPositions(buttonRef, setMenuPos, menuHeight, menuWidth, SCREEN_WIDTH, SCREEN_HEIGHT);
                   setVisible(true);
                 }}
-                style={({ pressed }) => [styles.iconButton, pressed && styles.pressedButton, isVisible && { backgroundColor: 'white' }]}
+                style={({ pressed }) => [styles.iconButton, pressed && styles.pressedButton, isVisible && styles.selectedIcon]}
               >
                 <Ionicons name={'ellipsis-horizontal-outline'} size={14} color={iconColor} />
               </Pressable>

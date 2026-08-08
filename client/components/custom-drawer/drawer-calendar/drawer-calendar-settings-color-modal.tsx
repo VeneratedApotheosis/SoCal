@@ -67,7 +67,7 @@ export default function CalendarSettingsColorModal({
                 styles.colorButton,
                 { backgroundColor: lightenColor(color, 'border', theme.isDark) },
                 pressed && styles.pressedButton,
-                thisColor === color && { boxShadow: '0px 0px 5px rgba(0, 0, 0, 0.5)' },
+                thisColor === color && styles.selectedColor,
               ]}
               onPress={() => {
                 colorCache.setManualCalendarColor(calendar.calendarId, color);
