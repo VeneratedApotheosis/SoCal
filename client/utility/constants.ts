@@ -25,6 +25,7 @@ export const THEME_STORAGE_KEY = '@ui_theme';
 export const PROFILE_STORAGE_KEY = '@user_profiles';
 export const CALENDAR_GROUPS_KEY = '@calendar_groups';
 export const TIME_ZONE_KEY = '@time_zone';
+export const HIDDEN_CALENDAR_KEY = '@hidden_calendar';
 
 export const PORTAL_HOME_NAME = 'layoutPortal';
 

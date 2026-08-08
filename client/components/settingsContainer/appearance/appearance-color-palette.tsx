@@ -110,7 +110,7 @@ export default function AppearanceColorPalette() {
                   themeStyles.colorCircle,
                   {
                     backgroundColor: getColor(color, 'raw'),
-                    borderColor: getColor(color, 'border'),
+                    borderColor: getColor(getColor(color, 'raw'), 'border'),
                   },
                 ]}
               />

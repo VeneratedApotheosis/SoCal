@@ -2,6 +2,7 @@ import { getPositions } from '@/utility/drawerUtil';
 import { lightenColor } from '@/utility/eventColorUtil';
 import { calendarObj } from '@/utility/types';
 
+import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
 import { useScreenSize } from '@/components/contexts/screen-size-context';
 import { getIconColor } from '@/utility/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,21 +26,23 @@ export default function CalendarDrawerList({
 }) {
   const { colorCache, theme } = useUIContext();
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
+  const { hiddenCalendars } = useCalendarObjects();
 
   const [isVisible, setVisible] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<View>(null);
+  const displayed = !hiddenCalendars.includes(calendarObj.calendarId || '');
   const [opacity, setOpacity] = useState(() => {
-    if (isolated === 'NA') return calendarObj.shown.displayed ? 1 : 0.5;
+    if (isolated === 'NA') return displayed ? 1 : 0.5;
     else return isolated === 'true' ? 1 : 0.5;
   });
 
   useEffect(() => {
     setOpacity(() => {
-      if (isolated === 'NA') return calendarObj.shown.displayed ? 1 : 0.5;
+      if (isolated === 'NA') return displayed ? 1 : 0.5;
       else return isolated === 'true' ? 1 : 0.5;
     });
-  }, [calendarObj.shown, isolated]);
+  }, [calendarObj.shown, hiddenCalendars, isolated]);
 
   const styles = getCalendarIndividual(theme.isDark);
   const iconColor = getIconColor(theme.isDark, opacity !== 1);
@@ -104,7 +107,7 @@ export default function CalendarDrawerList({
           }}
           style={({ pressed }) => [styles.iconButton, pressed && styles.pressedButton]}
         >
-          <Ionicons name={calendarObj.shown.displayed ? 'eye-outline' : 'eye-off-outline'} size={14} color={iconColor} />
+          <Ionicons name={displayed ? 'eye-outline' : 'eye-off-outline'} size={14} color={iconColor} />
         </Pressable>
       </View>
     </View>

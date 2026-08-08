@@ -47,7 +47,7 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   // ─── Calendar Object and Events Hooks ───────────────────────────────────────────────────────────
 
   // Calendar Object Hook
-  const { calendarObjs, calViewMode, suppressOther } = useCalendarObjects();
+  const { hiddenCalendars, calendarObjs, calViewMode, suppressOther } = useCalendarObjects();
   // Calendar Event Hook
   const {
     calendars,
@@ -59,20 +59,26 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
     refetch: refetchCalendar,
   } = useCalendar(timeZone, isTimeZoneLoaded);
 
+  const isDisplayed = (calendarId: string) => {
+    return !hiddenCalendars.includes(calendarId || '');
+  };
+
   // Visible Events
   const allEvents = useMemo(() => {
     if (!calendars || !calendarObjs) return [];
     if (calViewMode === 'default') {
-      const visibleIds = new Set(calendarObjs.filter((c) => c.shown.displayed && !c.shown.suppressed).map((c) => c.calendarId));
+      const visibleIds = new Set(calendarObjs.filter((c) => isDisplayed(c.calendarId) && !c.shown.suppressed).map((c) => c.calendarId));
       return (calendars.parent || []).filter((cal) => visibleIds.has(cal.id)).flatMap((cal) => cal.events);
     } else if (calViewMode === 'isolate') {
       const visibleIds = new Set(
-        calendarObjs.filter((c) => c.visibility === 'isolate' || (c.shown.displayed && !c.shown.suppressed)).map((c) => c.calendarId),
+        calendarObjs
+          .filter((c) => c.visibility === 'isolate' || (isDisplayed(c.calendarId) && !c.shown.suppressed))
+          .map((c) => c.calendarId),
       );
       return (calendars.parent || []).filter((cal) => visibleIds.has(cal.id)).flatMap((cal) => cal.events);
     }
 
-    const visibleIds = new Set(calendarObjs.filter((c) => c.shown.displayed && !c.shown.suppressed).map((c) => c.calendarId));
+    const visibleIds = new Set(calendarObjs.filter((c) => isDisplayed(c.calendarId) && !c.shown.suppressed).map((c) => c.calendarId));
     return (calendars.parent || []).filter((cal) => visibleIds.has(cal.id)).flatMap((cal) => cal.events);
   }, [calendars, calendarObjs, calViewMode, suppressOther]);
 

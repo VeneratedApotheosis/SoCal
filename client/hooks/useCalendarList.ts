@@ -69,7 +69,6 @@ export function useCalendarList() {
       const tokens = await getValidAccessToken(jwtToken);
       const accessToken = tokens.parent.accessToken;
       const { items: parentCalendars = [] } = await fetchCalendarList(accessToken);
-      console.log(parentCalendars);
 
       // Map synchronously without mutation
       const parentCalendarObjs = parentCalendars.map(formatCalendar);
