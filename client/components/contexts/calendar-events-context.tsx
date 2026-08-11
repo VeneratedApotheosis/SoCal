@@ -1,5 +1,5 @@
 // calendar-events-context.tsx
-import { useCalendar } from '@/hooks/useCalendar';
+import { useCalendar } from '@/hooks/APIFetchingHooks/useCalendar';
 import { useCalendarWrite } from '@/hooks/useCalendarWrite';
 import { useMutateEvent } from '@/hooks/useMutateEvent';
 import { BUFFER_INCREMENT } from '@/utility/constants';
@@ -47,7 +47,7 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   // ─── Calendar Object and Events Hooks ───────────────────────────────────────────────────────────
 
   // Calendar Object Hook
-  const { hiddenCalendars, calendarObjs, calViewMode, suppressOther } = useCalendarObjects();
+  const { hiddenCalendarHook: hiddenCalendar, calendarObjs, calViewMode, suppressOther } = useCalendarObjects();
   // Calendar Event Hook
   const {
     calendars,
@@ -60,7 +60,7 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   } = useCalendar(timeZone, isTimeZoneLoaded);
 
   const isDisplayed = (calendarId: string) => {
-    return !hiddenCalendars.includes(calendarId || '');
+    return !hiddenCalendar.hiddenCalendars.includes(calendarId || '');
   };
 
   // Visible Events

@@ -1,5 +1,4 @@
 import { Platform, StyleSheet } from 'react-native';
-import { HEADER_HEIGHT } from './constants';
 import { COLORS, FONT_WEIGHTS, SIZES } from './theme';
 
 export const globalStyles = StyleSheet.create({
@@ -279,12 +278,12 @@ export const getHeaderStyles = (isDark: boolean) => {
 
   return StyleSheet.create({
     headerContainer: {
-      height: HEADER_HEIGHT,
       flexDirection: 'row',
       alignItems: 'stretch',
       ...baseTheme.backgroundMuted,
       gap: 10,
       zIndex: 10,
+      paddingBottom: 15,
     },
     waffle: {
       alignSelf: 'flex-start',

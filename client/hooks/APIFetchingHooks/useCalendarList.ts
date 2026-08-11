@@ -3,7 +3,7 @@ import { fetchCalendarList, getCalendarSharingSettings } from '@/services/api';
 import { getValidAccessToken } from '@/utility/tokenUtils';
 import { calendarObj, sharedObj } from '@/utility/types';
 import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from './useAuth';
+import { useAuth } from '../useAuth';
 
 // 1. Abstracted synchronous formatter
 const formatCalendar = (cal: any): calendarObj => {

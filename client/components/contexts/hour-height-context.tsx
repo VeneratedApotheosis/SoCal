@@ -1,5 +1,5 @@
 // calendar-events-context.tsx
-import { ALL_DAY_HEIGHT, DATE_HEADER_HEIGHT, DEFAULT_HOUR_HEIGHT, HEADER_HEIGHT, WEB_Y_PADDING } from '@/utility/constants';
+import { ALL_DAY_HEIGHT, DATE_HEADER_HEIGHT, DEFAULT_HOUR_HEIGHT, WEB_Y_PADDING } from '@/utility/constants';
 import { createContext, ReactNode, useContext, useState } from 'react';
 import { useScreenSize } from './screen-size-context';
 
@@ -12,9 +12,9 @@ export interface HourHeightContextType {
 export const HourHeightContext = createContext<HourHeightContextType>({} as HourHeightContextType);
 
 export const HourHeightProvider = ({ children }: { children: ReactNode }) => {
-  const { height: SCREEN_HEIGHT, isWeb } = useScreenSize();
+  const { height: SCREEN_HEIGHT, isWeb, headerHeight } = useScreenSize();
   const [hourHeight, setHourHeight] = useState<number>(DEFAULT_HOUR_HEIGHT);
-  const minHeight = (SCREEN_HEIGHT - HEADER_HEIGHT - isWeb * WEB_Y_PADDING - DATE_HEADER_HEIGHT - ALL_DAY_HEIGHT) / 24;
+  const minHeight = (SCREEN_HEIGHT - headerHeight - isWeb * WEB_Y_PADDING - DATE_HEADER_HEIGHT - ALL_DAY_HEIGHT) / 24;
 
   return <HourHeightContext.Provider value={{ hourHeight, setHourHeight, minHeight }}>{children}</HourHeightContext.Provider>;
 };

@@ -1,11 +1,4 @@
-import {
-  ALL_DAY_HEIGHT,
-  DATE_HEADER_HEIGHT,
-  HEADER_HEIGHT,
-  PAST_BUFFER,
-  WEB_DATE_HEADER_PADDING,
-  WEB_Y_PADDING,
-} from '@/utility/constants';
+import { ALL_DAY_HEIGHT, DATE_HEADER_HEIGHT, PAST_BUFFER, WEB_DATE_HEADER_PADDING, WEB_Y_PADDING } from '@/utility/constants';
 import { createEventObj } from '@/utility/eventUtils';
 import { COLORS } from '@/utility/theme';
 import { AllDayPool, EventObj, EventWithLayout } from '@/utility/types';
@@ -132,7 +125,7 @@ export default function DayContainer({
   const { theme } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;
   const eventStyles = theme.isDark ? darkEventStyles : lightEventStyles;
-  const { height: SCREEN_HEIGHT, isWeb } = useScreenSize();
+  const { height: SCREEN_HEIGHT, isWeb, headerHeight } = useScreenSize();
 
   const msPerDay = 86400000;
   const thisDay = new Date(day).setHours(0, 0, 0, 0);
@@ -185,7 +178,7 @@ export default function DayContainer({
             : isWeekend
               ? COLORS.background.elevatedLight
               : COLORS.background.light,
-          height: SCREEN_HEIGHT - HEADER_HEIGHT - isWeb * WEB_Y_PADDING,
+          height: SCREEN_HEIGHT - headerHeight - isWeb * WEB_Y_PADDING,
         },
       ]}
     >

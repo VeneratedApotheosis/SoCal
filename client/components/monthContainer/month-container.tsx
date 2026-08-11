@@ -1,5 +1,5 @@
 import { useWeeklyEventGrouping } from '@/hooks/calendarHooks/useEventGrouping';
-import { BUFFER_INCREMENT, FETCH_INITIAL_BUFFER, HEADER_HEIGHT, PAST_BUFFER, WEB_Y_PADDING } from '@/utility/constants';
+import { BUFFER_INCREMENT, FETCH_INITIAL_BUFFER, PAST_BUFFER, WEB_Y_PADDING } from '@/utility/constants';
 import { getPositionsFromPointer } from '@/utility/drawerUtil';
 import { getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
 import { CalendarView, EventObj, EventWithLayout } from '@/utility/types';
@@ -27,13 +27,12 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
   const { timeZone } = useTimeZoneContext();
   const { theme, sideBar, multiDayInHeader } = useUIContext();
   const styles = monthstyles(theme.isDark);
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, isWeb, headerHeight } = useScreenSize();
 
   // ─── Dimensions ───────────────────────────────────────────────────────────
 
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, isWeb } = useScreenSize();
-
   const GRID_HEIGHT = useMemo(() => {
-    const rawHeight = SCREEN_HEIGHT - HEADER_HEIGHT;
+    const rawHeight = SCREEN_HEIGHT - headerHeight;
     const webPadding = -1 * Number(isWeb) * WEB_Y_PADDING;
     return rawHeight + webPadding;
   }, [isWeb, SCREEN_WIDTH]);

@@ -7,6 +7,7 @@ export interface ScreenSizeContextType {
   isLandscape: boolean;
   isWeb: number;
   fixedSidebar: number;
+  headerHeight: number;
 }
 
 const ScreenSizeContext = createContext<ScreenSizeContextType | undefined>(undefined);
@@ -18,6 +19,8 @@ export const ScreenSizeProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const contextValue = useMemo(() => {
     const isWebBool = Platform.OS === 'web' && width >= 600;
     const fixedSidebarBool = isWebBool && width >= 1200;
+    const headerHeight = isWebBool ? 80 : 60;
+    console.log(headerHeight);
 
     return {
       width,
@@ -25,6 +28,7 @@ export const ScreenSizeProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       isLandscape: width > height,
       isWeb: Number(isWebBool),
       fixedSidebar: Number(fixedSidebarBool),
+      headerHeight,
     };
   }, [width, height]);
 

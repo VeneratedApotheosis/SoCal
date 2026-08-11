@@ -24,8 +24,9 @@ export default function FolderSettingsModal({ isVisible, setVisible, calId, top,
   const buttonRef = useRef<View>(null);
   const [isColorsVisible, setColorsVisible] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
-  const { calendarGroups } = useCalendarGroupsContext();
-  const index = calendarGroups.groupedCalendars.findIndex((cal) => cal.id == calId);
+  const { calendarGroups, hiddenCalendarGroups, hideGroup, showGroup } = useCalendarGroupsContext();
+  const isHidden = hiddenCalendarGroups.includes(calId);
+  //const index = calendarGroups.groupedCalendars.findIndex((cal) => cal.id == calId);
   const { theme } = useUIContext();
   const styles = getFolderModal(theme.isDark, menuWidth, menuHeight);
   const iconColor = getIconColor(theme.isDark);
@@ -82,10 +83,27 @@ export default function FolderSettingsModal({ isVisible, setVisible, calId, top,
             top={menuPos.top}
             left={menuPos.left}
           />
-
-          <Pressable style={styles.menuItem} onPress={() => calendarGroups.deleteGroup(calId)}>
-            <Text style={styles.menuText}>Remove</Text>
-          </Pressable>
+          {isHidden ? (
+            <Pressable
+              style={styles.menuItem}
+              onPress={() => {
+                showGroup(calId);
+                setVisible(false);
+              }}
+            >
+              <Text style={styles.menuText}>Show Calendars</Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              style={styles.menuItem}
+              onPress={() => {
+                hideGroup(calId);
+                setVisible(false);
+              }}
+            >
+              <Text style={styles.menuText}>Hide Calendars</Text>
+            </Pressable>
+          )}
           <Pressable
             style={styles.menuItem}
             onPress={() => {
@@ -103,6 +121,10 @@ export default function FolderSettingsModal({ isVisible, setVisible, calId, top,
             }}
           >
             <Text style={styles.menuText}>Move Down</Text>
+          </Pressable>
+
+          <Pressable style={styles.menuItem} onPress={() => calendarGroups.deleteGroup(calId)}>
+            <Text style={styles.removeText}>Remove</Text>
           </Pressable>
         </View>
       </Modal>

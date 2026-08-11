@@ -4,7 +4,6 @@ import {
   BUFFER_INCREMENT,
   DATE_HEADER_HEIGHT,
   FETCH_INITIAL_BUFFER,
-  HEADER_HEIGHT,
   HOUR_LABEL_WIDTH,
   PAST_BUFFER,
   WEB_DATE_HEADER_PADDING,
@@ -67,7 +66,7 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
 
   // ─── Dimensions ───────────────────────────────────────────────────────────
 
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, isWeb, fixedSidebar } = useScreenSize();
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, isWeb, fixedSidebar, headerHeight } = useScreenSize();
 
   const GRID_WIDTH = useMemo(() => {
     const rawWidth = SCREEN_WIDTH - HOUR_LABEL_WIDTH + 1;
@@ -212,7 +211,7 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
     return (
       hourHeight * (isWeb ? 24 : 25) -
       SCREEN_HEIGHT +
-      HEADER_HEIGHT +
+      headerHeight +
       DATE_HEADER_HEIGHT +
       isWeb * (WEB_Y_PADDING + WEB_DATE_HEADER_PADDING * 2)
     );
@@ -451,7 +450,7 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
       style={[
         styles.container,
         {
-          height: SCREEN_HEIGHT - HEADER_HEIGHT - isWeb * WEB_Y_PADDING,
+          height: SCREEN_HEIGHT - headerHeight - isWeb * WEB_Y_PADDING,
         },
       ]}
     >

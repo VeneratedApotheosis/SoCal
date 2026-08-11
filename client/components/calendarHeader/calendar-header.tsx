@@ -16,7 +16,7 @@ export default function CalendarHeader() {
   const navigation = useNavigation();
   const { currentMonthText } = useCalendarIndex();
   const { now, theme, sideBar, setLoginVisible } = useUIContext();
-  const { isWeb, fixedSidebar } = useScreenSize();
+  const { isWeb, fixedSidebar, headerHeight } = useScreenSize();
   const styles = getHeaderStyles(theme.isDark);
   const iconColor = getIconColor(theme.isDark);
   const handleJumpToToday = () => {
@@ -39,7 +39,12 @@ export default function CalendarHeader() {
   return (
     <>
       {validJwt ? (
-        <View style={[styles.headerContainer, { paddingHorizontal: 16 + isWeb * WEB_MUTED_PADDING }]}>
+        <View
+          style={[
+            styles.headerContainer,
+            { paddingHorizontal: 16 + isWeb * WEB_MUTED_PADDING, paddingTop: isWeb ? 15 : 0, height: headerHeight },
+          ]}
+        >
           {/* --- Waffle --- */}
           <View style={{ justifyContent: 'center' }}>
             <Pressable onPress={wafflePress} style={styles.waffle}>

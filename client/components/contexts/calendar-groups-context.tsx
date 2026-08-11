@@ -1,7 +1,7 @@
 // calendar-events-context.tsx
 import { useCalendarGroup } from '@/hooks/useCalendarGroup';
 import { calendarGroup, calendarObj } from '@/utility/types';
-import { createContext, ReactNode, useContext } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useMemo } from 'react';
 import { useCalendarObjects } from './calendar-obj-context';
 import { useProfileContext } from './profile-context';
 
@@ -15,19 +15,69 @@ export interface GroupsContextType {
     deleteGroup: (groupName: string) => void;
     moveGroup: (groupName: string, direction: 'up' | 'down') => void;
   };
+  hiddenCalendarGroups: string[];
+  hideGroup: (id: string) => void;
+  showGroup: (id: string) => void;
 }
 
 export const GroupsContext = createContext<GroupsContextType>({} as GroupsContextType);
 
 export const GroupsProvider = ({ children }: { children: ReactNode }) => {
-  const { calendarObjs } = useCalendarObjects();
+  const { calendarObjs, hiddenCalendarHook } = useCalendarObjects();
   const { familyProfiles } = useProfileContext();
   const calendarGroups = useCalendarGroup(calendarObjs, familyProfiles && familyProfiles.parent ? familyProfiles.parent.id : null);
+
+  // ─── hiddenCalendarGroups Functions ───────────────────────────────────────────────────────────
+
+  const hiddenCalendarGroups = useMemo(() => {
+    const hiddenSet = new Set(hiddenCalendarHook.hiddenCalendars);
+
+    return calendarGroups.groupedCalendars.reduce<string[]>((hiddenGroupIds, group) => {
+      const areAllHidden = group.calendars.length > 0 && group.calendars.every((calendarObj) => hiddenSet.has(calendarObj.calendarId));
+
+      if (areAllHidden) {
+        hiddenGroupIds.push(group.id);
+      }
+
+      return hiddenGroupIds;
+    }, []);
+  }, [hiddenCalendarHook.hiddenCalendars, calendarGroups.groupedCalendars]);
+
+  const hideGroup = useCallback(
+    (id: string) => {
+      const groupToHide = calendarGroups.groupedCalendars.find((group) => group.id === id);
+
+      if (groupToHide) {
+        groupToHide.calendars.forEach((c) => {
+          hiddenCalendarHook.hideCalendar(c.calendarId);
+        });
+      }
+    },
+    // 3. Cleaned up dependency array
+    [calendarGroups.groupedCalendars, hiddenCalendarHook],
+  );
+
+  const showGroup = useCallback(
+    (id: string) => {
+      const foundGroup = calendarGroups.groupedCalendars.find((group) => group.id === id);
+
+      if (foundGroup) {
+        foundGroup.calendars.forEach((c) => {
+          hiddenCalendarHook.showCalendar(c.calendarId);
+        });
+      }
+    },
+    // 3. Cleaned up dependency array
+    [calendarGroups.groupedCalendars, hiddenCalendarHook],
+  );
 
   return (
     <GroupsContext.Provider
       value={{
         calendarGroups,
+        hiddenCalendarGroups,
+        hideGroup,
+        showGroup,
       }}
     >
       {children}

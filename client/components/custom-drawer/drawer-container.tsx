@@ -26,7 +26,7 @@ export default function CustomDrawerContent(props: any) {
   const { familyProfiles } = useProfileContext();
   const userId = familyProfiles && familyProfiles.parent ? familyProfiles.parent.id : null;
   const { fixedSidebar, isWeb } = useScreenSize();
-  const { toggleCalendar, calViewMode: viewMode, resetViewMode, suppressOther } = useCalendarObjects();
+  const { hiddenCalendarHook, calViewMode: viewMode, resetViewMode, suppressOther } = useCalendarObjects();
   const { calendarGroups } = useCalendarGroupsContext();
 
   const { setLoginVisible, theme: uiTheme } = useUIContext();
@@ -229,7 +229,7 @@ export default function CustomDrawerContent(props: any) {
                 key={data.folder ? `folder-${data.id}` : `cal-${data.calendar?.calendarId}`}
                 cal={data}
                 onDrop={handleDrop}
-                toggleCalendar={toggleCalendar}
+                toggleCalendar={hiddenCalendarHook.toggleCalendar}
                 thisIndex={index}
                 hoverIndex={hoverIndex}
                 activeIndex={activeIndex}

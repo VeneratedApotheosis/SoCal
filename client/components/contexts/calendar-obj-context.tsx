@@ -1,5 +1,5 @@
 // calendar-events-context.tsx
-import { useCalendarList } from '@/hooks/useCalendarList';
+import { useCalendarList } from '@/hooks/APIFetchingHooks/useCalendarList';
 import { useHiddenCalendar } from '@/hooks/useHiddenCalendar';
 import { calendarObj, sharedObj, visibility } from '@/utility/types';
 import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useEffect, useState } from 'react';
@@ -12,8 +12,12 @@ export interface CalendarObjectsContextType {
   sharedCalendars: sharedObj[];
   calViewMode: 'default' | 'isolate' | 'transparent';
   setCalViewMode: React.Dispatch<React.SetStateAction<'default' | 'isolate' | 'transparent'>>;
-  hiddenCalendars: string[];
-  toggleCalendar: (id: string) => void;
+  hiddenCalendarHook: {
+    hiddenCalendars: string[];
+    toggleCalendar: (id: string) => void;
+    hideCalendar: (id: string) => void;
+    showCalendar: (id: string) => void;
+  };
   toggleTransparent: (id: string) => void;
   toggleIsolate: (id: string) => void;
   resetViewMode: () => void;
@@ -83,7 +87,7 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
     setSuppressOther(isEnablingSuppression);
   }, [suppressOther, setCalendarObjs]);
 
-  const { hiddenCalendars, toggleCalendar } = useHiddenCalendar(calendarObjs, setCalendarObjs);
+  const hiddenCalendarHook = useHiddenCalendar(setCalendarObjs);
 
   // ─── Visiblity Mutators ───────────────────────────────────────────────────────────
 
@@ -145,8 +149,7 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
         sharedCalendars,
         calViewMode,
         setCalViewMode,
-        hiddenCalendars,
-        toggleCalendar,
+        hiddenCalendarHook,
         toggleTransparent,
         toggleIsolate,
         resetViewMode,

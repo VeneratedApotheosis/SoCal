@@ -5,18 +5,17 @@ import { StyleSheet, View } from 'react-native';
 //Components
 import MonthContainer from '@/components/monthContainer/month-container';
 import MultiDayContainer from '@/components/multiDayContainer/multi-day-container';
-import SettingsModal from '@/components/settingsContainer/settings-modal';
 import WelcomeScreen from '@/components/welcome-screen';
 
 //Global Contexts
 import CalendarHeader from '@/components/calendarHeader/calendar-header';
 import { EventsContext } from '@/components/contexts/calendar-events-context';
-import { useCalendarGroupsContext } from '@/components/contexts/calendar-groups-context';
 import { useScreenSize } from '@/components/contexts/screen-size-context';
 import { useUIContext } from '@/components/contexts/ui-context';
 import FixedDrawer from '@/components/custom-drawer/drawer-web';
 import { FetchStatusPill } from '@/components/multiDayContainer/loading-icon';
 import { useWebScrollbarStyle } from '@/components/scrollIndicator';
+import SettingsModal from '@/components/settingsContainer/settings-modal';
 import WebSettingsPortal from '@/components/settingsContainer/web-settings-portal';
 import { WEB_MUTED_PADDING, WEB_WHITE_X_PADDING, WEB_WHITE_Y_PADDING } from '@/utility/constants';
 import { getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
@@ -28,7 +27,6 @@ export default function Index() {
   const { isLoginVisible, setLoginVisible, theme } = useUIContext();
   const styles = indexStyles(theme.isDark);
   const { isWeb, fixedSidebar } = useScreenSize();
-  const { calendarGroups } = useCalendarGroupsContext();
   useWebScrollbarStyle();
 
   return validJwt ? (
@@ -72,7 +70,6 @@ export const indexStyles = (isDark: boolean) => {
       flex: 1,
       padding: WEB_MUTED_PADDING,
       paddingTop: 0,
-      ...baseTheme.backgroundMuted,
       flexDirection: 'row',
     },
     roundedEdges: {

@@ -26,12 +26,12 @@ export default function CalendarDrawerList({
 }) {
   const { colorCache, theme } = useUIContext();
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
-  const { hiddenCalendars } = useCalendarObjects();
+  const { hiddenCalendarHook } = useCalendarObjects();
 
   const [isVisible, setVisible] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<View>(null);
-  const displayed = !hiddenCalendars.includes(calendarObj.calendarId || '');
+  const displayed = !hiddenCalendarHook.hiddenCalendars.includes(calendarObj.calendarId || '');
   const [opacity, setOpacity] = useState(() => {
     if (isolated === 'NA') return displayed ? 1 : 0.5;
     else return isolated === 'true' ? 1 : 0.5;
@@ -42,7 +42,7 @@ export default function CalendarDrawerList({
       if (isolated === 'NA') return displayed ? 1 : 0.5;
       else return isolated === 'true' ? 1 : 0.5;
     });
-  }, [calendarObj.shown, hiddenCalendars, isolated]);
+  }, [calendarObj.shown, hiddenCalendarHook.hiddenCalendars, isolated]);
 
   const styles = getCalendarIndividual(theme.isDark);
   const iconColor = getIconColor(theme.isDark, opacity !== 1);

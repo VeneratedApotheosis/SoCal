@@ -209,6 +209,10 @@ export const getFolderModal = (isDark: boolean, width: number, height: number) =
     menuText: {
       ...baseText.subtitle,
     },
+    removeText: {
+      ...baseText.subtitle,
+      color: isDark ? COLORS.secondary.textDark : COLORS.secondary.textLight,
+    },
   });
 };
 

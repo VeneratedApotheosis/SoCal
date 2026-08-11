@@ -65,7 +65,7 @@ export default function AppearanceColorSortModal({
       {/* --- CENTERED SETTINGS BOX --- */}
       <View style={styles.centeredContainer} pointerEvents="box-none">
         <View style={[styles.menuBox]}>
-          <Text style={styles.title}>Rename Calendar</Text>
+          <Text style={styles.title}>Sort Starting Hue</Text>
 
           <TextInput
             ref={inputRef}

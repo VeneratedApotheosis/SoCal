@@ -3,11 +3,12 @@ import { HIDDEN_CALENDAR_KEY } from '@/utility/constants';
 import { calendarObj } from '@/utility/types';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
-export const useHiddenCalendar = (calendarObjs: calendarObj[] | null, setCalendarObjs: Dispatch<SetStateAction<calendarObj[]>>) => {
+export const useHiddenCalendar = (setCalendarObjs: Dispatch<SetStateAction<calendarObj[]>>) => {
   const [hiddenCalendars, setHiddenCalendars] = useState<string[]>([]);
   const [isStorageLoaded, setIsStorageLoaded] = useState(false);
 
-  // Helper accepts the target array explicitly
+  //Update calendarObjs in sync with hidden calendars without double re-render
+  //use WITH setHiddenCalendars
   const processHiddenCalendars = (targetHidden: string[]) => {
     setCalendarObjs((prev) =>
       prev.map((c) => ({
@@ -26,8 +27,6 @@ export const useHiddenCalendar = (calendarObjs: calendarObj[] | null, setCalenda
       try {
         const savedCaches = (await storage.get(HIDDEN_CALENDAR_KEY)) ?? [];
         setHiddenCalendars(savedCaches);
-
-        // Pass savedCaches directly so it updates synchronously
         processHiddenCalendars(savedCaches);
       } catch (e) {
         console.error('Failed to load storage', e);
@@ -39,7 +38,7 @@ export const useHiddenCalendar = (calendarObjs: calendarObj[] | null, setCalenda
     loadFromStorage();
   }, []);
 
-  // ─── 2. Save to storage ────────────────────────────────────────────────────
+  // ─── Storage Svae ────────────────────────────────────────────────────
   useEffect(() => {
     if (!isStorageLoaded) return;
 
@@ -54,12 +53,28 @@ export const useHiddenCalendar = (calendarObjs: calendarObj[] | null, setCalenda
     saveToStorage();
   }, [hiddenCalendars, isStorageLoaded]);
 
-  // ─── Toggle Function ────────────────────────────────────────────────────────
+  // ─── Helper Functions ────────────────────────────────────────────────────────
   const toggleCalendar = (id: string) => {
     setHiddenCalendars((prev) => {
       const nextHidden = prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id];
+      processHiddenCalendars(nextHidden);
 
-      // Synchronously update calendarObjs using the updated array
+      return nextHidden;
+    });
+  };
+
+  const hideCalendar = (id: string) => {
+    setHiddenCalendars((prev) => {
+      const nextHidden = prev.includes(id) ? prev : [...prev, id];
+      processHiddenCalendars(nextHidden);
+
+      return nextHidden;
+    });
+  };
+
+  const showCalendar = (id: string) => {
+    setHiddenCalendars((prev) => {
+      const nextHidden = prev.includes(id) ? prev.filter((c) => c !== id) : [...prev];
       processHiddenCalendars(nextHidden);
 
       return nextHidden;
@@ -70,5 +85,7 @@ export const useHiddenCalendar = (calendarObjs: calendarObj[] | null, setCalenda
     hiddenCalendars,
     isStorageLoaded,
     toggleCalendar,
+    hideCalendar,
+    showCalendar,
   };
 };
