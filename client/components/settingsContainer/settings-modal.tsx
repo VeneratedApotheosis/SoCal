@@ -9,6 +9,7 @@ import { getIconColor } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Portal } from '@gorhom/portal';
+import { useScreenSize } from '../contexts/screen-size-context';
 import { useUIContext } from '../contexts/ui-context';
 import AppearanceContainer from './appearance-container';
 import CalendarSettingsContainer from './calendar-settings-container';
@@ -22,6 +23,7 @@ interface Props {
 export default function SettingsModal({ isVisible, onClose }: Props) {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const { theme } = useUIContext();
+  const { headerHeight } = useScreenSize();
   const styles = getSettingBackgroundStyles(theme.isDark);
   const portalStyles = settingsPortalStyles(theme.isDark);
 
@@ -42,7 +44,6 @@ export default function SettingsModal({ isVisible, onClose }: Props) {
     { key: 'calendar', title: 'Calendar' },
   ]);
 
-  // 1. REPLACED inline components and SceneMap with a stable useCallback and switch statement
   const renderScene = useCallback(
     ({ route }: any) => {
       switch (route.key) {
@@ -117,8 +118,8 @@ export default function SettingsModal({ isVisible, onClose }: Props) {
           },
         ]}
       >
-        <View style={portalStyles.header}>
-          <Pressable style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <View style={[portalStyles.header, { height: headerHeight }]}>
+          <Pressable style={{}}>
             <Ionicons name={'arrow-back-outline'} size={24} onPress={onClose} color={iconColor} />
           </Pressable>
           <Text style={portalStyles.headerText}>Settings</Text>

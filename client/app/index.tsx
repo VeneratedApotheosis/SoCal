@@ -71,6 +71,7 @@ export const indexStyles = (isDark: boolean) => {
       padding: WEB_MUTED_PADDING,
       paddingTop: 0,
       flexDirection: 'row',
+      ...baseTheme.backgroundMuted,
     },
     roundedEdges: {
       paddingHorizontal: WEB_WHITE_X_PADDING,

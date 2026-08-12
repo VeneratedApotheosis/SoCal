@@ -20,7 +20,6 @@ export const ScreenSizeProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const isWebBool = Platform.OS === 'web' && width >= 600;
     const fixedSidebarBool = isWebBool && width >= 1200;
     const headerHeight = isWebBool ? 80 : 60;
-    console.log(headerHeight);
 
     return {
       width,

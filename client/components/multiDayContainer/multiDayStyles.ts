@@ -159,7 +159,7 @@ export const getDayContainerStyles = (isDark: boolean) => {
     rootContainer: {
       overflow: 'hidden',
       borderRightWidth: 1,
-      borderColor: isDark ? COLORS.border.mutedDark : COLORS.border.mutedLight,
+      ...baseTheme.border,
     },
     allDayContainer: {
       flexDirection: 'column',

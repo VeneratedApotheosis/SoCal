@@ -91,7 +91,7 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
     const subscription = DeviceEventEmitter.addListener('JUMP_TO_TODAY', () => {
       if (listRef.current) {
         listRef.current.scrollToIndex({
-          index: PAST_BUFFER - 1,
+          index: PAST_BUFFER - Math.floor(dividers / 2),
           animated: true,
         });
       }
@@ -100,7 +100,7 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [dividers]);
 
   // ─── Events ───────────────────────────────────────────────────────────
 
