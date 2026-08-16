@@ -18,6 +18,7 @@ export const getDrawerStyles = (isDark: boolean) => {
     profile: {
       height: 42,
       marginBottom: 20,
+      justifyContent: 'center',
     },
     username: {
       marginBottom: 4,

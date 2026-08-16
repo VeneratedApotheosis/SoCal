@@ -1,5 +1,7 @@
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, TextStyle, ViewStyle } from 'react-native';
 import { COLORS, FONT_WEIGHTS, SIZES } from './theme';
+
+type StyleMap = Record<string, TextStyle | ViewStyle>;
 
 export const globalStyles = StyleSheet.create({
   pressedButton: {
@@ -52,7 +54,7 @@ export const globalStyles = StyleSheet.create({
     boxShadow: '2px 2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 10,
   },
-});
+} satisfies StyleMap);
 
 export const getIconColor = (isDark: boolean, isMuted: boolean = false) => {
   if (isMuted) return isDark ? '#666' : '#ccc';
@@ -85,7 +87,7 @@ export const getBasicThemeStyles = (isDark: boolean) =>
     blueAccentColor: {
       color: isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark,
     },
-  });
+  } satisfies StyleMap);
 
 export const getBasicTypographyStyles = (isDark: boolean) => {
   const defaultColor = isDark ? COLORS.text.light : COLORS.text.dark;
@@ -139,7 +141,7 @@ export const getBasicTypographyStyles = (isDark: boolean) => {
         },
       }),
     },
-  });
+  } satisfies StyleMap);
 };
 
 export const baseFlexStyles = StyleSheet.create({
@@ -176,6 +178,21 @@ export const baseFlexStyles = StyleSheet.create({
   centerAll: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+} satisfies StyleMap);
+
+export const basePressedStyles = StyleSheet.create({
+  transform: {
+    opacity: 0.8,
+    transform: [{ scale: 0.96 }],
+  },
+  perserve: {
+    opacity: 0.8,
+  },
+  pressedDepth: {
+    transform: [{ translateY: 2 }],
+    boxShadow: 'none',
+    elevation: 0,
   },
 });
 

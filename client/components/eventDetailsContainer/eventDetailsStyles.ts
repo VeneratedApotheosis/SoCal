@@ -255,8 +255,8 @@ export const timeStyles = (isDark: boolean) => {
     },
     pillInput: {
       ...baseTheme.backgroundMuted,
-      borderRadius: 10,
-      padding: 10,
+      borderRadius: 12,
+      padding: 8,
       ...baseFlexStyles.centerAll,
       flexDirection: 'row',
       flex: 1,
@@ -272,7 +272,7 @@ export const timeStyles = (isDark: boolean) => {
     pillInputText: {
       width: '100%',
       ...baseText.noBorder,
-      ...baseText.subtitle,
+      ...baseText.input,
       fontWeight: '600',
       textAlign: 'center',
     },
@@ -280,7 +280,7 @@ export const timeStyles = (isDark: boolean) => {
       color: isDark ? COLORS.secondary.textLight : COLORS.secondary.textDark,
     },
     pillInputMuted: {
-      ...baseText.subtitle,
+      ...baseText.input,
       ...baseText.subtleColor,
       fontWeight: '600',
     },

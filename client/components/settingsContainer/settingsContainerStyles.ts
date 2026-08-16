@@ -523,16 +523,6 @@ export const getSharedCalIndividualStyles = (isDark: boolean) => {
       flex: 1,
       marginRight: 10,
     },
-    detailRole: {
-      ...baseText.body,
-      fontWeight: '500',
-      backgroundColor: isDark ? COLORS.primaryy.backgroundDark : COLORS.primaryy.backgroundLight,
-      textTransform: 'capitalize',
-      color: isDark ? COLORS.primaryy.textDark : COLORS.primaryy.textLight,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 4,
-    },
     iconButton: {
       padding: 4,
     },

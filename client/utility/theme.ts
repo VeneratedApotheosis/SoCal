@@ -72,7 +72,7 @@ export const COLORS = {
     darkGray: '#374151', //gray-700
     lightGray: '#d1d5db', //gray-300
   },
-};
+} as const;
 
 export const SIZES = {
   xs: 11,
@@ -89,7 +89,7 @@ export const SIZES = {
     xl: 12,
     full: 20, // for circles
   },
-};
+} as const;
 
 export const SPACING = {
   xs: 4,
@@ -98,7 +98,7 @@ export const SPACING = {
   l: 16,
   xl: 20,
   xxl: 24,
-};
+} as const;
 
 export const FONT_WEIGHTS: {
   light: '400' | '600' | '700';
@@ -109,4 +109,4 @@ export const FONT_WEIGHTS: {
   light: '400',
   medium: '600',
   heavy: '700',
-};
+} as const;

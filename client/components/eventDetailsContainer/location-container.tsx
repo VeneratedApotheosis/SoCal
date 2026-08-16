@@ -23,7 +23,7 @@ export default function LocationContainer({ initialValue, onLocationSelect, edit
     setInputValue(initialValue);
   }, [initialValue]);
 
-  const { predictions, getPredictions, selectPlace } = usePlacesAutocomplete({
+  const { predictions, getPredictions, selectPlace, clearPredictions } = usePlacesAutocomplete({
     onLocationSelect,
   });
   const handleTextChange = (text: string) => {
@@ -49,6 +49,7 @@ export default function LocationContainer({ initialValue, onLocationSelect, edit
           placeholder="Search for a location..."
           placeholderTextColor={inputColor}
           editable={editable}
+          onBlur={clearPredictions}
         />
       </View>
       {predictions.length > 0 && (

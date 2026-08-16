@@ -15,15 +15,15 @@ export const webEventWidth = 400;
 
 export interface WebEventDetails {
   isVisible: boolean;
-  setVisible: React.Dispatch<React.SetStateAction<boolean>>;
   top: number;
   left: number;
   event: EventObj | null;
   onClose: () => void;
   setNewEvent: React.Dispatch<React.SetStateAction<EventObj | null>>;
+  newEvent: EventObj | null;
 }
 
-export default function WebEventDetails({ isVisible, setVisible, top, left, event, onClose, setNewEvent }: WebEventDetails) {
+export default function WebEventDetails({ isVisible, top, left, event, onClose, setNewEvent, newEvent }: WebEventDetails) {
   const ref = useRef<BottomSheetModal>(null);
   const { theme } = useUIContext();
   const styles = webEventDetailStyles(theme.isDark);
@@ -113,7 +113,15 @@ export default function WebEventDetails({ isVisible, setVisible, top, left, even
             <Ionicons name={'reorder-three-outline'} size={24} color={iconColor} />
           </View>
           <ScrollView style={{ flex: 1 }}>
-            {event && <EventExpandedView initialEvent={event} bottomSheetModalRef={ref} onClose={onClose} setNewEvent={setNewEvent} />}
+            {event && (
+              <EventExpandedView
+                initialEvent={event}
+                bottomSheetModalRef={ref}
+                onClose={onClose}
+                setNewEvent={setNewEvent}
+                newEvent={newEvent}
+              />
+            )}
           </ScrollView>
         </Animated.View>
       </Animated.View>

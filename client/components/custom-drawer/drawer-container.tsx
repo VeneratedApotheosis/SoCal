@@ -1,22 +1,22 @@
 import { calendarObj, CalendarView } from '@/utility/types';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSharedValue, withSpring } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 //Global Contexts
 import { useAuthContext } from '../contexts/auth-context';
-import { useUIContext } from '../contexts/ui-context';
-
-import { toTitleCase } from '@/utility/drawerUtil';
-import { globalParameterStyles } from '@/utility/globalStyles';
-import { COLORS } from '@/utility/theme';
-import { Plus } from 'lucide-react-native';
 import { useCalendarGroupsContext } from '../contexts/calendar-groups-context';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
 import { useProfileContext } from '../contexts/profile-context';
 import { useScreenSize } from '../contexts/screen-size-context';
+import { useUIContext } from '../contexts/ui-context';
+
+import { toTitleCase } from '@/utility/drawerUtil';
+import { baseFlexStyles, globalParameterStyles } from '@/utility/globalStyles';
+import { COLORS } from '@/utility/theme';
+import { Plus } from 'lucide-react-native';
 import { getColorPaletteStyles } from '../settingsContainer/settingsContainerStyles';
 import { getDrawerStyles } from './customDrawer';
 import DraggableCalendar from './drawer-draggable-calendar';
@@ -181,7 +181,20 @@ export default function CustomDrawerContent(props: any) {
       {!fixedSidebar && (
         <View style={styles.profile}>
           <Pressable onPress={handleSettingspress} style={{ flexDirection: 'row', gap: 10 }}>
-            <View style={{ width: 42, height: 42, backgroundColor: '#4986e7', borderRadius: 8 }}></View>
+            <View style={{ ...baseFlexStyles.centerAll, padding: 2 }}>
+              {familyProfiles?.parent && familyProfiles?.parent.picture && (
+                <Image
+                  source={{ uri: familyProfiles?.parent.picture }}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 30,
+                  }}
+                  resizeMode="contain"
+                  onError={(error) => console.log('Image Error:', error.nativeEvent.error)}
+                />
+              )}
+            </View>
             <View>
               <Text style={styles.username}>
                 {familyProfiles && familyProfiles.parent ? toTitleCase(familyProfiles.parent.name) : 'Username'}

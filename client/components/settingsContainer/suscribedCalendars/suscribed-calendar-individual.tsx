@@ -1,3 +1,4 @@
+import AccessRoleIndicator from '@/components/AccessRoleIndicator';
 import { useScreenSize } from '@/components/contexts/screen-size-context';
 import { useUIContext } from '@/components/contexts/ui-context';
 import { getPositions } from '@/utility/drawerUtil';
@@ -6,7 +7,7 @@ import { calendarObj } from '@/utility/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { getSharedCalIndividualStyles, getSubscribedCalStyles } from '../settingsContainerStyles';
+import { getSharedCalIndividualStyles } from '../settingsContainerStyles';
 import SuscribedSettingsModal, { suscribedSettingsModalHeight, suscribedSettingsModalWidth } from './suscribed-settings-modal';
 
 export interface SharedCalIndividualProps {
@@ -18,7 +19,6 @@ export default function SuscribedCalendarIndividual({ cal }: SharedCalIndividual
   const [isVisible, setVisible] = useState(false);
   const buttonRef = useRef<View>(null);
   const { theme } = useUIContext();
-  const styles = getSubscribedCalStyles(theme.isDark);
 
   const shareStyles = getSharedCalIndividualStyles(theme.isDark);
   const iconColor = getIconColor(theme.isDark);
@@ -26,7 +26,7 @@ export default function SuscribedCalendarIndividual({ cal }: SharedCalIndividual
 
   return (
     <View key={cal.calendarId} style={shareStyles.detailRow}>
-      <Text style={shareStyles.detailRole}>{cal.accessRole}</Text>
+      <AccessRoleIndicator accessRole={cal.accessRole} />
       <Text style={shareStyles.detailName}>{cal.calendarName}</Text>
 
       {/* --- SETTINGS BUTTON --- */}

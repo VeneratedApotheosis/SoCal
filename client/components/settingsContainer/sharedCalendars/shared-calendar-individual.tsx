@@ -1,3 +1,4 @@
+import AccessRoleIndicator from '@/components/AccessRoleIndicator';
 import { useScreenSize } from '@/components/contexts/screen-size-context';
 import { useUIContext } from '@/components/contexts/ui-context';
 import { getPositions } from '@/utility/drawerUtil';
@@ -28,7 +29,7 @@ export default function SharedCalendarIndividual({ calName, accessRole, calId, u
 
   return (
     <View key={`${userId}-${idx}`} style={styles.detailRow}>
-      <Text style={styles.detailRole}>{accessRole}</Text>
+      <AccessRoleIndicator accessRole={accessRole} />
 
       {/* --- INNER TEXT --- */}
       {type === 'user' ? (

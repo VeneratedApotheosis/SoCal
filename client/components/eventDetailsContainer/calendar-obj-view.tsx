@@ -1,10 +1,11 @@
 import { lightenColor } from '@/utility/eventColorUtil';
-import { getIconColor } from '@/utility/globalStyles';
+import { basePressedStyles, getIconColor } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { calendarObj } from '@/utility/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import AccessRoleIndicator from '../AccessRoleIndicator';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
 import { useProfileContext } from '../contexts/profile-context';
 import { useUIContext } from '../contexts/ui-context';
@@ -68,7 +69,7 @@ export default function CalendarObjView({ calendarId, creatingEvent, calendarObj
   return (
     <>
       <Pressable
-        style={styles.listRow}
+        style={({ pressed }) => [styles.listRow, pressed && creatingEvent && localCalendar && basePressedStyles.transform]}
         ref={buttonRef}
         onPress={() => {
           if (creatingEvent && localCalendar) setIsVisible(true);
@@ -86,7 +87,11 @@ export default function CalendarObjView({ calendarId, creatingEvent, calendarObj
             </Text>
           )}
         </View>
-        {creatingEvent && localCalendar && <Ionicons name="chevron-forward-outline" size={20} color={iconColor} />}
+        {creatingEvent && localCalendar ? (
+          <Ionicons name="chevron-forward-outline" size={20} color={iconColor} />
+        ) : (
+          <AccessRoleIndicator accessRole={localCalendar?.accessRole || ''} />
+        )}
       </Pressable>
 
       <CalendarSelectionModal

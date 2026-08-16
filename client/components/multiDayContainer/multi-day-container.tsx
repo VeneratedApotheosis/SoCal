@@ -507,10 +507,10 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
         event={selectedEvent}
         isVisible={webDetailsVisible}
         onClose={closeEventDetails}
-        setVisible={setWebDetailsVisible}
         top={menuPos.top}
         left={menuPos.left}
         setNewEvent={setNewEvent}
+        newEvent={newEvent}
       />
     </View>
   );

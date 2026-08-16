@@ -5,7 +5,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Platform, TextInput, View } from 'react-native';
 import { useCalendarEvents } from '../contexts/calendar-events-context';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
-import { useScreenSize } from '../contexts/screen-size-context';
 import { useUIContext } from '../contexts/ui-context';
 import CalendarObjView from './calendar-obj-view';
 import { eventViewStyles } from './eventDetailsStyles';
@@ -19,15 +18,15 @@ interface ExpandedViewProps {
   bottomSheetModalRef: React.RefObject<BottomSheetModal | null>;
   onClose: () => void;
   setNewEvent: React.Dispatch<React.SetStateAction<EventObj | null>>;
+  newEvent: EventObj | null;
 }
 
 export function eventsAreEqual(a: EventObj, b: EventObj): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, setNewEvent }: ExpandedViewProps) => {
+export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, setNewEvent, newEvent }: ExpandedViewProps) => {
   const { mutateEvent, uniqueCalendars } = useCalendarEvents();
-  const { isWeb } = useScreenSize();
   const { theme } = useUIContext();
   const { calendarObjs } = useCalendarObjects();
   const styles = eventViewStyles(theme.isDark);
@@ -73,10 +72,12 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
 
   const updateField = (field: keyof EventObj, value: any) => {
     setEvent((prev) => ({ ...prev, [field]: value }));
-    setNewEvent((prev) => {
-      if (!prev) return prev;
-      return { ...prev, [field]: value };
-    });
+    if (newEvent) {
+      setNewEvent((prev) => {
+        if (!prev) return prev;
+        return { ...prev, [field]: value };
+      });
+    }
   };
 
   const closeModal = () => {
