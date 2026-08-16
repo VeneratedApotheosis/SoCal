@@ -153,7 +153,7 @@ export const getEventLayout = (event: EventWithLayout, offset: number, maxOffset
 //creates the time display for event details
 export const getEventTimeDisplay = (event: EventObj) => {
   if (!event || !event.startDate || !event.endDate) {
-    return { startTime: '', endTime: '', duration: '' };
+    return { startTime: '', endTime: '', duration: '', durationNumber: 0 };
   }
 
   let startTime = '';
@@ -161,6 +161,7 @@ export const getEventTimeDisplay = (event: EventObj) => {
   let duration = '';
   let startDate = '';
   let endDate = '';
+  let durationNumber = 0;
 
   const start: Date = new Date(event.startDate);
   const end: Date = new Date(event.endDate);
@@ -189,8 +190,8 @@ export const getEventTimeDisplay = (event: EventObj) => {
     // diffInDays is already the correct count because end is exclusive:
     // start=May27, end=May28 → diff=1 → "1 day" ✓
     // start=May27, end=May29 → diff=2 → "2 days" ✓
-    const totalDays = Math.max(diffInDays, 1);
-
+    const totalDays = diffInDays;
+    durationNumber = totalDays;
     duration = `${totalDays} ${totalDays === 1 ? 'day' : 'days'}`;
   } else {
     startTime = formatTimeStr(start);
@@ -201,12 +202,12 @@ export const getEventTimeDisplay = (event: EventObj) => {
 
     let diffInMs = end.getTime() - start.getTime();
 
-    if (diffInMs < 0) diffInMs += 24 * 60 * 60 * 1000; // overnight
     const totalMinutes = Math.floor(diffInMs / 60000);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
+    durationNumber = diffInMs;
     duration = `${hours}:${minutes.toString().padStart(2, '0')}`;
   }
 
-  return { startTime, endTime, duration, startDate, endDate };
+  return { startTime, endTime, duration, startDate, endDate, durationNumber };
 };

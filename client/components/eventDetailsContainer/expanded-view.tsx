@@ -39,6 +39,7 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
   const [firstRecurringEvent, setFirstRecurringEvent] = useState<boolean>(false);
   const baselineRef = useRef<EventObj>(initialEvent);
   const hasChanges = !eventsAreEqual(event, baselineRef.current);
+  const [error, setError] = useState<boolean>(false);
 
   // Update Local event
   useEffect(() => {
@@ -192,6 +193,8 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
     } else handleEdit('this');
   };
 
+  console.log(error);
+
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.container}>
@@ -214,7 +217,7 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
         </View>
         {/* Time */}
         <View style={[styles.card, { flex: 1 }]}>
-          <EventTimeDatePicker event={event} editable={editableEvent} onUpdate={updateField} />
+          <EventTimeDatePicker event={event} editable={editableEvent} onUpdate={updateField} setError={setError} />
         </View>
         {/* Place */}
         <View style={[styles.card, { zIndex: 10, padding: 0 }]}>
@@ -261,6 +264,7 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
           closeModal={closeModal}
           handleEditModal={handleEditModal}
           handleDeleteModal={handleDeleteModal}
+          timeError={error}
         />
       </View>
       <MutateRecurrenceModal

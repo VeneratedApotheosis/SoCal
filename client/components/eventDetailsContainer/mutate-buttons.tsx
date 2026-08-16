@@ -11,6 +11,7 @@ export interface MutateButtonProps {
   editableEvent: boolean;
   creatingEvent: boolean;
   hasChanges: boolean;
+  timeError: boolean;
   event: EventObj;
   closeModal: () => void;
   handleEditModal: () => void;
@@ -21,6 +22,7 @@ export const MutateButtons = ({
   editableEvent,
   creatingEvent,
   hasChanges,
+  timeError,
   event,
   closeModal,
   handleEditModal,
@@ -33,7 +35,7 @@ export const MutateButtons = ({
   const { mutateEvent } = useCalendarEvents();
 
   const blueText =
-    hasChanges && event.title !== ''
+    hasChanges && event.title !== '' && !timeError
       ? theme.isDark
         ? COLORS.text.light
         : COLORS.text.light
@@ -42,7 +44,7 @@ export const MutateButtons = ({
         : COLORS.primaryy.mutedTextDark;
 
   const blueBackgorund =
-    hasChanges && event.title !== ''
+    hasChanges && event.title !== '' && !timeError
       ? theme.isDark
         ? COLORS.primaryy.light
         : COLORS.primaryy.dark
@@ -56,7 +58,7 @@ export const MutateButtons = ({
         <Pressable
           style={[styles.mutateButtons, { flex: 1, backgroundColor: blueBackgorund }]}
           onPress={() => {
-            if (editableEvent && creatingEvent && event.title !== '') {
+            if (editableEvent && creatingEvent && event.title !== '' && !timeError) {
               closeModal();
               mutateEvent.createEvent(event);
             }
@@ -72,7 +74,7 @@ export const MutateButtons = ({
           <Pressable
             style={[styles.mutateButtons, { backgroundColor: blueBackgorund }]}
             onPress={() => {
-              if (hasChanges) handleEditModal();
+              if (hasChanges && !timeError) handleEditModal();
             }}
           >
             <Text style={{ marginHorizontal: 5, color: blueText }}>Save Changes</Text>

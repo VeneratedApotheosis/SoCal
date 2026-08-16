@@ -17,13 +17,14 @@ import { WebRecurrencePickerModal } from './web-reccurence-picker-modal';
 
 interface WebTimeInputProps {
   dateValue: Date | undefined;
-  onCommit: (date: Date) => void;
   placeholder: string;
   label: string;
   editable: boolean;
+  num: number;
+  updateTime: (date: Date | null, num: number, error: boolean) => void;
 }
 
-const WebTimeInput = ({ dateValue, onCommit, placeholder, label, editable }: WebTimeInputProps) => {
+const WebTimeInput = ({ dateValue, placeholder, label, editable, num, updateTime }: WebTimeInputProps) => {
   const [text, setText] = useState(formatTo12Hour(dateValue));
 
   useEffect(() => {
@@ -38,9 +39,12 @@ const WebTimeInput = ({ dateValue, onCommit, placeholder, label, editable }: Web
     const parsed = applyTimeString(dateValue, text);
     if (parsed) {
       setError(false);
-      onCommit(parsed);
       setText(formatTo12Hour(parsed));
-    } else setError(true);
+      updateTime(parsed, num, false);
+    } else {
+      setError(true);
+      updateTime(parsed, num, true);
+    }
   };
 
   return (
@@ -67,12 +71,13 @@ const WebTimeInput = ({ dateValue, onCommit, placeholder, label, editable }: Web
 
 interface WebDateInputProps {
   dateValue: Date | undefined;
-  onCommit: (date: Date) => void;
   label: string | undefined;
   editable: boolean;
+  num: number;
+  updateTime: (date: Date | null, num: number, error: boolean) => void;
 }
 
-const WebDateInput = ({ dateValue, onCommit, label, editable }: WebDateInputProps) => {
+const WebDateInput = ({ dateValue, label, editable, num, updateTime }: WebDateInputProps) => {
   const [text, setText] = useState(formatDateShort(dateValue));
 
   useEffect(() => {
@@ -87,9 +92,12 @@ const WebDateInput = ({ dateValue, onCommit, label, editable }: WebDateInputProp
     const parsed = applyDateString(dateValue, text);
     if (parsed) {
       setError(false);
-      onCommit(parsed);
       setText(formatDateShort(parsed));
-    } else setError(true);
+      updateTime(parsed, num, false);
+    } else {
+      setError(true);
+      updateTime(parsed, num, true);
+    }
   };
 
   return (
@@ -140,9 +148,10 @@ interface EventTimeDatePickerProps {
   event: EventObj;
   editable: boolean;
   onUpdate: (field: keyof EventObj, value: any) => void;
+  setError: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDatePickerProps) => {
+export const EventTimeDatePicker = ({ event, editable, onUpdate, setError }: EventTimeDatePickerProps) => {
   const recurrenceSheetRef = useRef<BottomSheetModal>(null);
   const [webVisible, setWebVisible] = useState<boolean>(false);
   const { theme } = useUIContext();
@@ -167,14 +176,14 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDate
     console.log('Custom recurrence tapped — hook up your UI here');
   }, []);
 
-  const [timeDisplay, setTimeDisplay] = useState<{ startTime: string; endTime: string; duration: string }>(() => {
-    const { startTime, endTime, duration } = getEventTimeDisplay(event);
-    return { startTime, endTime, duration };
+  const [timeDisplay, setTimeDisplay] = useState<{ startTime: string; endTime: string; duration: string; durationNumber: number }>(() => {
+    const { startTime, endTime, duration, durationNumber } = getEventTimeDisplay(event);
+    return { startTime, endTime, duration, durationNumber };
   });
 
   useEffect(() => {
-    const { startTime, endTime, duration } = getEventTimeDisplay(event);
-    setTimeDisplay({ startTime, endTime, duration });
+    const { startTime, endTime, duration, durationNumber } = getEventTimeDisplay(event);
+    setTimeDisplay({ startTime, endTime, duration, durationNumber });
   }, [event]);
 
   const isWeb = Platform.OS === 'web';
@@ -189,6 +198,32 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDate
     }).start();
   }, [event.allDay]);
 
+  const [errors, setErrors] = useState<boolean[]>([false, false, false, false]);
+
+  const updateError = (num: number, error: boolean) => {};
+
+  const updateTime = (field: 'startDate' | 'endDate', date: Date | null, num: number, error: boolean) => {
+    setErrors((prev) => {
+      const newErrors = prev.map((e, index) => (index === num - 1 ? error : e));
+      if (newErrors[0] === false && newErrors[1] === false && newErrors[2] === false && newErrors[3] === false) {
+        if (!date) return newErrors;
+        onUpdate(field, date);
+        if (field === 'startDate') {
+          const diff = date.getTime() - event.endDate.getTime();
+          console.log(diff);
+          if (diff > 0) setError(true);
+          else setError(false);
+        } else if (field === 'endDate') {
+          const diff = event.startDate.getTime() - date.getTime();
+          console.log(diff);
+          if (diff > 0) setError(true);
+          else setError(false);
+        }
+      } else setError(true);
+      return newErrors;
+    });
+  };
+
   return (
     <>
       <View style={{ flexShrink: 1 }}>
@@ -200,7 +235,8 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDate
                   label={'start time'}
                   editable={editable}
                   dateValue={event.startDate}
-                  onCommit={(d) => onUpdate('startDate', d)}
+                  num={1}
+                  updateTime={(date: Date | null, num: number, error: boolean) => updateTime('startDate', date, num, error)}
                 />
               ) : (
                 <IOSPillButton label="start time" value={timeDisplay.startTime} onPress={() => openIOSPicker('startTime')} />
@@ -210,8 +246,9 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDate
                   label=" "
                   editable={editable}
                   dateValue={event.startDate}
-                  onCommit={(d) => onUpdate('startDate', d)}
                   placeholder="N/A"
+                  num={2}
+                  updateTime={(date: Date | null, num: number, error: boolean) => updateTime('startDate', date, num, error)}
                 />
               ) : (
                 <IOSPillButton label="start time" value={timeDisplay.startTime} onPress={() => openIOSPicker('startTime')} />
@@ -219,7 +256,13 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDate
             </View>
             <View style={[styles.pillRow]}>
               {isWeb ? (
-                <WebDateInput label={'end time'} editable={editable} dateValue={event.endDate} onCommit={(d) => onUpdate('endDate', d)} />
+                <WebDateInput
+                  label={'end time'}
+                  editable={editable}
+                  dateValue={event.endDate}
+                  updateTime={(date: Date | null, num: number, error: boolean) => updateTime('endDate', date, num, error)}
+                  num={3}
+                />
               ) : (
                 <IOSPillButton label="end time" value={timeDisplay.endTime} onPress={() => openIOSPicker('endTime')} />
               )}
@@ -228,8 +271,9 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDate
                   label=" "
                   editable={editable}
                   dateValue={event.endDate}
-                  onCommit={(d) => onUpdate('endDate', d)}
                   placeholder="N/A"
+                  num={4}
+                  updateTime={(date: Date | null, num: number, error: boolean) => updateTime('endDate', date, num, error)}
                 />
               ) : (
                 <IOSPillButton label="end time" value={timeDisplay.endTime} onPress={() => openIOSPicker('endTime')} />
@@ -239,8 +283,10 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDate
             <View style={[styles.pillRow]}>
               <View style={styles.timePill}>
                 <Text style={styles.pillLabel}>duration</Text>
-                <View style={styles.pillInput}>
-                  <Text style={[styles.pillInputText, styles.pillInputMuted]}>{timeDisplay.duration}</Text>
+                <View style={[styles.pillInput, timeDisplay.durationNumber < 0 && styles.pillInputError]}>
+                  <Text style={[styles.pillInputText, styles.pillInputMuted, timeDisplay.durationNumber < 0 && styles.pillInputTextError]}>
+                    {timeDisplay.duration}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -254,7 +300,8 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDate
                   label="start time"
                   editable={editable}
                   dateValue={event.startDate}
-                  onCommit={(d) => onUpdate('startDate', d)}
+                  updateTime={(date: Date | null, num: number, error: boolean) => updateTime('startDate', date, num, error)}
+                  num={1}
                 />
               ) : (
                 <IOSPillButton label="start time" value={timeDisplay.startTime} onPress={() => openIOSPicker('startTime')} />
@@ -262,7 +309,13 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate }: EventTimeDate
             </View>
             <View style={[styles.pillRow]}>
               {isWeb ? (
-                <WebDateInput label="end time" editable={editable} dateValue={event.endDate} onCommit={(d) => onUpdate('endDate', d)} />
+                <WebDateInput
+                  label="end time"
+                  editable={editable}
+                  dateValue={event.endDate}
+                  updateTime={(date: Date | null, num: number, error: boolean) => updateTime('endDate', date, num, error)}
+                  num={3}
+                />
               ) : (
                 <IOSPillButton label="end time" value={timeDisplay.endTime} onPress={() => openIOSPicker('endTime')} />
               )}
