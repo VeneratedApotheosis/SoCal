@@ -86,13 +86,20 @@ const getAllData = async (tableName) => {
 // do: updates the refresh token for an existing user
 const updateToken = async (userId, refreshToken) => {
   const query = `
-    UPDATE "userInfo" 
-    SET "refreshToken" = $1 
-    WHERE id = $2
+    INSERT INTO "userInfo" (id, "refreshToken")
+    VALUES ($2, $1)
+    ON CONFLICT (id) 
+    DO UPDATE SET "refreshToken" = EXCLUDED."refreshToken"
     RETURNING id;
   `;
-  const res = await pool.query(query, [refreshToken, userId]);
-  return res.rowCount > 0; // Returns true if a row was updated
+  
+  try {
+    const res = await pool.query(query, [refreshToken, userId]);
+    return res.rowCount > 0;
+  } catch (err) {
+    console.error('Database error in updateToken:', err);
+    return false;
+  }
 };
 
 // Deletes user profile from userInfo table

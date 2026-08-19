@@ -49,7 +49,7 @@ export const fetchPlacesAutocomplete = (t: string, input: string) =>
 export const fetchPlacesDetails = (t: string, placeId: string) => bReq(`/places/details?placeId=${placeId}`, 'GET', t);
 
 export const postUpdateToken = (userId: string, provider_referesh_token: string) => {
-  bReq('/update-token', 'POST', undefined, {
+  return bReq('/update-token', 'POST', undefined, {
     userId: userId,
     refreshToken: provider_referesh_token,
   });

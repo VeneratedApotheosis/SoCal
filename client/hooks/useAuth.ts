@@ -51,13 +51,22 @@ export const useAuth = () => {
 
         if (session) {
           setValidJwt(true);
+          const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
           // Only update the backend if Google gave us a new refresh token
           if (session.provider_refresh_token) {
             try {
               await postUpdateToken(session.user.id, session.provider_refresh_token);
             } catch (err) {
-              console.error('Failed to send refresh token to backend:', err);
+              // If it fails (likely a 404), wait 2 seconds and try exactly once more
+              console.warn('Initial token save failed, retrying in 2s...', err);
+              await delay(2000);
+              try {
+                await postUpdateToken(session.user.id, session.provider_refresh_token);
+                console.log('Token saved on retry');
+              } catch (retryErr) {
+                console.error('Failed to send refresh token to backend after retry:', retryErr);
+              }
             }
           }
         }
