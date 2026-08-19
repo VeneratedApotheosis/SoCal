@@ -181,6 +181,7 @@ app.post('/api/get-family-access-tokens', authenticate, handleRoute('Failed to g
 }));
 
 app.post('/api/update-token', async (req, res) => {
+  console.log('[API] /update-token hit at', new Date().toISOString());
   const { userId, refreshToken } = req.body;
 
   if (!userId || !refreshToken) {
@@ -191,13 +192,14 @@ app.post('/api/update-token', async (req, res) => {
     const success = await db.updateToken(userId, refreshToken);
     
     if (success) {
+      console.log(`[API] Token saved successfully for ${userId}`);
       res.status(200).json({ message: 'Token saved successfully' });
     } else {
-      // If this happens, the Supabase trigger might not have created the user yet
+      console.log(`[API] User profile ${userId} not found in database yet.`);
       res.status(404).json({ error: 'User profile not found' });
     }
   } catch (err) {
-    console.error('Error updating token:', err);
+    console.error('[API] Error updating token:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

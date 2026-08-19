@@ -85,20 +85,22 @@ const getAllData = async (tableName) => {
 // params: supabase auth user id, provider refresh token
 // do: updates the refresh token for an existing user
 const updateToken = async (userId, refreshToken) => {
+  console.log(`[DB] Attempting to update token for user ID: ${userId}`);
+  
   const query = `
-    INSERT INTO "userInfo" (id, "refreshToken")
-    VALUES ($2, $1)
-    ON CONFLICT (id) 
-    DO UPDATE SET "refreshToken" = EXCLUDED."refreshToken"
+    UPDATE "userInfo" 
+    SET "refreshToken" = $1 
+    WHERE id = $2
     RETURNING id;
   `;
   
   try {
     const res = await pool.query(query, [refreshToken, userId]);
+    console.log(`[DB] Update successful? Row count: ${res.rowCount}`);
     return res.rowCount > 0;
   } catch (err) {
-    console.error('Database error in updateToken:', err);
-    return false;
+    console.error('[DB] Database error during update:', err);
+    throw err;
   }
 };
 
