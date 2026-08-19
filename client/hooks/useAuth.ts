@@ -2,7 +2,7 @@ import { useAuthContext } from '@/components/contexts/auth-context';
 import { supabase } from '@/lib/supabase';
 import { deleteAccount, postUpdateToken } from '@/services/api';
 import { storage } from '@/services/storage';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -10,6 +10,9 @@ export const useAuth = () => {
 
   const [error, setError] = useState<string | null>(null);
   const { setValidJwt } = useAuthContext();
+
+  const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+  const hasProcessedToken = useRef(false);
 
   const handleLogout = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
@@ -51,23 +54,35 @@ export const useAuth = () => {
 
         if (session) {
           setValidJwt(true);
-          const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
           // Only update the backend if Google gave us a new refresh token
-          if (session.provider_refresh_token) {
-            try {
-              await postUpdateToken(session.user.id, session.provider_refresh_token);
-            } catch (err) {
-              // If it fails (likely a 404), wait 2 seconds and try exactly once more
-              console.warn('Initial token save failed, retrying in 2s...', err);
-              await delay(2000);
-              try {
-                await postUpdateToken(session.user.id, session.provider_refresh_token);
-                console.log('Token saved on retry');
-              } catch (retryErr) {
-                console.error('Failed to send refresh token to backend after retry:', retryErr);
+          if (session.provider_refresh_token && !hasProcessedToken.current) {
+            hasProcessedToken.current = true;
+
+            const attemptTokenSave = async () => {
+              let success = false;
+              let attempts = 0;
+              const maxAttempts = 5; // Try up to 5 times (10 seconds total)
+
+              while (!success && attempts < maxAttempts) {
+                attempts++;
+                try {
+                  console.log(`[Frontend] Attempt ${attempts} to save token...`);
+                  // Make sure your postUpdateToken function has a 'return' statement!
+                  await postUpdateToken(session.user.id, session.provider_refresh_token);
+                  console.log('[Frontend] Token saved successfully!');
+                  success = true;
+                } catch (err) {
+                  console.warn(`[Frontend] Attempt ${attempts} failed. Row not ready yet.`);
+                  if (attempts < maxAttempts) {
+                    await delay(2000); // Wait 2 seconds before trying again
+                  } else {
+                    console.error('[Frontend] Gave up trying to save token after 5 attempts.');
+                  }
+                }
               }
-            }
+            };
+            attemptTokenSave();
           }
         }
       }
