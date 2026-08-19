@@ -1,11 +1,13 @@
 import { useAuthContext } from '@/components/contexts/auth-context';
 import { supabase } from '@/lib/supabase';
-import { postUpdateToken } from '@/services/api';
+import { deleteAccount, postUpdateToken } from '@/services/api';
 import { storage } from '@/services/storage';
 import { useCallback, useEffect, useState } from 'react';
 
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
   const { setValidJwt } = useAuthContext();
 
@@ -102,5 +104,36 @@ export const useAuth = () => {
     }
   };
 
-  return { getValidJwt, isLoading, error, promptAsync, handleLogout };
+  const handleDeleteAccount = useCallback(async () => {
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        throw new Error('No active session found. Cannot delete account.');
+      }
+
+      const jwtToken = session.access_token;
+      const userId = session.user.id;
+
+      const response = await deleteAccount(jwtToken, userId);
+      if (response?.error) {
+        throw new Error(response.error);
+      }
+
+      await handleLogout();
+    } catch (err: any) {
+      console.error('Backend Account Deletion Error:', err);
+      setError(err.message || 'An error occurred while deleting the account.');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [handleLogout]);
+
+  return { getValidJwt, isLoading, error, promptAsync, handleLogout, handleDeleteAccount, isDeleting };
 };

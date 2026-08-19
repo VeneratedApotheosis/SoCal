@@ -17,9 +17,7 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// ===========================================================
-// SETUP & CACHE
-// ===========================================================
+// ─── Setup and Cache ───────────────────────────────────────────────────────────
 
 const oAuth2ClientWeb = new OAuth2Client(process.env.CLIENT_ID, process.env.CLIENT_SECRET, process.env.REDIRECT_URI);
 const oAuth2ClientMobile = new OAuth2Client(process.env.CLIENT_ID, process.env.CLIENT_SECRET, "");
@@ -27,6 +25,17 @@ const oAuth2ClientMobile = new OAuth2Client(process.env.CLIENT_ID, process.env.C
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_PUBLISHABLE_KEY // or SUPABASE_SERVICE_ROLE_KEY
+);
+
+const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SECRET_KEY, 
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false // Critical for backend admin clients
+    }
+  }
 );
 
 // Stores: Map<userId: string, {accessToken: string, expiryDate: integer}>
@@ -192,6 +201,23 @@ app.post('/api/update-token', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+app.delete('/api/delete-account', authenticate, handleRoute('Failed to delete account', async (req, res) => {
+  const userId = req.userId;
+  const success = await db.deleteUserProfile(userId);
+
+  if (!success) {
+    return res.status(404).json({ error: 'User profile not found' });
+  }
+  accessTokenCache.delete(userId);
+
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+  if (error) {
+    throw new Error(`Supabase Auth deletion failed: ${error.message}`);
+  }
+
+  res.status(200).json({ message: 'Account deleted successfully' });
+}));
 
 // ─── Sharing Functions ───────────────────────────────────────────────────────────
 

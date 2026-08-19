@@ -95,10 +95,21 @@ const updateToken = async (userId, refreshToken) => {
   return res.rowCount > 0; // Returns true if a row was updated
 };
 
+// Deletes user profile from userInfo table
+const deleteUserProfile = async (userId) => {
+  const query = `
+    DELETE FROM "userInfo"
+    WHERE id = $1;
+  `;
+  const res = await pool.query(query, [userId]);
+  return res.rowCount > 0; // Returns true if a row was deleted
+};
+
 module.exports = { 
   getUserProfile, 
   getUserRefreshToken,
   updateToken,
   saveUserProfile, 
   getAllData,
+  deleteUserProfile,
 };

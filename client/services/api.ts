@@ -55,6 +55,12 @@ export const postUpdateToken = (userId: string, provider_referesh_token: string)
   });
 };
 
+export const deleteAccount = async (t: string, userId: string) => {
+  return bReq('/delete-account', 'delete', t, {
+    userId: userId,
+  });
+};
+
 // ─── Google API Event, Calendar, Sharing Setting Fetches ───────────────────────────────────────────────────────────
 
 export const fetchGivenCalendarRange = async (t: string, calId = 'primary', timeMin?: string, timeMax?: string, timeZone?: string) => {
