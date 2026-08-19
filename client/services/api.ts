@@ -55,7 +55,7 @@ export const postUpdateToken = (userId: string, provider_referesh_token: string)
   });
 };
 
-// ─── Google API Event & Calendar Fetches ───────────────────────────────────────────────────────────
+// ─── Google API Event, Calendar, Sharing Setting Fetches ───────────────────────────────────────────────────────────
 
 export const fetchGivenCalendarRange = async (t: string, calId = 'primary', timeMin?: string, timeMax?: string, timeZone?: string) => {
   let events: any[] = [],
@@ -97,6 +97,8 @@ export const fetchMultiGivenCalendarRange = async (t: string, calId = 'primary',
 };
 
 export const fetchCalendarList = (t: string) => gReq('/users/me/calendarList', 'GET', t);
+
+export const getCalendarSharingSettings = (calId: string, t: string) => gReq(`/calendars/${calId}/acl`, 'GET', t);
 
 // ─── Google API Specific Event Fetches ───────────────────────────────────────────────────────────
 
@@ -164,7 +166,7 @@ export const patchEventRecurrenceInGoogleCalendar = (t: string, e: EventObj) => 
   return gReq(`/calendars/${encodeURIComponent(e.calendarId)}/events/${encodeURIComponent(targetId)}`, 'PATCH', t, body);
 };
 
-// ─── Google API Sharing Functions ───────────────────────────────────────────────────────────
+// ─── Backend API Sharing Functions ───────────────────────────────────────────────────────────
 
 export const shareCalendar = (calId: string, email: string, t: string, r: accessRole) =>
   bReq('/share-calendar', 'post', t, {
@@ -183,5 +185,3 @@ export const unsuscribeCalendar = (calId: string, t: string) =>
   bReq('/unsuscribe-calendar', 'delete', t, {
     calId: calId,
   });
-
-export const getCalendarSharingSettings = (calId: string, t: string) => gReq(`/calendars/${calId}/acl`, 'GET', t);

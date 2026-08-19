@@ -75,20 +75,6 @@ const googleFetch = async (endpoint, method, token, body = null) => {
 
 // ─── Authentication Functions ───────────────────────────────────────────────────────────
 
-// const authenticate = (req, res, next) => {
-//   const token = req.headers['authorization']?.split(' ')[1]; // "Bearer <token>"
-//   if (!token) return res.sendStatus(401);
-
-//   jwt.verify(token, process.env.SUPABASE_JWT_SECRET, (err, decoded) => {
-//     if (err) {
-//       console.error('JWT Verification Error:', err.message);
-//       return res.sendStatus(403);
-//     }
-//     req.userId = decoded.userId; 
-//     next();
-//   });
-// };
-
 const authenticate = async (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1]; // "Bearer <token>"
   if (!token) return res.sendStatus(401);
@@ -171,18 +157,17 @@ app.post('/api/get-family-profiles', authenticate, handleRoute('Failed to get fa
   console.log('/api/get-family-profiles called');
   res.json({
     parent: await db.getUserProfile(req.userId),
-    children: await db.getChildrenProfiles(req.userId)
+    children: []
   });
 }));
 
 app.post('/api/get-family-access-tokens', authenticate, handleRoute('Failed to get family tokens', async (req, res) => {
   console.log('/api/get-family-access-tokens called');
   const parentData = await db.getUserRefreshToken(req.userId);
-  const childrenData = await db.getChildrenRefreshToken(req.userId);
   
   res.json({
     parent: await fetchAndFormatUserToken(req.userId, parentData.refreshToken, parentData.id),
-    children: await Promise.all(childrenData.map(c => fetchAndFormatUserToken(c.id, c.refreshToken, c.id)))
+    children: []
   });
 }));
 
@@ -208,9 +193,7 @@ app.post('/api/update-token', async (req, res) => {
   }
 });
 
-// ===========================================================
-// SHARING FUNCTIONS
-// ===========================================================
+// ─── Sharing Functions ───────────────────────────────────────────────────────────
 
 app.post('/api/share-calendar', authenticate, handleRoute('Internal server error during sharing', async (req, res) => {
   const { calId, email, role = 'reader' } = req.body;
@@ -253,9 +236,7 @@ app.delete('/api/unsuscribe-calendar', authenticate, handleRoute('Internal serve
   res.status(200).json({ message: 'Unsubscribed from calendar successfully' });
 }));
 
-// ===========================================================
-// GOOGLE PLACES PROXY ROUTES
-// ===========================================================
+// ─── Google Places Proxy Routes ───────────────────────────────────────────────────────────
 
 app.get('/api/places/autocomplete', authenticate, handleRoute('Autocomplete failed', async (req, res) => {
   const { input } = req.query;
@@ -287,9 +268,7 @@ app.get('/api/places/details', authenticate, handleRoute('Details failed', async
   res.json(data.result || {});
 }));
 
-// ===========================================================
-// DEBUG ROUTES
-// ===========================================================
+// ─── Debug Routes ───────────────────────────────────────────────────────────
 
 app.get('/getData', (req, res) => res.send(db.getAllData(req.query.table)));
 
@@ -297,7 +276,7 @@ app.get('/token', handleRoute('Failed to get family data', async (req, res) => {
   console.log("get-family-data called");
   res.json({
     parent: db.getUserProfile(req.query.id),
-    children: db.getChildrenProfiles(req.query.id)
+    children: []
   });
 }));
 
@@ -305,16 +284,13 @@ app.get('/tokenreal', handleRoute('Failed to get family data', async (req, res) 
   console.log("get-family-access-tokens called");
   const parentId = req.query.id;
   const parentData = db.getUserRefreshToken(parentId);
-  const childrenData = db.getChildrenRefreshToken(parentId);
 
   res.json({
     parent: await fetchAndFormatUserToken(parentId, parentData.refreshToken, parentData.id),
-    children: await Promise.all(childrenData.map(c => fetchAndFormatUserToken(c.id, c.refreshToken, c.id)))
+    children: []
   });
 }));
 
-// ===========================================================
-// INITIALIZATION
-// ===========================================================
+// ─── Initialization ───────────────────────────────────────────────────────────
 
 app.listen(3001, () => console.log('Server running on port 3001'));

@@ -52,7 +52,7 @@ const WebTimeInput = ({ dateValue, placeholder, label, editable, num, updateTime
       <Text style={styles.pillLabel}>{label}</Text>
       <View style={[styles.pillInput, error && styles.pillInputError]}>
         <TextInput
-          style={styles.pillInputText}
+          style={[styles.pillInputText, error && styles.pillInputTextError]}
           value={text}
           onChangeText={(t) => {
             setText(t);
