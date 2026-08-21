@@ -103,13 +103,15 @@ function EventContainer({ eventWithOffset, dayWidth, hourHeight, onSelect, isVis
               selectedThisEvent && { backgroundColor: borderColor, borderLeftColor: borderColor },
             ]}
           >
-            {/* --- EVENT TITLE --- */}
-            <Text
-              style={[styles.eventText, { color: selectedThisEvent ? (theme.isDark ? textColor : rawColor) : textColor }]}
-              numberOfLines={1}
-            >
-              {event.title}
-            </Text>
+            <View style={{ overflow: 'hidden' }}>
+              {/* --- EVENT TITLE --- */}
+              <Text
+                style={[styles.eventText, { color: selectedThisEvent ? (theme.isDark ? textColor : rawColor) : textColor }]}
+                numberOfLines={Math.floor((layout.height - 8) / 13)}
+              >
+                {event.title}
+              </Text>
+            </View>
           </View>
         </Pressable>
       )}

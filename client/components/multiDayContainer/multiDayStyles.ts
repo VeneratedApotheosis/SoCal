@@ -76,6 +76,7 @@ export const getEventCardStyles = (isDark: boolean) => {
     },
     eventText: {
       ...baseText.caption,
+      lineHeight: 13,
     },
     eventTime: {
       ...baseText.caption,

@@ -1,6 +1,6 @@
 import { COLORS } from '@/utility/theme';
 import React, { useEffect, useState } from 'react';
-import { FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { usePlacesAutocomplete } from '../../hooks/usePlacesAutocomplete';
 import { useUIContext } from '../contexts/ui-context';
 import { locationStyles } from './eventDetailsStyles';
@@ -37,6 +37,8 @@ export default function LocationContainer({ initialValue, onLocationSelect, edit
     if (chosenPlaceName) {
       setInputValue(chosenPlaceName);
     }
+
+    clearPredictions();
   };
 
   return (
@@ -49,23 +51,27 @@ export default function LocationContainer({ initialValue, onLocationSelect, edit
           placeholder="Search for a location..."
           placeholderTextColor={inputColor}
           editable={editable}
-          onBlur={clearPredictions}
+          onBlur={() => {}}
         />
       </View>
       {predictions.length > 0 && (
-        <FlatList
-          data={predictions}
-          keyExtractor={(item) => item.place_id}
-          style={styles.listView}
-          keyboardShouldPersistTaps="handled"
-          renderItem={({ item }) => (
-            <TouchableOpacity style={styles.row} onPress={() => handleRowPress(item)}>
-              <Text numberOfLines={1} style={{ color: listColor, fontSize: 14 }}>
-                {item.description}
-              </Text>
-            </TouchableOpacity>
-          )}
-        />
+        <>
+          {/* Invisible area that catches outside presses */}
+          <Pressable style={[StyleSheet.absoluteFill]} onPress={clearPredictions} />
+          <FlatList
+            data={predictions}
+            keyExtractor={(item) => item.place_id}
+            style={styles.listView}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item }) => (
+              <TouchableOpacity style={styles.row} onPress={() => handleRowPress(item)}>
+                <Text numberOfLines={1} style={{ color: listColor, fontSize: 14 }}>
+                  {item.description}
+                </Text>
+              </TouchableOpacity>
+            )}
+          />
+        </>
       )}
     </View>
   );

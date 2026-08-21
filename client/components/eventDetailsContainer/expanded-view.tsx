@@ -193,8 +193,6 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
     } else handleEdit('this');
   };
 
-  console.log(error);
-
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.container}>

@@ -153,6 +153,12 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
     [eventDetailsVisible, webDetailsVisible, isWeb],
   );
 
+  useEffect(() => {
+    if (!eventDetailsVisible && !webDetailsVisible) {
+      setNewEvent(null);
+    }
+  }, [eventDetailsVisible, webDetailsVisible]);
+
   const handleWebPress = (coords: { x: number; y: number } | any) => {
     let { pageX, pageY } = { pageX: 0, pageY: 0 };
     if (coords && 'x' in coords) {
