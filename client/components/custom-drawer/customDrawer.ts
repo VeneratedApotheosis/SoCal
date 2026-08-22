@@ -37,6 +37,47 @@ export const getDrawerStyles = (isDark: boolean) => {
       marginVertical: 2,
       borderRadius: 8,
     },
+    headerRow: {
+      ...baseFlexStyles.rowLeft,
+      flex: 1,
+      gap: 16,
+      padding: 12,
+      ...baseTheme.background,
+      borderRadius: 16,
+      marginBottom: 20,
+    },
+    headerLeft: {
+      ...baseFlexStyles.columnLeft,
+      flex: 1,
+      alignItems: 'flex-start',
+    },
+    labelText: {
+      ...baseText.subtitle,
+      color: isDark ? COLORS.text.light : COLORS.text.dark,
+      fontWeight: '500',
+      flex: 1,
+      paddingRight: 16,
+    },
+    descriptionText: {
+      ...baseText.body,
+      color: isDark ? '#999' : '#666',
+      fontSize: 13,
+    },
+    customSwitch: {
+      width: 48,
+      height: 28,
+      borderRadius: 9999,
+      padding: 4,
+      justifyContent: 'center',
+    },
+    customThumb: {
+      width: 20,
+      height: 20,
+      borderRadius: 9999,
+      ...baseTheme.background, // Ensures the thumb matches your theme's base background
+      boxShadow: '0px 1px 1px 0px rgba(0, 0, 0, 0.15)', // Note: boxShadow string is valid in newer RN/Expo web, but use shadow props if strictly native
+      elevation: 2,
+    },
   });
 };
 

@@ -35,6 +35,8 @@ interface UIContextType {
   setTransparencyOpacity: React.Dispatch<React.SetStateAction<number>>;
   multiDayInHeader: boolean;
   setMultiDayInHeader: React.Dispatch<React.SetStateAction<boolean>>;
+  visibleSettings: Set<string>;
+  setVisibleSettings: React.Dispatch<React.SetStateAction<Set<string>>>;
 }
 
 export const UIContext = createContext<UIContextType>({} as UIContextType);
@@ -49,6 +51,7 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
   const [isSidebarLoading, setSidebarLoading] = useState<boolean>(true);
   const [transparentOpacity, setTransparencyOpacity] = useState<number>(DEFAULT_TRANSPARENCY);
   const [multiDayInHeader, setMultiDayInHeader] = useState<boolean>(true);
+  const [visibleSettings, setVisibleSettings] = useState<Set<string>>(new Set());
 
   // ─── Now ───────────────────────────────────────────────────────────
 
@@ -78,6 +81,8 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
         setTransparencyOpacity,
         multiDayInHeader,
         setMultiDayInHeader,
+        visibleSettings,
+        setVisibleSettings,
       }}
     >
       {children}

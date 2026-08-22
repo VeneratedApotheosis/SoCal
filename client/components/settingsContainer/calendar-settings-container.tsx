@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { useUIContext } from '../contexts/ui-context';
 import CalendarSettingsToggles from './calendarSettings/multi-day-event-toggle';
 import TimeZoneSelector from './calendarSettings/set-time-zone';
+import SidebarSettingsToggles from './calendarSettings/sidebar-settings-toggle';
 
 export default function CalendarSettingsContainer() {
   const { theme } = useUIContext();
@@ -12,6 +13,7 @@ export default function CalendarSettingsContainer() {
     <View style={rootStyles.tabContainer}>
       <TimeZoneSelector />
       <CalendarSettingsToggles />
+      <SidebarSettingsToggles />
     </View>
   );
 }

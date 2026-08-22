@@ -1,6 +1,6 @@
 import { calendarObj, CalendarView } from '@/utility/types';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Animated, Image, Pressable, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSharedValue, withSpring } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,7 +14,7 @@ import { useScreenSize } from '../contexts/screen-size-context';
 import { useUIContext } from '../contexts/ui-context';
 
 import { toTitleCase } from '@/utility/drawerUtil';
-import { baseFlexStyles, globalParameterStyles } from '@/utility/globalStyles';
+import { baseFlexStyles, getBasicThemeStyles, globalParameterStyles } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { Plus } from 'lucide-react-native';
 import { getColorPaletteStyles } from '../settingsContainer/settingsContainerStyles';
@@ -26,10 +26,10 @@ export default function CustomDrawerContent(props: any) {
   const { familyProfiles } = useProfileContext();
   const userId = familyProfiles && familyProfiles.parent ? familyProfiles.parent.id : null;
   const { fixedSidebar, isWeb } = useScreenSize();
-  const { hiddenCalendarHook, calViewMode: viewMode, resetViewMode, suppressOther } = useCalendarObjects();
+  const { hiddenCalendarHook, calViewMode: viewMode, resetViewMode, suppressOther, toggleSuppress } = useCalendarObjects();
   const { calendarGroups } = useCalendarGroupsContext();
 
-  const { setLoginVisible, theme: uiTheme } = useUIContext();
+  const { setLoginVisible, theme: uiTheme, visibleSettings } = useUIContext();
   const hoverIndex = useSharedValue<number | null>(null);
   const activeIndex = useSharedValue<number | null>(null);
   const isHovering = useSharedValue<boolean>(false);
@@ -152,6 +152,18 @@ export default function CustomDrawerContent(props: any) {
     }
   };
 
+  // ─── Toggle Subscribed Calendars ───────────────────────────────────────────────────────────
+
+  const suppressTransformX = useRef(new Animated.Value(!suppressOther ? 20 : 0)).current;
+  useEffect(() => {
+    Animated.timing(suppressTransformX, {
+      toValue: !suppressOther ? 20 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [suppressOther, suppressTransformX]);
+  const baseTheme = getBasicThemeStyles(uiTheme.isDark);
+
   // ─── Smth is being expanded but i have no clue what ───────────────────────────────────────────────────────────
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -178,7 +190,7 @@ export default function CustomDrawerContent(props: any) {
   return (
     <SafeAreaView style={[styles.headerContainer, { padding: fixedSidebar ? 0 : 20 }]}>
       {/* --- USER INFO --- */}
-      {!fixedSidebar && (
+      {!fixedSidebar && visibleSettings.has('User Profile') && (
         <View style={styles.profile}>
           <Pressable onPress={handleSettingspress} style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ ...baseFlexStyles.centerAll, padding: 2 }}>
@@ -223,6 +235,28 @@ export default function CustomDrawerContent(props: any) {
                 </Text>
               </Pressable>
             ))}
+          </View>
+        )}
+        {/* --- Show Subiscribed Calendars --- */}
+        {visibleSettings.has('Subscribed Calendars Toggle') && (
+          <View style={styles.headerRow}>
+            <View style={styles.headerLeft}>
+              <Text style={styles.labelText}>Show Suscribed Calendars</Text>
+            </View>
+
+            <Pressable
+              onPress={() => toggleSuppress()}
+              style={[
+                styles.customSwitch,
+                !suppressOther
+                  ? { ...baseTheme.backgroundBlue } // Assuming backgroundBlue exists in your baseTheme
+                  : { backgroundColor: uiTheme.isDark ? '#3a3a3a' : '#d1d1dd' },
+              ]}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: !suppressOther }}
+            >
+              <Animated.View style={[styles.customThumb, { transform: [{ translateX: suppressTransformX }] }]} />
+            </Pressable>
           </View>
         )}
         {/* --- CALENDAR VISIBILITY TOGGLE --- */}
