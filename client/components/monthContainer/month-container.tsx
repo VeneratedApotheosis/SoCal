@@ -1,5 +1,5 @@
 import { useWeeklyEventGrouping } from '@/hooks/calendarHooks/useEventGrouping';
-import { BUFFER_INCREMENT, FETCH_INITIAL_BUFFER, PAST_BUFFER, WEB_Y_PADDING } from '@/utility/constants';
+import { BUFFER_INCREMENT, PAST_BUFFER, WEB_Y_PADDING } from '@/utility/constants';
 import { getPositionsFromPointer } from '@/utility/drawerUtil';
 import { getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
 import { CalendarView, EventObj, EventWithLayout } from '@/utility/types';
@@ -161,8 +161,8 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
   // ─── Fetch Foward and Backward ───────────────────────────────────────────────────────────
 
   const { fetchForward, fetchBackward } = useCalendarEvents();
-  const localFetchStart = useRef(-FETCH_INITIAL_BUFFER);
-  const localFetchEnd = useRef(FETCH_INITIAL_BUFFER);
+  const localFetchStart = useRef(-1 * calendarType.num * 7);
+  const localFetchEnd = useRef(calendarType.num * 7);
 
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: any) => {
@@ -181,15 +181,14 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
           setCurrentMonthText(MONTHS[date.getMonth()]);
         }
 
-        if (currentIndex > localFetchEnd.current) {
-          localFetchEnd.current += BUFFER_INCREMENT;
-          //fetchForward(localFetchEnd.current);
+        if (currentIndex * 7 > localFetchEnd.current) {
+          localFetchEnd.current += BUFFER_INCREMENT * 4;
+          fetchForward(localFetchEnd.current, 4);
         }
-        if (currentIndex < localFetchStart.current) {
-          localFetchStart.current -= BUFFER_INCREMENT;
-          //fetchBackward(localFetchStart.current);
+        if (currentIndex * 7 < localFetchStart.current) {
+          localFetchStart.current -= BUFFER_INCREMENT * 4;
+          fetchBackward(localFetchStart.current, 4);
         }
-        console.log(localFetchEnd.current, localFetchStart.current);
       }
     },
     [currentMonthText, fetchForward, fetchBackward],
@@ -212,7 +211,7 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
         </View>
       );
     },
-    [sundays, weekHeight],
+    [sundays, weekHeight, allDayWithLayout],
   );
 
   return (

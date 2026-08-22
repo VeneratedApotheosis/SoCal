@@ -49,6 +49,6 @@ export const DRAWER_DRAGGABLE_HEIGHT = 36;
 export const PAST_BUFFER = 2000;
 export const FUTURE_BUFFER = 2000;
 export const FETCH_INITIAL_BUFFER = 10; //in milliseconds
-export const BUFFER_INCREMENT = 20;
+export const BUFFER_INCREMENT = 14;
 export const DAYS_PADDING_THRESHOLD = 5;
 export const MAX_RESULTS = '250';

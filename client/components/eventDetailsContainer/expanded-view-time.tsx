@@ -210,12 +210,10 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate, setError }: Eve
         onUpdate(field, date);
         if (field === 'startDate') {
           const diff = date.getTime() - event.endDate.getTime();
-          console.log(diff);
           if (diff > 0) setError(true);
           else setError(false);
         } else if (field === 'endDate') {
           const diff = event.startDate.getTime() - date.getTime();
-          console.log(diff);
           if (diff > 0) setError(true);
           else setError(false);
         }

@@ -34,7 +34,6 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean) {
         clearCalendarEvents();
         return;
       }
-      console.log('fetching calendar events');
 
       //Fetching Start and End Date Calculation
       let fetchStartDate: Date = new Date();
@@ -43,7 +42,7 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean) {
         fetchStartDate = addDays(fetchStartDate, fetchStart);
         fetchEndDate = addDays(fetchEndDate, fetchEnd);
       } else if (!fetchStart && !fetchEnd) {
-        //Starting fetch scheme
+        //Days Starting Fetch
         fetchStartDate = addDays(fetchStartDate, -2 * BUFFER_INCREMENT);
         fetchEndDate = addDays(fetchEndDate, 2 * BUFFER_INCREMENT);
       } else if (fetchStart) {
@@ -54,7 +53,9 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean) {
         //fetch forward/end
         fetchStartDate = addDays(fetchStartDate, fetchEnd);
         fetchEndDate = addDays(fetchEndDate, fetchEnd + BUFFER_INCREMENT);
+        console.log(fetchEnd, fetchEnd + BUFFER_INCREMENT);
       }
+      console.log('[FETCH] calendar events');
 
       setIsLoading(true);
       setError(null);

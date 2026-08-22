@@ -25,8 +25,8 @@ export interface EventsContextType {
   isWriting: boolean;
   writeError: string | null;
   refetchCalendar: (fetchStart: number | null, fetchEnd: number | null) => Promise<void>;
-  fetchForward: (fetchEnd: number) => void;
-  fetchBackward: (fetchEnd: number) => void;
+  fetchForward: (fetchEnd: number, n: number) => void;
+  fetchBackward: (fetchEnd: number, n: number) => void;
   reloadCalendar: () => void;
   uniqueCalendars: CalendarData[];
   setUniqueCalendars: React.Dispatch<React.SetStateAction<CalendarData[]>>;
@@ -84,8 +84,10 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
 
   // ─── Event Mutation Hook ───────────────────────────────────────────────────────────
 
+  //the limits to what has been fetched
   const [fetchEnd, setFetchEnd] = useState<number>(2 * BUFFER_INCREMENT);
   const [fetchStart, setFetchStart] = useState<number>(-2 * BUFFER_INCREMENT);
+
   const mutateEvent = useMutateEvent(uniqueCalendars, setCalendars, setUniqueCalendars, fetchStart, fetchEnd);
 
   // ─── Fetching ───────────────────────────────────────────────────────────
@@ -93,27 +95,31 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (calendarType.type !== localCalType) {
       if (calendarType.type === 'W') {
-        refetchCalendar(-8 * BUFFER_INCREMENT, 8 * BUFFER_INCREMENT);
+        const targetStart = -1 * (calendarType.num + 8) * 7;
+        const targetEnd = (calendarType.num + 8) * 7;
+        refetchCalendar(Math.min(targetStart, fetchStart), Math.max(targetEnd, fetchEnd));
+        setFetchStart(Math.min(targetStart, fetchStart));
+        setFetchEnd(Math.max(targetEnd, fetchEnd));
       }
       setLocalCalType(calendarType.type);
-      setFetchEnd(Math.max(6 * BUFFER_INCREMENT, fetchEnd));
-      setFetchStart(Math.max(-6 * BUFFER_INCREMENT, fetchEnd));
     }
   }, [calendarType]);
 
-  const fetchForward = (fetchEnd: number) => {
-    refetchCalendar(null, fetchEnd);
-    setFetchEnd(fetchEnd);
+  const fetchForward = (fetchEnd: number, n: number) => {
+    refetchCalendar(fetchEnd, fetchEnd + n * BUFFER_INCREMENT);
+    setFetchEnd(Math.max(fetchEnd + BUFFER_INCREMENT));
   };
 
-  const fetchBackward = (fetchStart: number) => {
-    refetchCalendar(fetchStart, null);
-    setFetchStart(fetchStart);
+  const fetchBackward = (fetchStart: number, n: number) => {
+    refetchCalendar(fetchStart - n * BUFFER_INCREMENT, fetchStart);
+    setFetchStart(Math.min(fetchStart - BUFFER_INCREMENT));
   };
 
   const reloadCalendar = () => {
     refetchCalendar(fetchStart, fetchEnd);
   };
+
+  console.log(fetchStart, fetchEnd);
 
   return (
     <EventsContext.Provider

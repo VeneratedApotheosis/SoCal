@@ -29,7 +29,8 @@ export const getAllDayChipStyles = (isDark: boolean) => {
       marginTop: AllDayStyles.bottomMargin,
       borderRadius: 0,
       padding: AllDayStyles.padding,
-      justifyContent: 'center',
+      ...baseFlexStyles.rowLeft,
+      gap: AllDayStyles.padding,
     },
     newEvent: {
       padding: 4,

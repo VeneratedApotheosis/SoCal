@@ -3,7 +3,6 @@ import {
   ALL_DAY_HEIGHT,
   BUFFER_INCREMENT,
   DATE_HEADER_HEIGHT,
-  FETCH_INITIAL_BUFFER,
   HOUR_LABEL_WIDTH,
   PAST_BUFFER,
   WEB_DATE_HEADER_PADDING,
@@ -368,8 +367,9 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
   // ─── Fetching and Month Changing ───────────────────────────────────────────────────────────
 
   const { fetchForward, fetchBackward } = useCalendarEvents();
-  const localFetchStart = useRef(-FETCH_INITIAL_BUFFER);
-  const localFetchEnd = useRef(FETCH_INITIAL_BUFFER);
+  //the limits to what will trigger a fetch. NOT THE SAME AS THE LIMITS FETCHED
+  const localFetchStart = useRef(-BUFFER_INCREMENT);
+  const localFetchEnd = useRef(BUFFER_INCREMENT);
 
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: any) => {
@@ -390,11 +390,11 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
 
         if (currentIndex > localFetchEnd.current) {
           localFetchEnd.current += BUFFER_INCREMENT;
-          fetchForward(localFetchEnd.current);
+          fetchForward(localFetchEnd.current, 1);
         }
         if (currentIndex < localFetchStart.current) {
           localFetchStart.current -= BUFFER_INCREMENT;
-          fetchBackward(localFetchStart.current);
+          fetchBackward(localFetchStart.current, 1);
         }
       }
     },

@@ -1,6 +1,11 @@
 // hooks/useEventGrouping.ts
 import { EventObj, EventWithLayout } from '@/utility/types';
 
+type ClusterLayout = Omit<EventWithLayout, 'maxOffset'> & {
+  dayStart: number;
+  dayEnd: number;
+};
+
 // ─── All Day Events Layout Manager ───────────────────────────────────────────────────────────
 
 export const calculateAllDayLayouts = (rawAllDayEvents: EventObj[]) => {
@@ -26,26 +31,22 @@ export const calculateAllDayLayouts = (rawAllDayEvents: EventObj[]) => {
   let currentAllDayCluster: EventObj[] = [];
   let allDayClusterEnd = 0;
 
-  //Process Cluster, moving longest events to top and adding padding
   const processAllDayCluster = (cluster: EventObj[]) => {
     if (cluster.length === 0) return;
 
-    const clusterLayouts: Omit<EventWithLayout, 'maxOffset'>[] = [];
+    const clusterLayouts: ClusterLayout[] = [];
     let currentMaxOffset = 0;
 
     cluster.forEach((currentEvent) => {
-      const currentStart = new Date(currentEvent.startDate).getTime();
-      const currentEnd = currentEvent.endDate ? new Date(currentEvent.endDate).getTime() : currentStart;
+      const { startTime: dayStart, endTime: dayEnd } = getEventDayRange(currentEvent);
 
-      const overlappingEvents = clusterLayouts.filter((placed) => {
-        const placedStart = new Date(placed.startDate).getTime();
-        const placedEnd = new Date(placed.endDate).getTime();
-        return currentStart < placedEnd && currentEnd > placedStart;
-      });
+      const occupiedOffsets = new Set(
+        clusterLayouts.filter((placed) => dayStart <= placed.dayEnd && dayEnd >= placed.dayStart).map((placed) => placed.offset),
+      );
 
-      const occupiedOffsets = overlappingEvents.map((e) => e.offset);
       let firstFreeOffset = 0;
-      while (occupiedOffsets.includes(firstFreeOffset)) {
+
+      while (occupiedOffsets.has(firstFreeOffset)) {
         firstFreeOffset++;
       }
 
@@ -57,12 +58,18 @@ export const calculateAllDayLayouts = (rawAllDayEvents: EventObj[]) => {
         startDate: currentEvent.startDate,
         endDate: currentEvent.endDate,
         dummy: false,
+        dayStart,
+        dayEnd,
       });
     });
 
     clusterLayouts.forEach((layout) => {
       globalAllDayLayouts.push({
-        ...layout,
+        event: layout.event,
+        offset: layout.offset,
+        startDate: layout.startDate,
+        endDate: layout.endDate,
+        dummy: layout.dummy,
         maxOffset: currentMaxOffset,
       });
     });
@@ -70,13 +77,15 @@ export const calculateAllDayLayouts = (rawAllDayEvents: EventObj[]) => {
 
   // Create clusters and process
   sortedAllDayEvents.forEach((event) => {
-    const start = new Date(event.startDate).getTime();
-    const end = event.endDate ? new Date(event.endDate).getTime() : start;
+    const { startDay, endDay } = getEventDayRange(event);
+
+    const start = startDay.getTime();
+    const end = endDay.getTime();
 
     if (currentAllDayCluster.length === 0) {
       currentAllDayCluster.push(event);
       allDayClusterEnd = end;
-    } else if (start < allDayClusterEnd) {
+    } else if (start <= allDayClusterEnd) {
       currentAllDayCluster.push(event);
       allDayClusterEnd = Math.max(allDayClusterEnd, end);
     } else {
@@ -244,4 +253,27 @@ export const calculateTimedLayouts = (timed: Record<string, { event: EventObj; s
   });
 
   return timedWithLayout;
+};
+
+const getEventDayRange = (event: EventObj) => {
+  const start = new Date(event.startDate);
+  const end = event.endDate ? new Date(event.endDate) : new Date(event.startDate);
+
+  // Normalize start to the beginning of its calendar day
+  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+
+  // Normalize end to the beginning of its calendar day
+  let endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
+  // If the event ends exactly at midnight, that day is NOT occupied.
+  if (end.getHours() === 0 && end.getMinutes() === 0 && end.getSeconds() === 0 && end.getMilliseconds() === 0) {
+    endDay.setDate(endDay.getDate() - 1);
+  }
+
+  return {
+    startDay,
+    endDay,
+    startTime: startDay.getTime(),
+    endTime: endDay.getTime(),
+  };
 };

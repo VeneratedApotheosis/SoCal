@@ -3,7 +3,7 @@ import { useEventColors } from '@/hooks/useEventColor';
 import { EventObj, EventWithLayout } from '@/utility/types';
 import React, { memo, useMemo } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
 import { useUIContext } from '../contexts/ui-context';
 import { eventsAreEqual } from '../eventDetailsContainer/expanded-view';
@@ -31,6 +31,7 @@ function AllDayEvents({ event, day, layout, handlePress, dayWidth, isVisible, se
   const selectedThisEvent = !!selectedEventId && isVisible && selectedEventId === event.id;
   const { rawColor, borderColor, textColor } = useEventColors(event.calendarId);
 
+  //length and position of event
   const { isStart, isEnd, isMiddle } = useMemo(() => {
     let isStart = false;
     let isEnd = false;
@@ -40,8 +41,10 @@ function AllDayEvents({ event, day, layout, handlePress, dayWidth, isVisible, se
     if (!isStart && !isEnd) isMiddle = true;
     return { isStart, isEnd, isMiddle };
   }, [layout, event]);
-  const islatedEvent = isStart && isEnd;
+  const isolatedEvent = isStart && isEnd;
+  const notAllDay = isolatedEvent && !event.allDay;
 
+  //opacity for transparent and isolation
   const opacity = useMemo(() => {
     const calId = event.calendarId;
     const cal = calendarObjs?.find((c) => c.calendarId === calId);
@@ -60,10 +63,7 @@ function AllDayEvents({ event, day, layout, handlePress, dayWidth, isVisible, se
   const msPerDay = 86400000;
   const startMs = new Date(layout.startDate).setHours(0, 0, 0, 0);
   const endMs = layout.endDate ? new Date(layout.endDate).setHours(0, 0, 0, 0) : startMs;
-  const today = new Date().setHours(0, 0, 0, 0);
-  const isRegistered = useSharedValue<boolean>(false);
   const currentMs = new Date(day).setHours(0, 0, 0, 0);
-  const xOffset = Math.round((today - startMs) / msPerDay) * dayWidth;
 
   let totalDays = Math.max(1, Math.round((endMs - startMs) / msPerDay) + 1);
   if (event.allDay) totalDays--;
@@ -92,6 +92,7 @@ function AllDayEvents({ event, day, layout, handlePress, dayWidth, isVisible, se
   return (
     <View style={{ overflow: 'hidden' }} key={key}>
       {isDummy ? (
+        //DUMMY EVENT
         <View
           style={[
             styles.eventContainer,
@@ -101,7 +102,30 @@ function AllDayEvents({ event, day, layout, handlePress, dayWidth, isVisible, se
             },
           ]}
         ></View>
+      ) : notAllDay ? (
+        //NOT ALL DAY EVENT
+        <Pressable
+          onPress={(e: any) => handlePress(event, e)}
+          style={[
+            styles.eventContainer,
+            {
+              width: width,
+              marginLeft: marginLeft,
+              opacity: opacity,
+            },
+            selectedThisEvent && { backgroundColor: borderColor, borderLeftColor: borderColor },
+          ]}
+        >
+          <View style={{ width: 6, height: 6, backgroundColor: borderColor, borderRadius: 999 }}></View>
+          <Text
+            style={[styles.eventText, { color: selectedThisEvent ? (theme.isDark ? textColor : rawColor) : textColor }]}
+            numberOfLines={1}
+          >
+            {event.title}
+          </Text>
+        </Pressable>
       ) : (
+        //NORMAL ALL DAY EVENT
         <Pressable
           onPress={(e: any) => handlePress(event, e)}
           style={[
@@ -123,7 +147,7 @@ function AllDayEvents({ event, day, layout, handlePress, dayWidth, isVisible, se
             selectedThisEvent && { backgroundColor: borderColor, borderLeftColor: borderColor },
           ]}
         >
-          {islatedEvent ? (
+          {isolatedEvent ? (
             // Isolated Event Text
             <Text
               style={[styles.eventText, { color: selectedThisEvent ? (theme.isDark ? textColor : rawColor) : textColor }]}
