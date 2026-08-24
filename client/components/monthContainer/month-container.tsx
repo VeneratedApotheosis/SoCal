@@ -1,8 +1,9 @@
 import { useWeeklyEventGrouping } from '@/hooks/calendarHooks/useEventGrouping';
 import { BUFFER_INCREMENT, PAST_BUFFER, WEB_Y_PADDING } from '@/utility/constants';
 import { getPositionsFromPointer } from '@/utility/drawerUtil';
+import { createEventObj } from '@/utility/eventUtils';
 import { getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
-import { CalendarView, EventObj, EventWithLayout } from '@/utility/types';
+import { CalendarView, EventObj } from '@/utility/types';
 import { FlashList, FlashListRef } from '@shopify/flash-list';
 import { addDays } from 'date-fns';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -15,7 +16,8 @@ import { useCalendarRange } from '../contexts/calendar-range-context';
 import { useScreenSize } from '../contexts/screen-size-context';
 import { useTimeZoneContext } from '../contexts/time-zone-context';
 import { useUIContext } from '../contexts/ui-context';
-import { webEventHeight, webEventWidth } from '../eventDetailsContainer/web-event-details';
+import EventDetails from '../eventDetailsContainer/event-details';
+import WebEventDetails, { webEventHeight, webEventWidth } from '../eventDetailsContainer/web-event-details';
 import WeekBox from './week-container';
 
 const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
@@ -39,7 +41,6 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
 
   const rowNum = calendarType.num || 5;
   const weekHeight = Math.floor(GRID_HEIGHT / rowNum);
-  const [initialWeekHeight] = useState<number>(weekHeight);
   const sharedWeekHeight = useSharedValue(weekHeight);
   useEffect(() => {
     sharedWeekHeight.value = weekHeight;
@@ -112,6 +113,12 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
     [eventDetailsVisible, webDetailsVisible, isWeb],
   );
 
+  useEffect(() => {
+    if (!eventDetailsVisible && !webDetailsVisible) {
+      setNewEvent(null);
+    }
+  }, [eventDetailsVisible, webDetailsVisible]);
+
   const handleWebPress = (coords: { x: number; y: number } | any) => {
     let { pageX, pageY } = { pageX: 0, pageY: 0 };
     if (coords && 'x' in coords) {
@@ -131,6 +138,28 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
     setWebDetailsVisible(false);
     setNewEvent(null);
   };
+
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('CREATE_EVENT', () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const draftEvent = createEventObj(
+        {
+          startDate: today,
+          endDate: addDays(today, 1),
+          title: '',
+          allDay: true,
+        },
+        timeZone,
+      );
+      console.log('CREATING EVENT');
+      handlePress(draftEvent, true, { x: SCREEN_WIDTH / 2 - webEventWidth / 2, y: SCREEN_HEIGHT / 2 });
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [handlePress, SCREEN_WIDTH, SCREEN_HEIGHT]);
 
   // ─── Scroll Variables ───────────────────────────────────────────────────────────
 
@@ -199,19 +228,41 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
   const renderWeek = useCallback(
     ({ item }: any) => {
       const sundayDay: Date = item.date;
-      const events: { day: Date; event: EventWithLayout[] | undefined }[] = [];
-      for (let i = 0; i < 7; i++) {
+
+      const weekEvents = Array.from({ length: 7 }, (_, i) => {
         const tempDay = addDays(sundayDay, i);
-        const event = allDayWithLayout[tempDay.toDateString()];
-        events.push({ day: tempDay, event: event });
+
+        return {
+          day: tempDay,
+          event: allDayWithLayout[tempDay.toDateString()],
+        };
+      });
+
+      let selectedId: string | null = null;
+
+      if (selectedEvent) {
+        for (const { event } of weekEvents) {
+          if (event?.some((e) => e.event.id === selectedEvent.id)) {
+            selectedId = selectedEvent.id;
+            break;
+          }
+        }
       }
+
       return (
         <View style={{ flex: 1, flexDirection: 'row', height: weekHeight }}>
-          <WeekBox day={item.date} weekHeight={weekHeight} events={events} />
+          <WeekBox
+            day={sundayDay}
+            weekHeight={weekHeight}
+            events={weekEvents}
+            handlePress={handlePress}
+            newEvent={newEvent}
+            selectedEventId={selectedId}
+          />
         </View>
       );
     },
-    [sundays, weekHeight, allDayWithLayout],
+    [weekHeight, allDayWithLayout, handlePress, selectedEvent, newEvent],
   );
 
   return (
@@ -228,6 +279,16 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
         key={`timeline-width-${weekHeight}`}
+      />
+      <EventDetails event={selectedEvent} isVisible={eventDetailsVisible} onClose={() => setEventDetailsVisible(false)} />
+      <WebEventDetails
+        event={selectedEvent}
+        isVisible={webDetailsVisible}
+        onClose={closeEventDetails}
+        top={menuPos.top}
+        left={menuPos.left}
+        setNewEvent={setNewEvent}
+        newEvent={newEvent}
       />
     </Animated.View>
   );

@@ -1,5 +1,6 @@
 import { WEB_MUTED_PADDING } from '@/utility/constants';
 import { getHeaderStyles, getIconColor } from '@/utility/globalStyles';
+import { COLORS } from '@/utility/theme';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DrawerActions } from '@react-navigation/native';
 import { useNavigation } from 'expo-router';
@@ -61,6 +62,30 @@ export default function CalendarHeader() {
 
           <View style={styles.headerButtonContainer}>
             <FetchStatusIcon />
+
+            <View style={{ zIndex: 10 }}>
+              {/* Dropdown Trigger */}
+              {!!isWeb ? (
+                <Pressable
+                  style={styles.createContainer}
+                  onPress={() => {
+                    DeviceEventEmitter.emit('CREATE_EVENT');
+                  }}
+                >
+                  <Ionicons name="add-outline" size={20} color={theme.isDark ? COLORS.text.light : COLORS.text.dark} />
+                  <Text style={styles.createText}>Create</Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  style={[styles.createButton, { borderRadius: 24 }]}
+                  onPress={() => {
+                    DeviceEventEmitter.emit('CREATE_EVENT');
+                  }}
+                >
+                  <Ionicons name="add-outline" size={24} color={theme.isDark ? COLORS.text.light : COLORS.text.dark} />
+                </Pressable>
+              )}
+            </View>
             {!!isWeb && <CalendarTypePicker />}
             <View style={{ justifyContent: 'center' }}>
               <Pressable onPress={handleSettingspress}>

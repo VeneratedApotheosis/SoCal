@@ -64,7 +64,7 @@ export const indexStyles = (isDark: boolean) => {
     container: {
       flex: 1,
       height: '100%',
-      overflow: 'hidden', // Prevents outer page dragging
+      overflow: 'hidden',
     },
     web: {
       flex: 1,

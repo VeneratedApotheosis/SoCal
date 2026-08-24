@@ -178,6 +178,28 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
     setNewEvent(null);
   };
 
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('CREATE_EVENT', () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const draftEvent = createEventObj(
+        {
+          startDate: addDays(today, Math.floor(scrollX.value / dayWidth + dividers / 2) - PAST_BUFFER),
+          endDate: addDays(today, Math.floor(scrollX.value / dayWidth + dividers / 2) - PAST_BUFFER + 1),
+          title: '',
+          allDay: true,
+        },
+        timeZone,
+      );
+      console.log('CREATING EVENT');
+      handlePress(draftEvent, true, { x: SCREEN_WIDTH / 2 - webEventWidth / 2, y: SCREEN_HEIGHT / 2 });
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [handlePress, SCREEN_WIDTH, SCREEN_HEIGHT, dayWidth, dividers]);
+
   // ─── Scroll Variables ───────────────────────────────────────────────────────────
 
   const scrollX = useSharedValue<number>(initialDayWidth * PAST_BUFFER);
@@ -422,14 +444,14 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
         eventsWithLayout={groupedTimedEvents[item.date.toDateString()] ?? EMPTY_EVENTS}
         allDayEvents={groupedAllDayEvents[item.date.toDateString()] ?? EMPTY_ALL_DAY}
         hourHeight={hourHeight}
-        handlePress={handlePress}
         scrollY={scrollY}
-        isVisible={eventDetailsVisible || webDetailsVisible}
-        selectedEventId={selectedEvent?.id ? selectedEvent?.id : null}
         currentAllDayHeight={currentAllDayHeight}
         eventPool={eventPool}
         widthsDictionary={widthsDictionary}
+        handlePress={handlePress}
         newEvent={newEvent}
+        selectedEventId={selectedEvent?.id ? selectedEvent?.id : null}
+        isVisible={eventDetailsVisible || webDetailsVisible}
         dragStartDayIdx={dragStartDayIdx}
         dragStartMin={dragStartMins}
         dragCurrentDayMin={dragCurrentMins}

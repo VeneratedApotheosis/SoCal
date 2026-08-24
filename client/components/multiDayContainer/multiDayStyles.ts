@@ -20,7 +20,6 @@ export const getAllDayChipStyles = (isDark: boolean) => {
   return StyleSheet.create({
     eventContainer: {
       borderWidth: 0,
-      ...baseTheme.background,
       borderColor: isDark ? COLORS.black : COLORS.white,
       overflow: 'visible',
       position: 'relative',

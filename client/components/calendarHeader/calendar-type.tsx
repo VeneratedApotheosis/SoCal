@@ -97,7 +97,7 @@ export const CalendarTypeStyles = (isDark: boolean) => {
     stepperInput: {
       width: 56,
       textAlign: 'center',
-      paddingVertical: 10,
+      paddingVertical: 12,
       ...baseText.input,
       ...baseText.noBorder,
     },
@@ -111,7 +111,7 @@ export const CalendarTypeStyles = (isDark: boolean) => {
       borderRadius: 12,
       ...baseTheme.background,
       paddingHorizontal: 16,
-      paddingVertical: 11,
+      paddingVertical: 12,
       gap: 8,
     },
     dropdownTriggerText: {

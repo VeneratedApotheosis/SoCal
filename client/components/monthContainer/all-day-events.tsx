@@ -14,7 +14,6 @@ export interface Props {
   layout: EventWithLayout;
   handlePress: (event: EventObj, e: any) => void;
   dayWidth: number;
-  isVisible: boolean;
   selectedEventId: string | null;
   isDummy: boolean;
   idx: number;
@@ -23,12 +22,13 @@ export interface Props {
 const darkStyles = getAllDayChipStyles(true);
 const lightStyles = getAllDayChipStyles(false);
 
-function AllDayEvents({ event, day, layout, handlePress, dayWidth, isVisible, selectedEventId, isDummy, idx }: Props) {
+function AllDayEvents({ event, day, layout, handlePress, dayWidth, selectedEventId, isDummy, idx }: Props) {
+  //console.log('creating event');
   const { theme, transparentOpacity } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;
   const { calendarObjs, calViewMode } = useCalendarObjects();
 
-  const selectedThisEvent = !!selectedEventId && isVisible && selectedEventId === event.id;
+  const selectedThisEvent = !!selectedEventId && selectedEventId === event.id;
   const { rawColor, borderColor, textColor } = useEventColors(event.calendarId);
 
   //length and position of event
@@ -87,7 +87,7 @@ function AllDayEvents({ event, day, layout, handlePress, dayWidth, isVisible, se
     return { opacity: 1, position: 'absolute', left: left };
   });
 
-  const key = event.id + ' ' + idx + ' ' + day.toISOString();
+  const key = event.id + ' ' + idx + ' ' + layout.offset + ' ' + day.toISOString();
 
   return (
     <View style={{ overflow: 'hidden' }} key={key}>
@@ -112,6 +112,7 @@ function AllDayEvents({ event, day, layout, handlePress, dayWidth, isVisible, se
               width: width,
               marginLeft: marginLeft,
               opacity: opacity,
+              borderRadius: AllDayStyles.borderRadius,
             },
             selectedThisEvent && { backgroundColor: borderColor, borderLeftColor: borderColor },
           ]}
@@ -183,12 +184,10 @@ function AllDayEvents({ event, day, layout, handlePress, dayWidth, isVisible, se
 
 const areEqual = (prevProps: Props, nextProps: Props) => {
   if (prevProps.dayWidth !== nextProps.dayWidth) return false;
-  if (prevProps.isVisible !== nextProps.isVisible) return false;
   if (!eventsAreEqual(prevProps.event, nextProps.event)) return false;
 
   const wasSelected = prevProps.selectedEventId === prevProps.event.id;
   const isSelected = nextProps.selectedEventId === nextProps.event.id;
-
   if (wasSelected !== isSelected) return false;
 
   return true;

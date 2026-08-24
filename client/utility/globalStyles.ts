@@ -336,5 +336,24 @@ export const getHeaderStyles = (isDark: boolean) => {
       ...baseText.subtitle,
       color: 'white',
     },
+    createContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: 12,
+      ...baseTheme.background,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      gap: 8,
+    },
+    createButton: {
+      width: 35,
+      height: 35,
+      borderRadius: 12,
+      ...baseTheme.background,
+      ...baseFlexStyles.centerAll,
+    },
+    createText: {
+      ...baseText.subtitle,
+    },
   });
 };

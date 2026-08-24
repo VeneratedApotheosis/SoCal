@@ -53,20 +53,30 @@ export const MutateButtons = ({
         : COLORS.primaryy.mutedBackgroundLight;
 
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
       {editableEvent && creatingEvent && (
-        <Pressable
-          style={[styles.mutateButtons, { flex: 1, backgroundColor: blueBackgorund }]}
-          onPress={() => {
-            if (editableEvent && creatingEvent && event.title !== '' && !timeError) {
+        <>
+          <Pressable
+            style={[styles.mutateButtons, { flex: 1, backgroundColor: blueBackgorund }]}
+            onPress={() => {
+              if (editableEvent && creatingEvent && event.title !== '' && !timeError) {
+                closeModal();
+                mutateEvent.createEvent(event);
+              }
+            }}
+          >
+            <Ionicons name={'add-outline'} size={16} color={blueText} />
+            <Text style={[styles.mutateButtonsText, { color: blueText }]}>Create Event</Text>
+          </Pressable>
+          <Pressable
+            style={styles.mutateButtons}
+            onPress={() => {
               closeModal();
-              mutateEvent.createEvent(event);
-            }
-          }}
-        >
-          <Ionicons name={'add-outline'} size={16} color={blueText} />
-          <Text style={{ marginRight: 5, color: blueText }}>Create Event</Text>
-        </Pressable>
+            }}
+          >
+            <Text style={styles.mutateButtonsText}>Cancel</Text>
+          </Pressable>
+        </>
       )}
 
       {editableEvent && !creatingEvent && (
@@ -77,9 +87,17 @@ export const MutateButtons = ({
               if (hasChanges && !timeError) handleEditModal();
             }}
           >
-            <Text style={{ marginHorizontal: 5, color: blueText }}>Save Changes</Text>
+            <Text style={[styles.mutateButtonsText, { color: blueText }]}>Save Changes</Text>
           </Pressable>
           <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Pressable
+              style={styles.mutateButtons}
+              onPress={() => {
+                closeModal();
+              }}
+            >
+              <Text style={styles.mutateButtonsText}>Cancel</Text>
+            </Pressable>
             <Pressable
               style={styles.mutateButtons}
               onPress={() => {

@@ -55,6 +55,11 @@ export const eventViewStyles = (isDark: boolean) => {
       alignSelf: 'flex-start',
       ...baseFlexStyles.rowCenter,
     },
+    mutateButtonsText: {
+      ...baseText.subtitle,
+      fontWeight: '400',
+      marginHorizontal: 5,
+    },
     titleInput: {
       ...baseText.title,
       fontSize: 26,

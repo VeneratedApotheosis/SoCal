@@ -48,7 +48,7 @@ export const getEventDayBounds = (newEvent: EventObj | null | undefined, day: Da
   const startsToday = eventStartTime >= thisDay && eventStartTime < thisDay + msPerDay;
   const startsBeforeToday = eventStartTime < thisDay;
   const endsToday = eventEndTime >= thisDay && eventEndTime < thisDay + msPerDay;
-  const endsTodayOrLater = eventEndTime >= thisDay;
+  const endsTodayOrLater = eventEndTime > thisDay;
   const endsAfterToday = eventEndTime > thisDay;
 
   return {
@@ -81,14 +81,14 @@ export interface DayContainerProps {
   hourHeight: number;
   eventsWithLayout: EventWithLayout[];
   allDayEvents: EventWithLayout[];
-  handlePress: (event: EventObj | null, newEvent: boolean, e: any) => void;
   scrollY: SharedValue<number>;
-  isVisible: boolean;
-  selectedEventId: string | null;
   currentAllDayHeight: SharedValue<number>;
   eventPool: SharedValue<AllDayPool[]>;
   widthsDictionary: Record<string, number>;
+  handlePress: (event: EventObj | null, newEvent: boolean, e: any) => void;
   newEvent: EventObj | null;
+  isVisible: boolean;
+  selectedEventId: string | null;
   dragStartDayIdx: SharedValue<number>;
   dragStartMin: SharedValue<number>;
   dragCurrentDayMin: SharedValue<number>;
@@ -245,7 +245,7 @@ export default function DayContainer({
             onPress={(event) => {
               const startTime = new Date(day);
               startTime.setHours(0, 0, 0);
-              const endTime = addHours(startTime, isWeb ? 24 : 25);
+              const endTime = addHours(startTime, 24);
               const draftEvent = createEventObj(
                 {
                   startDate: startTime,

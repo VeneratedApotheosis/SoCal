@@ -119,8 +119,6 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
     refetchCalendar(fetchStart, fetchEnd);
   };
 
-  console.log(fetchStart, fetchEnd);
-
   return (
     <EventsContext.Provider
       value={{
