@@ -41,7 +41,7 @@ export default function DraggableCalendar({
   const isDragging = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
   const { theme } = useUIContext();
-  const { calViewMode: viewMode, setCalViewMode: setViewMode, toggleTransparent, toggleIsolate } = useCalendarObjects();
+  const { calViewMode: viewMode, toggleTransparent, toggleIsolate } = useCalendarObjects();
 
   const gesture = Gesture.Pan()
     .activateAfterLongPress(250)
@@ -126,7 +126,7 @@ export default function DraggableCalendar({
   });
 
   const dynamicBackgroundStyle = useMemo(() => {
-    let backgroundColor = theme.isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight;
+    let backgroundColor: string = theme.isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight;
 
     const isMatchingTransparent = viewMode === 'transparent' && cal.calendar?.visibility === 'transparent';
     const isMatchingIsolate = viewMode === 'isolate' && cal.calendar?.visibility === 'isolate';

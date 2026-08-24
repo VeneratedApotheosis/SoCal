@@ -1,5 +1,6 @@
 import { useColorCache } from '@/hooks/useColorCache';
 import { useTheme } from '@/hooks/useTheme';
+import { useVisibleSettings } from '@/hooks/useVisibleSettings';
 import { DEFAULT_TRANSPARENCY } from '@/utility/constants';
 import { colorCache } from '@/utility/types';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
@@ -51,7 +52,7 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
   const [isSidebarLoading, setSidebarLoading] = useState<boolean>(true);
   const [transparentOpacity, setTransparencyOpacity] = useState<number>(DEFAULT_TRANSPARENCY);
   const [multiDayInHeader, setMultiDayInHeader] = useState<boolean>(true);
-  const [visibleSettings, setVisibleSettings] = useState<Set<string>>(new Set());
+  const { visibleSettings, setVisibleSettings } = useVisibleSettings();
 
   // ─── Now ───────────────────────────────────────────────────────────
 
