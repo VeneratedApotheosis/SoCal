@@ -1,5 +1,8 @@
 import React from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Image, ImageSourcePropType, Pressable, StyleSheet } from 'react-native';
+
+import googleButtonAsset from '@/assets/images/GoogleButton.svg';
+import googleLogoAsset from '@/assets/images/GoogleLogo.svg';
 
 type Props = {
   onPress: () => void;
@@ -8,17 +11,22 @@ type Props = {
 };
 
 export function GoogleWeb({ onPress, width, height }: Props) {
+  const w = width || 180;
+  const h = height || 40;
+
   return (
     <Pressable onPress={onPress} style={webStyles.button} accessibilityRole="button" accessibilityLabel="Sign in with Google">
-      <img src="/GoogleButton.svg" width={width || 180} height={height || 40} alt="Sign in with Google" />
+      <Image source={googleButtonAsset as ImageSourcePropType} style={{ width: w, height: h }} />
     </Pressable>
   );
 }
 
 export function GoogleLogoWeb({ onPress, width, height }: Props) {
+  const w = width || 180;
+  const h = height || 180;
   return (
     <Pressable onPress={onPress} style={webStyles.button} accessibilityRole="button" accessibilityLabel="Sign in with Google">
-      <img src="/GoogleLogo.svg" width={width || 180} height={height || 180} alt="Sign in with Google" />
+      <Image source={googleLogoAsset as ImageSourcePropType} style={{ width: w, height: h }} />
     </Pressable>
   );
 }

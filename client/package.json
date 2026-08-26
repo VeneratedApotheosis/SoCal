@@ -29,6 +29,7 @@
     "@shopify/flash-list": "^2.2.2",
     "@stream-io/flat-list-mvcp": "^0.10.3",
     "@supabase/supabase-js": "^2.110.8",
+    "@svgr/plugin-svgo": "^8.1.0",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "expo": "~54.0.31",
