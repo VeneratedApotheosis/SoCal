@@ -446,8 +446,6 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
         hourHeight={hourHeight}
         scrollY={scrollY}
         currentAllDayHeight={currentAllDayHeight}
-        eventPool={eventPool}
-        widthsDictionary={widthsDictionary}
         handlePress={handlePress}
         newEvent={newEvent}
         selectedEventId={selectedEvent?.id ? selectedEvent?.id : null}

@@ -152,7 +152,6 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
         },
         timeZone,
       );
-      console.log('CREATING EVENT');
       handlePress(draftEvent, true, { x: SCREEN_WIDTH / 2 - webEventWidth / 2, y: SCREEN_HEIGHT / 2 });
     });
 

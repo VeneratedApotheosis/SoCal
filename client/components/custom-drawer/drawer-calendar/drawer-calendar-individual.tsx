@@ -51,7 +51,7 @@ export default function CalendarDrawerList({
 
   //Sync color with colorCache
   useEffect(() => {
-    setColor(lightenColor(colorCache.getCalendarColor(calendarObj.calendarId), 'border', theme.isDark));
+    setColor(lightenColor(colorCache.getCalendarColor(calendarObj.calendarId, calendarObj), 'border', theme.isDark));
   }, [colorCache.allCaches, colorCache.activeCacheId, lightenColor, theme.isDark]);
 
   return (

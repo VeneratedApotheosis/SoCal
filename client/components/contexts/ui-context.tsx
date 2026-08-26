@@ -2,7 +2,7 @@ import { useColorCache } from '@/hooks/useColorCache';
 import { useTheme } from '@/hooks/useTheme';
 import { useVisibleSettings } from '@/hooks/useVisibleSettings';
 import { DEFAULT_TRANSPARENCY } from '@/utility/constants';
-import { colorCache } from '@/utility/types';
+import { calendarObj, colorCache } from '@/utility/types';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { useCalendarObjects } from './calendar-obj-context';
 
@@ -17,7 +17,7 @@ interface UIContextType {
     changePalette: (newPaletteId: number, newPaletteName: string, newColors: string[]) => void;
     syncCacheToPalette: (updatedPalette: string[]) => void;
     setManualCalendarColor: (calendarId: string, hexColor: string) => void;
-    getCalendarColor: (calendarId: string) => string;
+    getCalendarColor: (calendarId: string, calendar?: calendarObj) => string;
   };
   theme: {
     themeMode: string;

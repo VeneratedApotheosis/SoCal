@@ -25,6 +25,7 @@ export interface DraggableCalendarProps {
   activeIndex: SharedValue<number | null>;
   isHovering: SharedValue<boolean>;
   drawerScrollViewRef?: React.RefObject<ScrollView | null>;
+  backgroundColor?: string;
 }
 
 //Each Individual Calendar
@@ -37,6 +38,7 @@ export default function DraggableCalendar({
   activeIndex,
   isHovering,
   drawerScrollViewRef,
+  backgroundColor: presetBackgroundColor,
 }: DraggableCalendarProps) {
   const isDragging = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
@@ -100,7 +102,11 @@ export default function DraggableCalendar({
         width: '100%',
         zIndex: 1,
         opacity: 1,
-        backgroundColor: theme.isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight,
+        backgroundColor: presetBackgroundColor
+          ? presetBackgroundColor
+          : theme.isDark
+            ? COLORS.background.mutedDark
+            : COLORS.background.mutedLight,
       };
     }
 
@@ -121,12 +127,17 @@ export default function DraggableCalendar({
       width: '100%',
       zIndex: 1,
       opacity: 1,
-      backgroundColor: theme.isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight,
+      backgroundColor: presetBackgroundColor
+        ? presetBackgroundColor
+        : theme.isDark
+          ? COLORS.background.mutedDark
+          : COLORS.background.mutedLight,
     };
   });
 
   const dynamicBackgroundStyle = useMemo(() => {
     let backgroundColor: string = theme.isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight;
+    if (presetBackgroundColor) backgroundColor = presetBackgroundColor;
 
     const isMatchingTransparent = viewMode === 'transparent' && cal.calendar?.visibility === 'transparent';
     const isMatchingIsolate = viewMode === 'isolate' && cal.calendar?.visibility === 'isolate';

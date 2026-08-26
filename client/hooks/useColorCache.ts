@@ -1,8 +1,8 @@
-import { storage } from "@/services/storage";
-import { findClosestColor } from "@/utility/colorCacheUtil";
-import { ACTIVE_ID_KEY, CACHE_STORAGE_KEY, DEFAULT_COLORS } from "@/utility/constants";
-import { calendarObj, colorCache } from "@/utility/types";
-import { useCallback, useEffect, useState } from "react";
+import { storage } from '@/services/storage';
+import { findClosestColor } from '@/utility/colorCacheUtil';
+import { ACTIVE_ID_KEY, CACHE_STORAGE_KEY, DEFAULT_COLORS } from '@/utility/constants';
+import { calendarObj, colorCache } from '@/utility/types';
+import { useCallback, useEffect, useState } from 'react';
 
 export const useColorCache = (calendarObjs: calendarObj[] | null) => {
   const [allCaches, setAllCaches] = useState<colorCache[]>([]);
@@ -10,7 +10,7 @@ export const useColorCache = (calendarObjs: calendarObj[] | null) => {
   const [isStorageLoaded, setIsStorageLoaded] = useState(false);
 
   // ─── Storage Functions ───────────────────────────────────────────────────────────
-    
+
   // Load Color Cache from storage
   useEffect(() => {
     const loadFromStorage = async () => {
@@ -21,17 +21,19 @@ export const useColorCache = (calendarObjs: calendarObj[] | null) => {
         if (savedCaches) setAllCaches(savedCaches);
         else {
           // Default
-          setAllCaches([{
-            paletteId: 0,
-            name: 'Default Palette',
-            palette: DEFAULT_COLORS,
-            colorMap: {},
-          } as colorCache]);
+          setAllCaches([
+            {
+              paletteId: 0,
+              name: 'Default Palette',
+              palette: DEFAULT_COLORS,
+              colorMap: {},
+            } as colorCache,
+          ]);
         }
 
         if (savedActiveId !== null && savedActiveId !== undefined) setActiveCacheId(Number(savedActiveId));
       } catch (e) {
-        console.error("Failed to load color cache from storage", e);
+        console.error('Failed to load color cache from storage', e);
       } finally {
         setIsStorageLoaded(true);
       }
@@ -49,99 +51,113 @@ export const useColorCache = (calendarObjs: calendarObj[] | null) => {
         await storage.save(CACHE_STORAGE_KEY, allCaches);
         await storage.save(ACTIVE_ID_KEY, activeCacheId);
       } catch (e) {
-        console.error("Failed to save color cache to storage", e);
+        console.error('Failed to save color cache to storage', e);
       }
     };
 
     saveToStorage();
   }, [allCaches, activeCacheId, isStorageLoaded]);
-  
+
   // -------------------------------------------
   // Helper Functions
   // -------------------------------------------
 
   //totally change color palette
-  const changePalette = useCallback((newPaletteId: number, newPaletteName: string, newColors: string[]) => {
-    const newColorMap: Record<string, string> = {};
+  const changePalette = useCallback(
+    (newPaletteId: number, newPaletteName: string, newColors: string[]) => {
+      const newColorMap: Record<string, string> = {};
 
-    calendarObjs?.forEach((cal) => {
-      newColorMap[cal.calendarId] = findClosestColor(cal.calendarDefaultColor, newColors);
-    });
-    setAllCaches((prev) => {
-      // Check if this palette ID already exists in our storage
-      const exists = prev.find((c) => c.paletteId === newPaletteId);
+      calendarObjs?.forEach((cal) => {
+        newColorMap[cal.calendarId] = findClosestColor(cal.calendarDefaultColor, newColors);
+      });
+      setAllCaches((prev) => {
+        // Check if this palette ID already exists in our storage
+        const exists = prev.find((c) => c.paletteId === newPaletteId);
 
-      // If in storage, update existing colorMap
-      if (exists) {
-        return prev.map((c) => (c.paletteId === newPaletteId ? { ...c, palette: newColors, colorMap: newColorMap } : c));
-      }
+        // If in storage, update existing colorMap
+        if (exists) {
+          return prev.map((c) => (c.paletteId === newPaletteId ? { ...c, palette: newColors, colorMap: newColorMap } : c));
+        }
 
-      // Otherwise, add a brand new colorCache object to the array
-      return [
-        ...prev,
-        {
-          paletteId: newPaletteId,
-          name: newPaletteName,
-          palette: newColors,
-          colorMap: newColorMap,
-        } as colorCache,
-      ];
-    });
+        // Otherwise, add a brand new colorCache object to the array
+        return [
+          ...prev,
+          {
+            paletteId: newPaletteId,
+            name: newPaletteName,
+            palette: newColors,
+            colorMap: newColorMap,
+          } as colorCache,
+        ];
+      });
 
-    //Update active cache ID
-    setActiveCacheId(newPaletteId);
-  }, [activeCacheId, calendarObjs, allCaches]);
+      //Update active cache ID
+      setActiveCacheId(newPaletteId);
+    },
+    [activeCacheId, calendarObjs, allCaches],
+  );
 
   //update a color palette
-  const syncCacheToPalette = useCallback((updatedPalette: string[]) => {
-    setAllCaches((prev) =>
-      prev.map((cache) => {
-        if (cache.paletteId !== activeCacheId) return cache;
+  const syncCacheToPalette = useCallback(
+    (updatedPalette: string[]) => {
+      setAllCaches((prev) =>
+        prev.map((cache) => {
+          if (cache.paletteId !== activeCacheId) return cache;
 
-        const nextMap = { ...cache.colorMap };
+          const nextMap = { ...cache.colorMap };
 
-        Object.keys(nextMap).forEach((calId) => {
-          const currentColor = nextMap[calId];
+          Object.keys(nextMap).forEach((calId) => {
+            const currentColor = nextMap[calId];
 
-          // If the color assigned to this calendar isn't in the new palette anymore...
-          if (!updatedPalette.includes(currentColor)) {
-            console.log(calId);
-            const cal = calendarObjs?.find((c) => c.calendarId === calId);
-            // ...recalculate the closest match from the updated palette
-            nextMap[calId] = findClosestColor(cal?.calendarDefaultColor || '#000000', updatedPalette);
-          }
-        });
-        return { ...cache, palette: updatedPalette, colorMap: nextMap };
-      }),
-    );
-  }, [activeCacheId, calendarObjs, allCaches]);
+            // If the color assigned to this calendar isn't in the new palette anymore...
+            if (!updatedPalette.includes(currentColor)) {
+              console.log(calId);
+              const cal = calendarObjs?.find((c) => c.calendarId === calId);
+              // ...recalculate the closest match from the updated palette
+              nextMap[calId] = findClosestColor(cal?.calendarDefaultColor || '#000000', updatedPalette);
+            }
+          });
+          return { ...cache, palette: updatedPalette, colorMap: nextMap };
+        }),
+      );
+    },
+    [activeCacheId, calendarObjs, allCaches],
+  );
 
   //update color of specific calendar
-  const setManualCalendarColor = useCallback((calendarId: string, hexColor: string) => {
-    setAllCaches((prev) =>
-      prev.map((cache) => {
-        // Manual override theme the user is currently updating
-        if (cache.paletteId === activeCacheId) {
-          return {
-            ...cache,
-            colorMap: {
-              ...cache.colorMap,
-              [calendarId]: hexColor, //update key, value pair
-            },
-          };
-        }
-        return cache;
-      }),
-    );
-  }, [activeCacheId, calendarObjs, allCaches]);
+  const setManualCalendarColor = useCallback(
+    (calendarId: string, hexColor: string) => {
+      setAllCaches((prev) =>
+        prev.map((cache) => {
+          // Manual override theme the user is currently updating
+          if (cache.paletteId === activeCacheId) {
+            return {
+              ...cache,
+              colorMap: {
+                ...cache.colorMap,
+                [calendarId]: hexColor, //update key, value pair
+              },
+            };
+          }
+          return cache;
+        }),
+      );
+    },
+    [activeCacheId, calendarObjs, allCaches],
+  );
 
   //get the color of a calendar
-  const getCalendarColor = useCallback((calendarId: string): string => {
-    const activeCache = allCaches.find((c) => c.paletteId === activeCacheId);
-    const customColor = activeCache?.colorMap[calendarId];
-    return customColor || '#00ffff';
-  }, [activeCacheId, calendarObjs, allCaches]);
-  
+  const getCalendarColor = useCallback(
+    (calendarId: string, calendar?: calendarObj): string => {
+      const activeCache = allCaches.find((c) => c.paletteId === activeCacheId);
+      const customColor = activeCache?.colorMap[calendarId];
+      if (customColor) return customColor;
+      if (calendar) return calendar.calendarDefaultColor;
+      return '#00ffff';
+    },
+    [activeCacheId, calendarObjs, allCaches],
+  );
+
   // -------------------------------------------
   // Update Function
   // -------------------------------------------
@@ -180,4 +196,4 @@ export const useColorCache = (calendarObjs: calendarObj[] | null) => {
     setManualCalendarColor,
     getCalendarColor,
   };
-}
+};

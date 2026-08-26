@@ -5,7 +5,6 @@ import { StyleSheet, View } from 'react-native';
 //Components
 import MonthContainer from '@/components/monthContainer/month-container';
 import MultiDayContainer from '@/components/multiDayContainer/multi-day-container';
-import WelcomeScreen from '@/components/welcome-screen';
 
 //Global Contexts
 import CalendarHeader from '@/components/calendarHeader/calendar-header';
@@ -17,6 +16,7 @@ import { FetchStatusPill } from '@/components/multiDayContainer/loading-icon';
 import { useWebScrollbarStyle } from '@/components/scrollIndicator';
 import SettingsModal from '@/components/settingsContainer/settings-modal';
 import WebSettingsPortal from '@/components/settingsContainer/web-settings-portal';
+import Homescreen from '@/homeScreen/home-screen';
 import { WEB_MUTED_PADDING, WEB_WHITE_X_PADDING, WEB_WHITE_Y_PADDING } from '@/utility/constants';
 import { getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
 import { AuthContext } from '../components/contexts/auth-context';
@@ -52,7 +52,8 @@ export default function Index() {
       )}
     </View>
   ) : (
-    <WelcomeScreen />
+    // <WelcomeScreen />
+    <Homescreen />
   );
 }
 

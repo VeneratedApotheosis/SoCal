@@ -1,7 +1,7 @@
 import { ALL_DAY_HEIGHT, DATE_HEADER_HEIGHT, PAST_BUFFER, WEB_DATE_HEADER_PADDING, WEB_Y_PADDING } from '@/utility/constants';
 import { createEventObj } from '@/utility/eventUtils';
 import { COLORS } from '@/utility/theme';
-import { AllDayPool, EventObj, EventWithLayout } from '@/utility/types';
+import { EventObj, EventWithLayout } from '@/utility/types';
 import { addHours, isSameDay } from 'date-fns';
 import React, { useCallback, useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -83,8 +83,6 @@ export interface DayContainerProps {
   allDayEvents: EventWithLayout[];
   scrollY: SharedValue<number>;
   currentAllDayHeight: SharedValue<number>;
-  eventPool: SharedValue<AllDayPool[]>;
-  widthsDictionary: Record<string, number>;
   handlePress: (event: EventObj | null, newEvent: boolean, e: any) => void;
   newEvent: EventObj | null;
   isVisible: boolean;
@@ -111,8 +109,6 @@ export default function DayContainer({
   isVisible,
   selectedEventId,
   currentAllDayHeight,
-  eventPool,
-  widthsDictionary,
   newEvent,
   dragStartDayIdx,
   dragStartMin,

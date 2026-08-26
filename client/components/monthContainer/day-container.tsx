@@ -2,7 +2,7 @@ import { ALL_DAY_HEIGHT } from '@/utility/constants';
 import { baseFlexStyles, getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { EventObj, EventWithLayout } from '@/utility/types';
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useCalendarIndex } from '../contexts/calendar-index-context';
 import { useUIContext } from '../contexts/ui-context';
@@ -40,9 +40,18 @@ export default function DayBox({ day, weekHeight, dayWidth, event, handlePress, 
     },
     [handlePress],
   );
+  const handleMoreRef = useRef<View>(null);
+
+  const handleMore = () => {
+    if (!handleMoreRef || !handleMoreRef.current) return;
+    handleMoreRef.current.measure((x, y, width, height, pageX, pageY) => {
+      console.log(pageX, pageY);
+    });
+  };
 
   return (
     <View
+      ref={handleMoreRef}
       style={[
         style.dayContainer,
         day.getDay() === 6 && { borderRightWidth: 1 },
@@ -85,7 +94,7 @@ export default function DayBox({ day, weekHeight, dayWidth, event, handlePress, 
         );
       })}
       {hasMore && (
-        <Pressable style={{ paddingLeft: 6, height: ALL_DAY_HEIGHT }}>
+        <Pressable style={{ paddingLeft: 6, height: ALL_DAY_HEIGHT }} onPress={handleMore}>
           <Text style={style.moreText}>{numMore + ' ' + 'more'}</Text>
         </Pressable>
       )}
