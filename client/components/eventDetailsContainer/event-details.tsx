@@ -1,7 +1,7 @@
 import { EventObj } from '@/utility/types';
 
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard } from 'react-native';
 import { useUIContext } from '../contexts/ui-context';
 import { eventDetailStyles } from './eventDetailsStyles';
@@ -11,14 +11,17 @@ interface Props {
   isVisible: boolean;
   event: EventObj | null;
   onClose: () => void;
+  setNewEvent?: React.Dispatch<React.SetStateAction<EventObj | null>>;
+  newEvent?: EventObj | null;
 }
 
-export default function EventDetails({ isVisible, event, onClose }: Props) {
+export default function EventDetails({ isVisible, event, onClose, setNewEvent, newEvent }: Props) {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['20%', '98%'], []);
   const [currentIndex, setCurrentIndex] = React.useState(-1);
   const { theme } = useUIContext();
   const styles = eventDetailStyles(theme.isDark);
+  const [fakeNewEvent, setFakeNewEvent] = useState<EventObj | null>(null);
 
   useEffect(() => {
     if (isVisible) {
@@ -49,7 +52,15 @@ export default function EventDetails({ isVisible, event, onClose }: Props) {
       stackBehavior="push"
     >
       <BottomSheetScrollView style={styles.container}>
-        {event && <EventExpandedView initialEvent={event} bottomSheetModalRef={bottomSheetModalRef} onClose={onClose} />}
+        {event && (
+          <EventExpandedView
+            initialEvent={event}
+            bottomSheetModalRef={bottomSheetModalRef}
+            onClose={onClose}
+            newEvent={newEvent || fakeNewEvent}
+            setNewEvent={setNewEvent || setFakeNewEvent}
+          />
+        )}
       </BottomSheetScrollView>
     </BottomSheetModal>
   );

@@ -41,9 +41,7 @@ const supabaseAdmin = createClient(
 // Stores: Map<userId: string, {accessToken: string, expiryDate: integer}>
 const accessTokenCache = new Map();
 
-// ===========================================================
-// GENERAL TEMPLATES & UTILITIES
-// ===========================================================
+// ─── General Templates & Utilities ───────────────────────────────────────────────────────────
 
 // Template wrapper for centralized route error handling
 const handleRoute = (errMsg, fn) => async (req, res) => {
@@ -140,27 +138,6 @@ const fetchAndFormatUserToken = async (userId, refreshToken, id) => {
 };
 
 // ─── Main API Routes ───────────────────────────────────────────────────────────
-
-app.post('/api/google-exchange', handleRoute('Failed to exchange code', async (req, res) => {
-  console.log('/api/google-exchange called');
-  const { code, codeVerifier, redirectUri } = req.body;
-  if (!code) return res.status(400).json({ error: 'No code provided' });
-
-  // 1. Dynamic client & payload fetching
-  const client = redirectUri ? oAuth2ClientWeb : oAuth2ClientMobile;
-  const { tokens } = await client.getToken(redirectUri ? { code, codeVerifier, redirect_uri: redirectUri } : { code });
-
-  const ticket = await oAuth2ClientWeb.verifyIdToken({ idToken: tokens.id_token, audience: process.env.CLIENT_ID });
-  const { sub: googleId, email, name, picture } = ticket.getPayload();
-  
-  // 2. Generate Session
-  const sessionTokenObj = getJWTToken(googleId);
-  console.log(sessionTokenObj);
-
-  // 3. Respond & Save
-  res.status(200).json(sessionTokenObj);
-  db.saveUserProfile(googleId, email, name, picture, tokens.refresh_token);
-}));
 
 app.post('/api/get-family-profiles', authenticate, handleRoute('Failed to get family data', async (req, res) => {
   console.log('/api/get-family-profiles called');

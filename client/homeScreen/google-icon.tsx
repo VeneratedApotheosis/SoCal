@@ -11,7 +11,7 @@ type Props = {
 };
 
 export function GoogleWeb({ onPress, width, height }: Props) {
-  const w = width || 180;
+  const w = width || 182;
   const h = height || 40;
 
   return (
@@ -37,5 +37,6 @@ const webStyles = StyleSheet.create({
     borderWidth: 0,
     backgroundColor: 'transparent',
     cursor: 'pointer',
+    overflow: 'visible',
   },
 });

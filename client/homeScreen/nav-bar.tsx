@@ -1,7 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { baseFlexStyles } from '@/utility/globalStyles';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GoogleWeb } from './google-icon';
 import { COLORS, FONT_WEIGHTS, LAYOUT, Logo, RADII, SPACING, textStyles, TYPOGRAPHY } from './homeScreenStyles';
 
@@ -18,12 +18,19 @@ export default function Navbar({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const styles = navBarStyles(false);
-  const links = [
-    { label: 'Features', id: 'features' },
-    { label: 'About', id: 'about' },
-    { label: 'GitHub', id: 'github' },
-    { label: 'Privacy Policy', id: 'footer' },
-  ];
+  const links =
+    Platform.OS === 'web'
+      ? [
+          { label: 'Features', id: 'features' },
+          { label: 'About', id: 'about' },
+          { label: 'Privacy Policy', id: 'footer' },
+        ]
+      : [
+          { label: 'Features', id: 'features' },
+          { label: 'About', id: 'about' },
+          { label: 'GitHub', id: 'github' },
+          { label: 'Privacy Policy', id: 'footer' },
+        ];
 
   const go = (id: string) => {
     setMenuOpen(false);
@@ -46,6 +53,15 @@ export default function Navbar({
               <Text style={styles.navLinkText}>{link.label}</Text>
             </Pressable>
           ))}
+          {Platform.OS === 'web' && (
+            <Pressable
+              key={'github'}
+              onPress={() => window.open('https://github.com/VeneratedApotheosis/SoCal', '_blank', 'noopener,noreferrer')}
+              style={styles.navLink}
+            >
+              <Text style={styles.navLinkText}>{'GitHub'}</Text>
+            </Pressable>
+          )}
           <View style={styles.loginButton}>
             <GoogleWeb onPress={() => promptAsync()} />
           </View>
@@ -65,7 +81,7 @@ export default function Navbar({
               <Text style={styles.navLinkText}>{link.label}</Text>
             </Pressable>
           ))}
-          <View style={styles.loginButton}>
+          <View style={[styles.loginButton, { overflow: 'visible', backgroundColor: 'blue' }]}>
             <GoogleWeb onPress={() => promptAsync()} />
           </View>
         </View>

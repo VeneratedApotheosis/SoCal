@@ -1,10 +1,13 @@
+import * as WebBrowser from 'expo-web-browser';
 import React, { useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Linking, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import AboutSection from './about';
 import FeatureSection from './features';
 import Footer from './footer';
 import Hero from './hero';
 import Navbar from './nav-bar';
+
+WebBrowser.openBrowserAsync('https://example.com');
 
 export default function Homescreen() {
   const scrollRef = useRef<ScrollView>(null);
@@ -23,7 +26,17 @@ export default function Homescreen() {
   );
 
   const navigate = (id: string) => {
-    if (id === 'github') return;
+    if (id === 'github') {
+      const openGithub = async () => {
+        const url = 'https://github.com';
+        const supported = await Linking.canOpenURL(url);
+
+        if (supported) {
+          await Linking.openURL(url);
+        }
+        await openGithub();
+      };
+    }
     scrollRef.current?.scrollTo({
       y: sectionPositions[id as keyof typeof sectionPositions] ?? 0,
       animated: true,

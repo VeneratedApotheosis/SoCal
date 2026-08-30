@@ -36,9 +36,6 @@ const gReq = (path: string, method: string, t: string, b?: any) => req(`https://
 
 // ─── Backend Fetches ───────────────────────────────────────────────────────────
 
-export const fetchJwtToken = (code: string, codeVerifier?: string, redirectUri?: string) =>
-  bReq('/google-exchange', 'POST', undefined, { code, ...(codeVerifier && { codeVerifier }), ...(redirectUri && { redirectUri }) });
-
 export const fetchFamilyProfiles = (t: string) => bReq('/get-family-profiles', 'POST', t);
 
 export const fetchFamilyAccessTokens = (t: string) => bReq('/get-family-access-tokens', 'POST', t);

@@ -12,7 +12,6 @@ import SharedCalendarIndividual from './shared-calendar-individual';
 
 export default function SharedCalendars() {
   const { sharedCalendars = [] } = useCalendarObjects();
-  console.log(JSON.stringify(sharedCalendars));
 
   // -------------------------------------------
   // Card Themes and Toggle

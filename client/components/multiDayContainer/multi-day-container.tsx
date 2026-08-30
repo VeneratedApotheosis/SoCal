@@ -528,7 +528,13 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
           </Animated.View>
         </GestureDetector>
       </View>
-      <EventDetails event={selectedEvent} isVisible={eventDetailsVisible} onClose={() => setEventDetailsVisible(false)} />
+      <EventDetails
+        event={selectedEvent}
+        isVisible={eventDetailsVisible}
+        onClose={() => setEventDetailsVisible(false)}
+        newEvent={newEvent}
+        setNewEvent={setNewEvent}
+      />
       <WebEventDetails
         event={selectedEvent}
         isVisible={webDetailsVisible}

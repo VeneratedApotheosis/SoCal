@@ -3,7 +3,7 @@ import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLORS, FONT_WEIGHTS, homeScreenStyles, LAYOUT, Logo, SPACING, TYPOGRAPHY } from './homeScreenStyles';
 
 export default function Footer({ onNavigate }: { onNavigate: (id: string) => void }) {
-  const contact = () => Linking.openURL('mailto:contact@socal.app');
+  const contact = () => Linking.openURL('mailto:alexcalendar1234@gmail.com');
 
   return (
     <View nativeID="footer" style={styles.footer}>
@@ -22,11 +22,11 @@ export default function Footer({ onNavigate }: { onNavigate: (id: string) => voi
             <Pressable onPress={() => onNavigate('footer')}>
               <Text style={styles.footerLink}>Privacy Policy</Text>
             </Pressable>
-            <Pressable>
+            <Pressable onPress={() => window.open('https://github.com/VeneratedApotheosis/SoCal', '_blank', 'noopener,noreferrer')}>
               <Text style={styles.footerLink}>GitHub</Text>
             </Pressable>
-            <Pressable onPress={contact}>
-              <Text style={styles.footerLink}>Contact Us</Text>
+            <Pressable onPress={() => {}}>
+              <Text style={styles.footerLink}>alexcalendar1234@gmail.com</Text>
             </Pressable>
           </View>
         </View>
