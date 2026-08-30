@@ -302,7 +302,7 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate, setError }: Eve
                   num={1}
                 />
               ) : (
-                <IOSPillButton label="start time" value={timeDisplay.startTime} onPress={() => openIOSPicker('startTime')} />
+                <IOSPillButton label="end time" value={timeDisplay.endTime} onPress={() => openIOSPicker('endTime')} />
               )}
             </View>
             <View style={[styles.pillRow]}>

@@ -91,6 +91,8 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
 
   // ─── Visiblity Mutators ───────────────────────────────────────────────────────────
 
+  // ─── Visiblity Mutators ───────────────────────────────────────────────────────────
+
   const toggleTransparent = useCallback(
     (id: string) => {
       if (calViewMode !== 'transparent') setCalViewMode('transparent');

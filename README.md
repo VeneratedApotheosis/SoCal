@@ -3,6 +3,7 @@
 SoCal brings your group's Google Calendars into one unified view. Keep track of what your friends are up to, and easily manage who has access to your time.
 
 ---
+<img align="right" width="450" src="/README_Imgs/edited/Web_3_Week_View_Edited.png" alt="Example Image">
 
 ## Features
 
@@ -21,6 +22,8 @@ SoCal brings your group's Google Calendars into one unified view. Keep track of 
 - **Google Calendar API:** All events are managed by google, SoCal just makes it better.
 
 ---
+
+<img align="right" width="450" src="/README_Imgs/edited/Web_Settings_Edited.png" alt="Example Image">
 
 ## Architecture & Stack
 
@@ -44,6 +47,10 @@ A modular Node.js API service managing authentication, credentials, and relation
     - User & Family Management: Endpoints to fetch family profiles and access tokens, update Google refresh tokens, and a secure account deletion flow that removes data from both the database and Supabase Auth (`supabaseAdmin`).
   - `db.js`: Handles database connectivity and prepares the SQL schemas:
     - `userInfo`: Stores registered users' basic profile metadata and secure Google refresh tokens.
+
+    
+<img align="right" width="300" src="/README_Imgs/edited/Mobile_Drawer_Edited.png" alt="Example Image">
+
 ### 2. Frontend (`/client`)
 A cross-platform native application built with TypeScript, Expo, and React Native.
 - **Key Modules & Layers:**
@@ -61,3 +68,15 @@ A cross-platform native application built with TypeScript, Expo, and React Nativ
   - `services/`: Low-level network utilities:
     - `api.ts`: Combines internal backend client calls (`bReq`) and direct Google v3 API queries (`gReq`).
     - `storage.ts`: Handles cross-platform encrypted key/value state persistence (native vs. web).
+
+### 3. TODO:
+ - Save Separate State for Weekly and Daily Count
+ - TouchScreen Vertical Scroll
+ - BUG FIX: sharing doesnt work
+ - Consider checking if calendarList is properly being refreshed
+ - Setting to add a weekly space btwn months in weekly View
+ - Create Logo
+ - Update All-Day to have last day INCLUSIVE
+ - Finish Weekly View
+ - BUG FIX: Smth wrogn with whatever is highlighted
+ - Font Size Settings

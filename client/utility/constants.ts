@@ -29,6 +29,8 @@ export const HIDDEN_CALENDAR_KEY = '@hidden_calendar';
 
 export const PORTAL_HOME_NAME = 'layoutPortal';
 
+export const PORTAL_HOME_NAME = 'layoutPortal';
+
 export const DEFAULT_COLORS = [
   '#f8deff', //287°, 13%, 100%
   '#ffdef2', //324°, 13%, 100%
