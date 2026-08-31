@@ -1,66 +1,13 @@
-import { storage } from '@/services/storage';
+import { useColorGroupsContext } from '@/components/contexts/color-groups-sync-context';
 import { findClosestColor } from '@/utility/colorCacheUtil';
-import { ACTIVE_ID_KEY, CACHE_STORAGE_KEY, DEFAULT_COLORS } from '@/utility/constants';
 import { calendarObj, colorCache } from '@/utility/types';
 import { useCallback, useEffect, useState } from 'react';
 
 export const useColorCache = (calendarObjs: calendarObj[] | null) => {
-  const [allCaches, setAllCaches] = useState<colorCache[]>([]);
+  const { paletteData: allCaches, isLoading: isStorageLoaded, setPaletteData: setAllCaches } = useColorGroupsContext();
   const [activeCacheId, setActiveCacheId] = useState<number>(0);
-  const [isStorageLoaded, setIsStorageLoaded] = useState(false);
 
-  // ─── Storage Functions ───────────────────────────────────────────────────────────
-
-  // Load Color Cache from storage
-  useEffect(() => {
-    const loadFromStorage = async () => {
-      try {
-        const savedCaches = await storage.get(CACHE_STORAGE_KEY);
-        const savedActiveId = await storage.get(ACTIVE_ID_KEY);
-
-        if (savedCaches) setAllCaches(savedCaches);
-        else {
-          // Default
-          setAllCaches([
-            {
-              paletteId: 0,
-              name: 'Default Palette',
-              palette: DEFAULT_COLORS,
-              colorMap: {},
-            } as colorCache,
-          ]);
-        }
-
-        if (savedActiveId !== null && savedActiveId !== undefined) setActiveCacheId(Number(savedActiveId));
-      } catch (e) {
-        console.error('Failed to load color cache from storage', e);
-      } finally {
-        setIsStorageLoaded(true);
-      }
-    };
-
-    loadFromStorage();
-  }, []);
-
-  //save to storage
-  useEffect(() => {
-    if (!isStorageLoaded) return;
-
-    const saveToStorage = async () => {
-      try {
-        await storage.save(CACHE_STORAGE_KEY, allCaches);
-        await storage.save(ACTIVE_ID_KEY, activeCacheId);
-      } catch (e) {
-        console.error('Failed to save color cache to storage', e);
-      }
-    };
-
-    saveToStorage();
-  }, [allCaches, activeCacheId, isStorageLoaded]);
-
-  // -------------------------------------------
-  // Helper Functions
-  // -------------------------------------------
+  // ─── Helper Functions ───────────────────────────────────────────────────────────
 
   //totally change color palette
   const changePalette = useCallback(
@@ -94,7 +41,7 @@ export const useColorCache = (calendarObjs: calendarObj[] | null) => {
       //Update active cache ID
       setActiveCacheId(newPaletteId);
     },
-    [activeCacheId, calendarObjs, allCaches],
+    [activeCacheId, calendarObjs, allCaches, setAllCaches],
   );
 
   //update a color palette
@@ -121,7 +68,7 @@ export const useColorCache = (calendarObjs: calendarObj[] | null) => {
         }),
       );
     },
-    [activeCacheId, calendarObjs, allCaches],
+    [activeCacheId, calendarObjs, allCaches, setAllCaches],
   );
 
   //update color of specific calendar
@@ -143,7 +90,7 @@ export const useColorCache = (calendarObjs: calendarObj[] | null) => {
         }),
       );
     },
-    [activeCacheId, calendarObjs, allCaches],
+    [activeCacheId, calendarObjs, allCaches, setAllCaches],
   );
 
   //get the color of a calendar
@@ -155,7 +102,7 @@ export const useColorCache = (calendarObjs: calendarObj[] | null) => {
       if (calendar) return calendar.calendarDefaultColor;
       return '#00ffff';
     },
-    [activeCacheId, calendarObjs, allCaches],
+    [activeCacheId, calendarObjs, allCaches, setAllCaches],
   );
 
   // -------------------------------------------
@@ -185,7 +132,7 @@ export const useColorCache = (calendarObjs: calendarObj[] | null) => {
         return { ...cache, colorMap: nextMap };
       });
     });
-  }, [calendarObjs, activeCacheId, isStorageLoaded]);
+  }, [calendarObjs, activeCacheId, isStorageLoaded, setAllCaches]);
 
   return {
     allCaches,

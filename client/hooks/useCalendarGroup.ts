@@ -1,10 +1,11 @@
+import { useColorGroupsContext } from '@/components/contexts/color-groups-sync-context';
 import { storage } from '@/services/storage';
 import { calendarGroup, calendarObj } from '@/utility/types';
 import { useEffect, useMemo, useState } from 'react';
 
 export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: string | null) => {
-  const [groupedCalendars, setGroupedCalendars] = useState<calendarGroup[]>([]);
   const [isStorageLoaded, setIsStorageLoaded] = useState(false);
+  const { groupsData: groupedCalendars, isLoading, setGroupsData: setGroupedCalendars } = useColorGroupsContext();
 
   const currentUserGroups = useMemo(() => {
     if (!userId) return [];
@@ -17,63 +18,11 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
       }));
   }, [groupedCalendars, userId]);
 
-  // ─── Storage Functions ───────────────────────────────────────────────────────────
-
-  const getUserStorageKey = (id: string) => `@calendar_groups_${id}`;
-
-  // Load Color Cache from storage
-  useEffect(() => {
-    if (!userId) {
-      setGroupedCalendars([]);
-      setIsStorageLoaded(false);
-      return;
-    }
-
-    let isMounted = true;
-    setIsStorageLoaded(false);
-
-    const loadFromStorage = async () => {
-      try {
-        // Load ONLY this specific user's groups directly
-        const userGroups: calendarGroup[] = (await storage.get(getUserStorageKey(userId))) || [];
-
-        if (isMounted) {
-          setGroupedCalendars(userGroups);
-          setIsStorageLoaded(true);
-        }
-      } catch (e) {
-        console.error('Failed to load user calendar groups from storage', e);
-      }
-    };
-
-    loadFromStorage();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [userId]);
-
-  //save to storage
-  useEffect(() => {
-    // Guard: Only save if storage is loaded and userId exists
-    if (!isStorageLoaded || !userId || groupedCalendars.length === 0) return;
-
-    const saveToStorage = async () => {
-      try {
-        // Save directly to the user's isolated storage key
-        await storage.save(getUserStorageKey(userId), groupedCalendars);
-      } catch (e) {
-        console.error('Failed to save user calendar groups to storage', e);
-      }
-    };
-
-    saveToStorage();
-  }, [groupedCalendars, isStorageLoaded, userId]);
-
   // ─── Update Function ───────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!isStorageLoaded || !calendarObjs || !userId) return;
+    console.log(groupedCalendars);
 
     setGroupedCalendars((prevGroups) => {
       const userGroups = prevGroups.filter((g) => g.userId === userId);
@@ -112,7 +61,7 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
       // Merge the active user's groups back with the rest of the users
       return [...sortedUserGroups];
     });
-  }, [calendarObjs, userId, isStorageLoaded]);
+  }, [calendarObjs, userId, isStorageLoaded, groupedCalendars, setGroupedCalendars]);
 
   // ─── Helper Functions ───────────────────────────────────────────────────────────
 

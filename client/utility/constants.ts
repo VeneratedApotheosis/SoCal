@@ -27,6 +27,7 @@ export const TIME_ZONE_KEY = '@time_zone';
 export const VISIBLE_SETTINGS_KEY = '@visible_settings';
 export const HIDDEN_CALENDAR_KEY = '@hidden_calendar';
 export const CALENDAR_TYPE_KEY = '@calendar_type';
+export const COLOR_GROUPS_STORAGE_KEY = '@color_groups';
 
 export const PORTAL_HOME_NAME = 'layoutPortal';
 export const PORTAL_HOME_NAME_2 = 'layoutPortal2';

@@ -1,5 +1,5 @@
 import { convertToGoogleEvent } from '@/utility/eventUtils';
-import { EventObj, accessRole } from '@/utility/types';
+import { EventObj, accessRole, calendarGroup, colorCache } from '@/utility/types';
 
 const req = async (url: string, method: string = 'GET', token?: string, body?: any) => {
   try {
@@ -102,6 +102,24 @@ export const fetchMultiGivenCalendarRange = async (t: string, calId = 'primary',
 export const fetchCalendarList = (t: string) => gReq('/users/me/calendarList', 'GET', t);
 
 export const getCalendarSharingSettings = (calId: string, t: string) => gReq(`/calendars/${calId}/acl`, 'GET', t);
+
+// ─── Backend API Color Palette & Groups Functions ─────────────────────────
+
+export const fetchColorGroups = (t: string) => bReq('/get-color-groups', 'POST', t);
+
+export const saveColorGroups = (t: string, palette?: any, groups?: any) => {
+  return bReq('/save-color-groups', 'POST', t, { palette: palette, groups: groups });
+};
+
+export const saveColorPalette = (t: string, palette?: colorCache[]) => {
+  return bReq('/save-color-palette', 'POST', t, { palette: palette });
+};
+
+export const saveGroups = (t: string, groups?: calendarGroup[]) => {
+  return bReq('/save-groups', 'POST', t, { groups: groups });
+};
+
+export const deleteColorGroups = (t: string) => bReq('/delete-color-groups', 'DELETE', t);
 
 // ─── Google API Specific Event Fetches ───────────────────────────────────────────────────────────
 

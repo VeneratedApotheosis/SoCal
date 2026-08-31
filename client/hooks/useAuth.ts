@@ -67,17 +67,16 @@ export const useAuth = () => {
               while (!success && attempts < maxAttempts) {
                 attempts++;
                 try {
-                  console.log(`[Frontend] Attempt ${attempts} to save token...`);
-                  // Make sure your postUpdateToken function has a 'return' statement!
+                  if (!session.provider_refresh_token) throw Error('Invalid session provider refresh token');
                   await postUpdateToken(session.user.id, session.provider_refresh_token);
-                  console.log('[Frontend] Token saved successfully!');
+                  console.log('[POST] Token saved successfully. Attempts:', attempts);
                   success = true;
                 } catch (err) {
-                  console.warn(`[Frontend] Attempt ${attempts} failed. Row not ready yet.`);
+                  console.warn(`[POST] Attempt ${attempts} failed. Row not ready yet.`);
                   if (attempts < maxAttempts) {
                     await delay(2000); // Wait 2 seconds before trying again
                   } else {
-                    console.error('[Frontend] Gave up trying to save token after 5 attempts.');
+                    console.error('[POST] Gave up trying to save token after 5 attempts.');
                   }
                 }
               }

@@ -8,7 +8,7 @@ import { useAuth } from './useAuth';
 
 export function useProfiles() {
   const [familyProfiles, setFamilyProfiles] = useState<FamilyProfileObjs | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { getValidJwt } = useAuth();
   const { validJwt } = useAuthContext();
@@ -36,6 +36,7 @@ export function useProfiles() {
 
   useEffect(() => {
     if (isLoading) return;
+    if (!familyProfiles) return;
 
     const saveToStorage = async () => {
       try {
@@ -68,7 +69,7 @@ export function useProfiles() {
 
       //Update State & Local Storage
       setFamilyProfiles(data);
-      await storage.save('profiles', data);
+      await storage.save(PROFILE_STORAGE_KEY, data);
     } catch (err: any) {
       console.error('Backend Profile Fetch Error:', err);
       setError(err.message || 'big error in profiles');
