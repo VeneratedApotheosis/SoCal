@@ -134,22 +134,23 @@ const upsertUserColorGroups = async (userId, palette, groups) => {
 const upsertUserColorPalette = async (userId, palette) => {
   const query = `
     INSERT INTO "userColorGroups" (id, palette)
-    VALUES ($1, $2)
+    VALUES ($1, $2::jsonb)
     ON CONFLICT (id) DO UPDATE SET
-      palette = EXCLUDED.palette
-  `
-  return await pool.query(query, [userId, palette]);
-}
+      palette = EXCLUDED.palette;
+  `;
+  // JSON.stringify prevents pg from converting JS arrays to Postgres arrays
+  return await pool.query(query, [userId, JSON.stringify(palette)]);
+};
 
 const upsertUserGroups = async (userId, groups) => {
   const query = `
     INSERT INTO "userColorGroups" (id, groups)
-    VALUES ($1, $3)
+    VALUES ($1, $2::jsonb)
     ON CONFLICT (id) DO UPDATE SET
-      groups = EXCLUDED.groups
-  `
-  return await pool.query(query, [userId, groups]);
-}
+      groups = EXCLUDED.groups;
+  `;
+  return await pool.query(query, [userId, JSON.stringify(groups)]);
+};
 
 const getUserColorPalette = async (userId) => {
   const query = `
@@ -170,6 +171,7 @@ const getUserColorGroups = async (userId) => {
   const res = await pool.query(query, [userId]);
   return res.rows[0] || null;
 }
+
 const deleteUserColorGroups = async (userId) => {
   const query = `
     DELETE FROM "userColorGroups"
