@@ -25,6 +25,14 @@ const initDb = async () => {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "userColorGroups" (
+      id TEXT PRIMARY KEY REFERENCES "userInfo"(id) ON DELETE CASCADE,
+      palette JSONB,
+      groups JSONB
+      )
+      `)
+
     await client.query('COMMIT');
   } catch (err) {
     await client.query('ROLLBACK');
@@ -36,7 +44,7 @@ const initDb = async () => {
 };
 
 // Execute initialization
-initDb();
+initDb().catch((err) => console.error('Failed to initialize DB:', err));
 
 // saves information into userInfo table
 const saveUserProfile = async (googleId, email, name, picture, refreshToken) => {
@@ -46,6 +54,7 @@ const saveUserProfile = async (googleId, email, name, picture, refreshToken) => 
     ON CONFLICT (id) DO UPDATE SET 
       email = EXCLUDED.email,
       name = EXCLUDED.name,
+      picture = EXCLUDED.picture,
       "refreshToken" = EXCLUDED."refreshToken"
   `;
   return await pool.query(query, [googleId, email, name, picture, refreshToken]);
@@ -85,8 +94,6 @@ const getAllData = async (tableName) => {
 // params: supabase auth user id, provider refresh token
 // do: updates the refresh token for an existing user
 const updateToken = async (userId, refreshToken) => {
-  console.log(`[DB] Attempting to update token for user ID: ${userId}`);
-  
   const query = `
     UPDATE "userInfo" 
     SET "refreshToken" = $1 
@@ -96,7 +103,6 @@ const updateToken = async (userId, refreshToken) => {
   
   try {
     const res = await pool.query(query, [refreshToken, userId]);
-    console.log(`[DB] Update successful? Row count: ${res.rowCount}`);
     return res.rowCount > 0;
   } catch (err) {
     console.error('[DB] Database error during update:', err);
@@ -114,6 +120,46 @@ const deleteUserProfile = async (userId) => {
   return res.rowCount > 0; // Returns true if a row was deleted
 };
 
+const upsertUserColorGroups = async (userId, palette, groups) => {
+  const query = `
+    INSERT INTO "userColorGroups" (id, palette, groups)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (id) DO UPDATE SET
+      palette = EXCLUDED.palette
+      groups = EXCLUDED.groups
+  `
+  return await pool.query(query, [userId, palette, groups]);
+}
+
+const getUserColorPalette = async (userId) => {
+  const query = `
+    SELECT id, palette
+    FROM "userColorGroups" 
+    WHERE id = $1
+  `;
+  const res = await pool.query(query, [userId]);
+  return res.rows[0] || null;
+}
+
+const getUserColorGroups = async (userId) => {
+  const query = `
+    SELECT id, groups
+    FROM "userColorGroups" 
+    WHERE id = $1
+  `;
+  const res = await pool.query(query, [userId]);
+  return res.rows[0] || null;
+}
+const deleteUserColorGroups = async (userId) => {
+  const query = `
+    DELETE FROM "userColorGroups"
+    WHERE id = $1;
+  `;
+  const res = await pool.query(query, [userId]);
+  return res.rowCount > 0;
+
+}
+
 module.exports = { 
   getUserProfile, 
   getUserRefreshToken,
@@ -121,4 +167,9 @@ module.exports = {
   saveUserProfile, 
   getAllData,
   deleteUserProfile,
+
+  upsertUserColorGroups,
+  getUserColorPalette,
+  getUserColorGroups,
+  deleteUserColorGroups,
 };

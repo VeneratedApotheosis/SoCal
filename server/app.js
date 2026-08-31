@@ -19,12 +19,9 @@ app.use(express.json());
 
 // ─── Setup and Cache ───────────────────────────────────────────────────────────
 
-const oAuth2ClientWeb = new OAuth2Client(process.env.CLIENT_ID, process.env.CLIENT_SECRET, process.env.REDIRECT_URI);
-const oAuth2ClientMobile = new OAuth2Client(process.env.CLIENT_ID, process.env.CLIENT_SECRET, "");
-
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_PUBLISHABLE_KEY // or SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_PUBLISHABLE_KEY
 );
 
 const supabaseAdmin = createClient(
@@ -33,7 +30,7 @@ const supabaseAdmin = createClient(
   {
     auth: {
       autoRefreshToken: false,
-      persistSession: false // Critical for backend admin clients
+      persistSession: false //backend admin permissions
     }
   }
 );
@@ -124,12 +121,6 @@ const getAccessToken = async (userId, refreshToken) => {
     console.error(`Google API Error for user ${userId}:`, error.message);
     throw new Error(`Failed to refresh token: ${error.message}`);
   }
-};
-
-const getJWTToken = (userId) => {
-  const sessionToken = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
-  const { exp: expiryDate } = jwt.verify(sessionToken, process.env.JWT_SECRET);
-  return { sessionToken, expiryDate };
 };
 
 const fetchAndFormatUserToken = async (userId, refreshToken, id) => {
@@ -241,6 +232,43 @@ app.delete('/api/unsuscribe-calendar', authenticate, handleRoute('Internal serve
   res.status(200).json({ message: 'Unsubscribed from calendar successfully' });
 }));
 
+// ─── Color Palette & Groups Routes ──────────────────────────────────────────
+
+// Fetch color palette and groups for the authenticated user
+app.post('/api/get-color-groups', authenticate, handleRoute('Failed to get color groups', async (req, res) => {
+  const paletteResult = await db.getUserColorPalette(req.userId);
+  const groupsResult = await db.getUserColorGroups(req.userId);
+
+  // Return clean JSON payloads instead of nesting the DB record wrappers
+  res.json({
+    palette: paletteResult?.palette || null,
+    groups: groupsResult?.groups || null
+  });
+}));
+
+// Save or update color palette and groups
+app.post('/api/save-color-groups', authenticate, handleRoute('Failed to save color groups', async (req, res) => {
+  const { palette, groups } = req.body;
+
+  if (palette === undefined && groups === undefined) {
+    return res.status(400).json({ error: 'Payload must contain palette or groups data' });
+  }
+
+  await db.upsertUserColorGroups(req.userId, palette ?? null, groups ?? null);
+  res.status(200).json({ message: 'Color palette and groups saved successfully' });
+}));
+
+// Delete/reset color palette and groups
+app.delete('/api/delete-color-groups', authenticate, handleRoute('Failed to delete color groups', async (req, res) => {
+  const success = await db.deleteUserColorGroups(req.userId);
+
+  if (!success) {
+    return res.status(404).json({ error: 'No color groups found to delete' });
+  }
+
+  res.status(200).json({ message: 'Color groups deleted successfully' });
+}));
+
 // ─── Google Places Proxy Routes ───────────────────────────────────────────────────────────
 
 app.get('/api/places/autocomplete', authenticate, handleRoute('Autocomplete failed', async (req, res) => {
@@ -273,22 +301,23 @@ app.get('/api/places/details', authenticate, handleRoute('Details failed', async
   res.json(data.result || {});
 }));
 
-// ─── Debug Routes ───────────────────────────────────────────────────────────
+// ─── Debug Routes ──────────────────────────────────────────
 
-app.get('/getData', (req, res) => res.send(db.getAllData(req.query.table)));
+app.get('/getData', async (req, res) => {
+  const data = await db.getAllData(req.query.table);
+  res.json(data);
+});
 
 app.get('/token', handleRoute('Failed to get family data', async (req, res) => {
-  console.log("get-family-data called");
-  res.json({
-    parent: db.getUserProfile(req.query.id),
-    children: []
-  });
+  const profile = await db.getUserProfile(req.query.id);
+  res.json({ parent: profile, children: [] });
 }));
 
 app.get('/tokenreal', handleRoute('Failed to get family data', async (req, res) => {
-  console.log("get-family-access-tokens called");
   const parentId = req.query.id;
-  const parentData = db.getUserRefreshToken(parentId);
+  const parentData = await db.getUserRefreshToken(parentId);
+
+  if (!parentData) return res.status(404).json({ error: 'User not found' });
 
   res.json({
     parent: await fetchAndFormatUserToken(parentId, parentData.refreshToken, parentData.id),
