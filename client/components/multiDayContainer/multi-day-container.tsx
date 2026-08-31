@@ -75,7 +75,7 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
     return rawWidth + webPadding - sideBarPadding;
   }, [sideBar.isSidebarExpanded, sideBar.isSidebarLoading, SCREEN_WIDTH, isWeb]);
 
-  const dividers = calendarType.num || 3;
+  const dividers = calendarType.dayNum || 3;
   const dayWidth = Math.round(GRID_WIDTH / dividers);
   const [initialDayWidth] = useState<number>(dayWidth);
   const sharedDayWidth = useSharedValue(dayWidth);
@@ -225,7 +225,7 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
       return m * ALL_DAY_HEIGHT;
     });
     allDayHeights.value = rollingMax;
-  }, [days, groupedAllDayEvents, allDayHeights, calendarType.num]);
+  }, [days, groupedAllDayEvents, allDayHeights, calendarType.dayNum]);
 
   const currentAllDayHeight = useDerivedValue(() => {
     const index = Math.max(0, Math.min(Math.round(scrollX.value / sharedDayWidth.value), allDayHeights.value.length - 1));

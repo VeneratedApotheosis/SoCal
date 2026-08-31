@@ -23,6 +23,7 @@ export default function CalendarTypePicker() {
 
   // Derived label for the trigger button
   const currentPeriodLabel = PERIOD_OPTIONS.find((opt) => opt.key === calendarType.type)?.label || 'Days';
+  const num = calendarType.type === 'D' ? calendarType.dayNum : calendarType.weekNum;
 
   return (
     <View style={[{ zIndex: 10 }]}>
@@ -32,15 +33,22 @@ export default function CalendarTypePicker() {
           <TextInput
             keyboardType="number-pad"
             maxLength={3}
-            value={String(calendarType.num)}
+            value={String(num)}
             onFocus={() => setDurationFocused(true)}
             onBlur={() => {
-              if (calendarType.num === 0) setCalendarType({ type: calendarType.type, num: 1 });
+              if (num === 0)
+                setCalendarType((prev) => {
+                  const isDay = calendarType.type === 'D';
+                  return { type: calendarType.type, dayNum: isDay ? 1 : prev.dayNum, weekNum: isDay ? prev.weekNum : 1 };
+                });
               setDurationFocused(false);
             }}
             onChangeText={(text) => {
               const parsed = parseInt(text) || 0;
-              setCalendarType({ type: calendarType.type, num: parsed });
+              setCalendarType((prev) => {
+                const isDay = calendarType.type === 'D';
+                return { type: calendarType.type, dayNum: isDay ? parsed : prev.dayNum, weekNum: isDay ? prev.weekNum : parsed };
+              });
             }}
             style={styles.stepperInput}
           />
@@ -62,7 +70,7 @@ export default function CalendarTypePicker() {
                   key={opt.key}
                   style={styles.dropdownItem}
                   onPress={() => {
-                    setCalendarType({ type: opt.key, num: calendarType.num });
+                    setCalendarType((prev) => ({ type: opt.key, dayNum: prev.dayNum, weekNum: prev.weekNum }));
                     setShowPeriodDropdown(false);
                   }}
                 >

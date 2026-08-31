@@ -1,10 +1,7 @@
-import { WEB_DRAWER_WIDTH, WEB_MUTED_PADDING, WEB_X_PADDING } from '@/utility/constants';
 import { EventObj, EventWithLayout } from '@/utility/types';
 import { addDays } from 'date-fns';
 import { memo, useMemo } from 'react';
 import { View } from 'react-native';
-import { useScreenSize } from '../contexts/screen-size-context';
-import { useUIContext } from '../contexts/ui-context';
 import DayBox from './day-container';
 
 export interface WeekBoxProps {
@@ -14,19 +11,10 @@ export interface WeekBoxProps {
   handlePress: (event: EventObj | null, newEvent: boolean, e: any) => void;
   newEvent: EventObj | null;
   selectedEventId: string | null;
+  dayWidth: number;
 }
 
-function WeekBox({ day, weekHeight, events, handlePress, newEvent, selectedEventId }: WeekBoxProps) {
-  const { sideBar } = useUIContext();
-  const { width: SCREEN_WIDTH, isWeb, fixedSidebar } = useScreenSize();
-  const dayWidth = useMemo(() => {
-    const rawWidth = SCREEN_WIDTH + 1;
-    const webPadding = -1 * Number(isWeb) * WEB_X_PADDING;
-    const sideBarPadding =
-      fixedSidebar * Number(!(sideBar.isSidebarExpanded !== !sideBar.isSidebarLoading)) * (WEB_DRAWER_WIDTH + WEB_MUTED_PADDING);
-    return Math.ceil((rawWidth + webPadding - sideBarPadding) / 7);
-  }, [sideBar.isSidebarExpanded, sideBar.isSidebarLoading, SCREEN_WIDTH, isWeb]);
-
+function WeekBox({ day, weekHeight, events, handlePress, newEvent, selectedEventId, dayWidth }: WeekBoxProps) {
   const daysOfWeek = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => addDays(day, i));
   }, [day]);
@@ -40,7 +28,7 @@ function WeekBox({ day, weekHeight, events, handlePress, newEvent, selectedEvent
   return (
     <>
       {daysOfWeek.map((dayItem) => (
-        <View style={{ flex: 1, height: weekHeight }} key={dayItem.toISOString()}>
+        <View style={{ height: weekHeight, width: dayWidth }} key={dayItem.toISOString()}>
           <DayBox
             day={dayItem}
             weekHeight={weekHeight}

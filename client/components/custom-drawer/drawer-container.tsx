@@ -225,12 +225,14 @@ export default function CustomDrawerContent(props: any) {
               <Pressable
                 key={option}
                 onPress={() => {
-                  setCalendarType({ type: 'D', num: option });
+                  setCalendarType((prev) => {
+                    return { type: 'D', num: option, dayNum: option, weekNum: prev.weekNum };
+                  });
                   if (!fixedSidebar) props.navigation.closeDrawer();
                 }}
-                style={({ pressed }) => getButtonStyle({ type: 'D', num: option }, pressed)}
+                style={({ pressed }) => getButtonStyle({ type: 'D', dayNum: option, weekNum: 0 }, pressed)}
               >
-                <Text style={[globalStyles.smallButtonText, calendarType.num === option && globalStyles.activeSmallButtonText]}>
+                <Text style={[globalStyles.smallButtonText, calendarType.dayNum === option && globalStyles.activeSmallButtonText]}>
                   {`${option} days`}
                 </Text>
               </Pressable>

@@ -17,12 +17,13 @@ export interface Props {
   selectedEventId: string | null;
   isDummy: boolean;
   idx: number;
+  singleEvent?: boolean;
 }
 
 const darkStyles = getAllDayChipStyles(true);
 const lightStyles = getAllDayChipStyles(false);
 
-function AllDayEvents({ event, day, layout, handlePress, dayWidth, selectedEventId, isDummy, idx }: Props) {
+function AllDayEvents({ event, day, layout, handlePress, dayWidth, selectedEventId, isDummy, idx, singleEvent }: Props) {
   //console.log('creating event');
   const { theme, transparentOpacity } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;
@@ -32,10 +33,11 @@ function AllDayEvents({ event, day, layout, handlePress, dayWidth, selectedEvent
   const { rawColor, borderColor, textColor } = useEventColors(event.calendarId);
 
   //length and position of event
-  const { isStart, isEnd, isMiddle } = useMemo(() => {
+  const { isStart, isEnd } = useMemo(() => {
     let isStart = false;
     let isEnd = false;
     let isMiddle = false;
+    if (singleEvent) return { isStart: true, isEnd: true };
     if (layout.startDate.getTime() - day.getTime() < 86400000 && layout.startDate.getTime() - day.getTime() >= 0) isStart = true;
     if (layout.endDate.getTime() - day.getTime() <= 86400000 && layout.endDate.getTime() - day.getTime() > 0) isEnd = true;
     if (!isStart && !isEnd) isMiddle = true;
@@ -70,7 +72,7 @@ function AllDayEvents({ event, day, layout, handlePress, dayWidth, selectedEvent
 
   let width = dayWidth - AllDayStyles.marginHorizontalTotal * Number(isStart) - AllDayStyles.marginRight * Number(isEnd);
   if (isStart && !isEnd) {
-    width = totalDays * dayWidth + -2 * AllDayStyles.marginHorizontalTotal;
+    width = 1 * dayWidth + -1 * AllDayStyles.marginHorizontalTotal;
   }
   let textWidth = totalDays * width - 2 * AllDayStyles.marginHorizontalTotal - AllDayStyles.padding - 10;
   const marginLeft = 0 + AllDayStyles.marginLeft * Number(isStart);
@@ -138,7 +140,8 @@ function AllDayEvents({ event, day, layout, handlePress, dayWidth, selectedEvent
             },
             { backgroundColor: rawColor, borderLeftColor: borderColor },
             isStart && {
-              borderRadius: AllDayStyles.borderRadius,
+              borderTopLeftRadius: AllDayStyles.borderRadius,
+              borderBottomLeftRadius: AllDayStyles.borderRadius,
               borderLeftWidth: AllDayStyles.borderLeftWidth,
             },
             isEnd && {

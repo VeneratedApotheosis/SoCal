@@ -26,10 +26,10 @@ export const CALENDAR_GROUPS_KEY = '@calendar_groups';
 export const TIME_ZONE_KEY = '@time_zone';
 export const VISIBLE_SETTINGS_KEY = '@visible_settings';
 export const HIDDEN_CALENDAR_KEY = '@hidden_calendar';
+export const CALENDAR_TYPE_KEY = '@calendar_type';
 
 export const PORTAL_HOME_NAME = 'layoutPortal';
-
-export const PORTAL_HOME_NAME = 'layoutPortal';
+export const PORTAL_HOME_NAME_2 = 'layoutPortal2';
 
 export const DEFAULT_COLORS = [
   '#f8deff', //287°, 13%, 100%

@@ -13,9 +13,7 @@ export function useProfiles() {
   const { getValidJwt } = useAuth();
   const { validJwt } = useAuthContext();
 
-  // -------------------------------------------
-  // Storage Functions
-  // -------------------------------------------
+  // ─── Storage Functions ───────────────────────────────────────────────────────────
 
   useEffect(() => {
     const loadFromStorage = async () => {
@@ -50,9 +48,7 @@ export function useProfiles() {
     saveToStorage();
   }, [familyProfiles]);
 
-  // -------------------------------------------
-  // Fetch from backend
-  // -------------------------------------------
+  // ─── Fetch from Backend ───────────────────────────────────────────────────────────
 
   const fetchProfiles = useCallback(async () => {
     const jwtToken = await getValidJwt();
@@ -64,8 +60,6 @@ export function useProfiles() {
     try {
       //Fetch from Backend
       const data = await fetchFamilyProfiles(jwtToken);
-
-      //check if data is ok
       if (data.error) {
         console.error('Backend Profile Fetch Error:', data?.error);
         setError(data?.error || 'big error in profiles');

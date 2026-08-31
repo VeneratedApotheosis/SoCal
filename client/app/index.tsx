@@ -1,5 +1,4 @@
 //Libraries
-import { useContext } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 //Components
@@ -8,7 +7,7 @@ import MultiDayContainer from '@/components/multiDayContainer/multi-day-containe
 
 //Global Contexts
 import CalendarHeader from '@/components/calendarHeader/calendar-header';
-import { EventsContext } from '@/components/contexts/calendar-events-context';
+import { useCalendarEvents } from '@/components/contexts/calendar-events-context';
 import { useScreenSize } from '@/components/contexts/screen-size-context';
 import { useUIContext } from '@/components/contexts/ui-context';
 import FixedDrawer from '@/components/custom-drawer/drawer-web';
@@ -17,13 +16,14 @@ import { useWebScrollbarStyle } from '@/components/scrollIndicator';
 import SettingsModal from '@/components/settingsContainer/settings-modal';
 import WebSettingsPortal from '@/components/settingsContainer/web-settings-portal';
 import Homescreen from '@/homeScreen/home-screen';
-import { WEB_MUTED_PADDING, WEB_WHITE_X_PADDING, WEB_WHITE_Y_PADDING } from '@/utility/constants';
+import { PORTAL_HOME_NAME_2, WEB_MUTED_PADDING, WEB_WHITE_X_PADDING, WEB_WHITE_Y_PADDING } from '@/utility/constants';
 import { getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
-import { AuthContext } from '../components/contexts/auth-context';
+import { PortalHost } from '@gorhom/portal';
+import { useAuthContext } from '../components/contexts/auth-context';
 
 export default function Index() {
-  const { calendarType, validJwt } = useContext(AuthContext);
-  const { allEvents } = useContext(EventsContext);
+  const { calendarType, validJwt } = useAuthContext();
+  const { allEvents } = useCalendarEvents();
   const { isLoginVisible, setLoginVisible, theme } = useUIContext();
   const styles = indexStyles(theme.isDark);
   const { isWeb, fixedSidebar } = useScreenSize();
@@ -31,6 +31,7 @@ export default function Index() {
 
   return validJwt ? (
     <View style={styles.container}>
+      <PortalHost name={PORTAL_HOME_NAME_2} />
       <CalendarHeader />
       {isWeb ? (
         <View style={[styles.web]}>

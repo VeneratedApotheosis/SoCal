@@ -1,4 +1,4 @@
-import { fetchJwtToken } from '@/services/api';
+import { useCalendarType } from '@/hooks/useCalendarType';
 import { storage } from '@/services/storage';
 import { CalendarView, JwtTokenObj } from '@/utility/types';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
@@ -12,9 +12,7 @@ export interface AuthContextType {
   setValidJwt: React.Dispatch<React.SetStateAction<boolean>>;
 
   calendarType: CalendarView;
-  setCalendarType: (calendarType: CalendarView) => void;
-
-  loginWithCode: (code: string, codeVerifier?: string, redirectUri?: string) => Promise<JwtTokenObj | undefined>;
+  setCalendarType: React.Dispatch<React.SetStateAction<CalendarView>>;
 }
 
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -25,7 +23,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   //PROFILE HOOK
   const { isWeb } = useScreenSize();
-  const [calendarType, setCalendarType] = useState<CalendarView>({ type: 'D', num: isWeb ? 7 : 3 });
+  const { calendarType, setCalendarType } = useCalendarType(!!isWeb);
 
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -47,18 +45,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     hydrateAuth();
   }, []);
 
-  const loginWithCode = async (code: string, codeVerifier?: string, redirectUri?: string) => {
-    try {
-      const newJwtToken = await fetchJwtToken(code, codeVerifier, redirectUri);
-      await storage.clearAll();
-      await storage.saveSecure('jwt_token', newJwtToken);
-      setJwtToken(newJwtToken as JwtTokenObj);
-      return newJwtToken as JwtTokenObj;
-    } catch (err) {
-      console.error('loginWithCode failed:', err);
-    }
-  };
-
   if (!isHydrated) return null;
 
   return (
@@ -70,7 +56,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setValidJwt,
         calendarType,
         setCalendarType,
-        loginWithCode,
       }}
     >
       {children}

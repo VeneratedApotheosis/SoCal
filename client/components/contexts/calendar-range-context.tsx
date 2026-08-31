@@ -1,6 +1,6 @@
 // calendar-events-context.tsx
 import { FUTURE_BUFFER, PAST_BUFFER } from '@/utility/constants';
-import { addDays, setDate, startOfDay, startOfWeek, subDays } from 'date-fns';
+import { addDays, startOfDay, startOfWeek, subDays } from 'date-fns';
 import { createContext, ReactNode, useContext, useState } from 'react';
 
 export interface RangeContextType {
@@ -29,8 +29,7 @@ export const RangeProvider = ({ children }: { children: ReactNode }) => {
     const today = startOfDay(new Date());
 
     // 15th of the current month
-    const fifteenthOfMonth = setDate(today, 15);
-    const middleSunday = startOfWeek(fifteenthOfMonth, { weekStartsOn: 0 });
+    const middleSunday = startOfWeek(today, { weekStartsOn: 0 });
 
     const weeksPast = Math.floor(PAST_BUFFER / 7);
     const weeksFuture = Math.floor(FUTURE_BUFFER / 7);

@@ -23,7 +23,8 @@ export interface FamilyAccessTokenObjs {
 }
 export type CalendarView = {
   type: 'D' | 'W';
-  num: number;
+  dayNum: number;
+  weekNum: number;
 };
 export type visibility = 'default' | 'transparent' | 'isolate';
 export type shown = {

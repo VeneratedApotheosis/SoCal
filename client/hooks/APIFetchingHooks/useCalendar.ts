@@ -8,7 +8,6 @@ import { getValidAccessToken } from '@/utility/tokenUtils';
 import { CalendarData, calendarObj, EventObj, FamilyCalendarState } from '@/utility/types';
 import { addDays } from 'date-fns';
 import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from './useAuth';
 
 export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean) {
   const [calendars, setCalendars] = useState<FamilyCalendarState | null>(null);

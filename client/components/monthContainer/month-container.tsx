@@ -1,27 +1,31 @@
-import { useWeeklyEventGrouping } from '@/hooks/calendarHooks/useEventGrouping';
-import { BUFFER_INCREMENT, PAST_BUFFER, WEB_Y_PADDING } from '@/utility/constants';
-import { getPositionsFromPointer } from '@/utility/drawerUtil';
-import { createEventObj } from '@/utility/eventUtils';
-import { getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
-import { CalendarView, EventObj } from '@/utility/types';
 import { FlashList, FlashListRef } from '@shopify/flash-list';
 import { addDays } from 'date-fns';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, DeviceEventEmitter, Platform, StyleSheet, View } from 'react-native';
-import { Gesture } from 'react-native-gesture-handler';
+import { Animated, DeviceEventEmitter, Platform, StyleSheet, Text, View } from 'react-native';
 import { useAnimatedRef, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
+
 import { useCalendarEvents } from '../contexts/calendar-events-context';
 import { useCalendarIndex } from '../contexts/calendar-index-context';
 import { useCalendarRange } from '../contexts/calendar-range-context';
 import { useScreenSize } from '../contexts/screen-size-context';
 import { useTimeZoneContext } from '../contexts/time-zone-context';
 import { useUIContext } from '../contexts/ui-context';
+
+import { BUFFER_INCREMENT, PAST_BUFFER, WEB_DRAWER_WIDTH, WEB_MUTED_PADDING, WEB_X_PADDING, WEB_Y_PADDING } from '@/utility/constants';
+import { getPositionsFromPointer } from '@/utility/drawerUtil';
+import { createEventObj } from '@/utility/eventUtils';
+import { baseFlexStyles, getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
+import { COLORS } from '@/utility/theme';
+import { CalendarView, EventObj } from '@/utility/types';
+
+import { useWeeklyEventGrouping } from '@/hooks/calendarHooks/useEventGrouping';
 import EventDetails from '../eventDetailsContainer/event-details';
 import WebEventDetails, { webEventHeight, webEventWidth } from '../eventDetailsContainer/web-event-details';
 import WeekBox from './week-container';
 
 const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat'];
 
 export default function MonthContainer({ calendarType, events }: { calendarType: CalendarView; events: EventObj[] }) {
   const { sundays } = useCalendarRange();
@@ -29,7 +33,7 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
   const { timeZone } = useTimeZoneContext();
   const { theme, sideBar, multiDayInHeader } = useUIContext();
   const styles = monthstyles(theme.isDark);
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, isWeb, headerHeight } = useScreenSize();
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, isWeb, headerHeight, fixedSidebar } = useScreenSize();
 
   // ─── Dimensions ───────────────────────────────────────────────────────────
 
@@ -39,7 +43,7 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
     return rawHeight + webPadding;
   }, [isWeb, SCREEN_WIDTH]);
 
-  const rowNum = calendarType.num || 5;
+  const rowNum = calendarType.weekNum || 5;
   const weekHeight = Math.floor(GRID_HEIGHT / rowNum);
   const sharedWeekHeight = useSharedValue(weekHeight);
   useEffect(() => {
@@ -61,6 +65,15 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
       subscription.remove();
     };
   }, []);
+
+  const dayWidth = useMemo(() => {
+    const rawWidth = SCREEN_WIDTH;
+    const webPadding = -1 * Number(isWeb) * WEB_X_PADDING;
+    const sideBarPadding =
+      fixedSidebar * Number(!(sideBar.isSidebarExpanded !== !sideBar.isSidebarLoading)) * (WEB_DRAWER_WIDTH + WEB_MUTED_PADDING);
+    const output = Math.floor((rawWidth + webPadding - sideBarPadding) / 7);
+    return output;
+  }, [sideBar.isSidebarExpanded, sideBar.isSidebarLoading, SCREEN_WIDTH, isWeb]);
 
   // ─── Events ───────────────────────────────────────────────────────────
 
@@ -163,8 +176,6 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
   // ─── Scroll Variables ───────────────────────────────────────────────────────────
 
   const scrollY = useSharedValue<number>(Math.floor(PAST_BUFFER / 7 - rowNum / 2) * weekHeight); //fix to 13923.1015625
-  const contextY = useSharedValue<number>(0);
-  const nativeRef = useRef(Gesture.Native());
   const internalDayIndex = useRef(0);
 
   // ─── ScrollX Value Management ───────────────────────────────────────────────────────────
@@ -178,7 +189,6 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
     Platform.OS === 'web'
       ? (event: any) => {
           scrollY.value = event.nativeEvent.contentOffset.y;
-          //console.log(scrollY.value);
         }
       : useAnimatedScrollHandler({
           onScroll: (event) => {
@@ -189,8 +199,8 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
   // ─── Fetch Foward and Backward ───────────────────────────────────────────────────────────
 
   const { fetchForward, fetchBackward } = useCalendarEvents();
-  const localFetchStart = useRef(-1 * calendarType.num * 7);
-  const localFetchEnd = useRef(calendarType.num * 7);
+  const localFetchStart = useRef(-1 * calendarType.weekNum * 7);
+  const localFetchEnd = useRef(calendarType.weekNum * 7);
 
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: any) => {
@@ -205,7 +215,7 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
           internalDayIndex.current = currentIndex;
           const date = new Date();
           date.setHours(12, 0, 0, 0);
-          date.setDate(date.getDate() + currentIndex * 7);
+          date.setDate(date.getDate() + currentIndex * 7 + 3);
           setCurrentMonthText(MONTHS[date.getMonth()]);
         }
 
@@ -219,7 +229,7 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
         }
       }
     },
-    [currentMonthText, fetchForward, fetchBackward],
+    [currentMonthText, fetchForward, fetchBackward, rowNum],
   );
 
   // ─── Render Item ───────────────────────────────────────────────────────────
@@ -257,15 +267,31 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
             handlePress={handlePress}
             newEvent={newEvent}
             selectedEventId={selectedId}
+            dayWidth={dayWidth}
           />
         </View>
       );
     },
-    [weekHeight, allDayWithLayout, handlePress, selectedEvent, newEvent],
+    [weekHeight, allDayWithLayout, handlePress, selectedEvent, newEvent, dayWidth],
   );
 
   return (
     <Animated.View style={{ flex: 1 }}>
+      <View style={{ height: 24, flexDirection: 'row' }}>
+        {DAYS_OF_WEEK.map((day, idx) => (
+          <View
+            key={idx}
+            style={[
+              styles.dateContainer,
+              day === 'Sat' && [{ borderRightWidth: 1 }, styles.elevatedBackground],
+              day === 'Sun' && styles.elevatedBackground,
+              { width: dayWidth },
+            ]}
+          >
+            <Text style={styles.dateText}>{day}</Text>
+          </View>
+        ))}
+      </View>
       <AnimatedFlashList
         ref={listRef}
         onScroll={scrollHandler}
@@ -302,6 +328,17 @@ const monthstyles = (isDark: boolean) => {
       flexDirection: 'column',
       ...baseTheme.background,
       flex: 1,
+    },
+    dateContainer: {
+      borderLeftWidth: 1,
+      ...baseTheme.border,
+      ...baseFlexStyles.centerAll,
+    },
+    elevatedBackground: {
+      backgroundColor: isDark ? COLORS.background.elevatedDark : COLORS.background.elevatedLight,
+    },
+    dateText: {
+      ...baseText.body,
     },
   });
 };

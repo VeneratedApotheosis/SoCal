@@ -70,13 +70,15 @@ A cross-platform native application built with TypeScript, Expo, and React Nativ
     - `storage.ts`: Handles cross-platform encrypted key/value state persistence (native vs. web).
 
 ### 3. TODO:
- - Save Separate State for Weekly and Daily Count
  - TouchScreen Vertical Scroll
  - BUG FIX: sharing doesnt work
  - Consider checking if calendarList is properly being refreshed
  - Setting to add a weekly space btwn months in weekly View
  - Create Logo
  - Update All-Day to have last day INCLUSIVE
- - Finish Weekly View
  - BUG FIX: Smth wrogn with whatever is highlighted
  - Font Size Settings
+ - Save Additional User Data in db instead of saving locally
+ - Add UI feedback to hover, press, and selected buttons
+ - Save Separate State for Weekly and Daily Count //Done
+ - Finish Weekly View //Potentially Done
