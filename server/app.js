@@ -236,6 +236,7 @@ app.delete('/api/unsuscribe-calendar', authenticate, handleRoute('Internal serve
 
 // Fetch color palette and groups for the authenticated user
 app.post('/api/get-color-groups', authenticate, handleRoute('Failed to get color groups', async (req, res) => {
+  console.log('/api/get-color-groups called');
   const paletteResult = await db.getUserColorPalette(req.userId);
   const groupsResult = await db.getUserColorGroups(req.userId);
 

@@ -1,10 +1,8 @@
 import { useColorGroupsContext } from '@/components/contexts/color-groups-sync-context';
-import { storage } from '@/services/storage';
 import { calendarGroup, calendarObj } from '@/utility/types';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 
 export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: string | null) => {
-  const [isStorageLoaded, setIsStorageLoaded] = useState(false);
   const { groupsData: groupedCalendars, isLoading, setGroupsData: setGroupedCalendars } = useColorGroupsContext();
 
   const currentUserGroups = useMemo(() => {
@@ -21,8 +19,7 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
   // ─── Update Function ───────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!isStorageLoaded || !calendarObjs || !userId) return;
-    console.log(groupedCalendars);
+    if (isLoading || !calendarObjs || !userId) return;
 
     setGroupedCalendars((prevGroups) => {
       const userGroups = prevGroups.filter((g) => g.userId === userId);
@@ -61,7 +58,7 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
       // Merge the active user's groups back with the rest of the users
       return [...sortedUserGroups];
     });
-  }, [calendarObjs, userId, isStorageLoaded, groupedCalendars, setGroupedCalendars]);
+  }, [calendarObjs, userId, isLoading]);
 
   // ─── Helper Functions ───────────────────────────────────────────────────────────
 
