@@ -250,11 +250,15 @@ app.post('/api/get-color-groups', authenticate, handleRoute('Failed to get color
 app.post('/api/save-color-groups', authenticate, handleRoute('Failed to save color groups', async (req, res) => {
   const { palette, groups } = req.body;
 
-  if (palette === undefined && groups === undefined) {
-    return res.status(400).json({ error: 'Payload must contain palette or groups data' });
+  // Treat empty arrays as null if you don't want to save empty structures
+  const cleanPalette = (Array.isArray(palette) && palette.length === 0) ? null : palette;
+  const cleanGroups = (Array.isArray(groups) && groups.length === 0) ? null : groups;
+
+  if (cleanPalette === null && cleanGroups === null) {
+    return res.status(400).json({ error: 'Payload must contain non-empty palette or groups data' });
   }
 
-  await db.upsertUserColorGroups(req.userId, palette ?? null, groups ?? null);
+  await db.upsertUserColorGroups(req.userId, cleanPalette, cleanGroups);
   res.status(200).json({ message: 'Color palette and groups saved successfully' });
 }));
 

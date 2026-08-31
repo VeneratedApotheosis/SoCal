@@ -131,6 +131,26 @@ const upsertUserColorGroups = async (userId, palette, groups) => {
   return await pool.query(query, [userId, palette, groups]);
 }
 
+const upsertUserColorPalette = async (userId, palette) => {
+  const query = `
+    INSERT INTO "userColorGroups" (id, palette)
+    VALUES ($1, $2)
+    ON CONFLICT (id) DO UPDATE SET
+      palette = EXCLUDED.palette
+  `
+  return await pool.query(query, [userId, palette]);
+}
+
+const upsertUserGroups = async (userId, groups) => {
+  const query = `
+    INSERT INTO "userColorGroups" (id, groups)
+    VALUES ($1, $3)
+    ON CONFLICT (id) DO UPDATE SET
+      groups = EXCLUDED.groups
+  `
+  return await pool.query(query, [userId, groups]);
+}
+
 const getUserColorPalette = async (userId) => {
   const query = `
     SELECT id, palette
@@ -169,6 +189,8 @@ module.exports = {
   deleteUserProfile,
 
   upsertUserColorGroups,
+  upsertUserColorPalette,
+  upsertUserGroups,
   getUserColorPalette,
   getUserColorGroups,
   deleteUserColorGroups,
