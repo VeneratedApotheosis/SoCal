@@ -2,6 +2,7 @@ import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
 import { useProfileContext } from '@/components/contexts/profile-context';
 import { useScreenSize } from '@/components/contexts/screen-size-context';
 import { useUIContext } from '@/components/contexts/ui-context';
+import InformationIcon from '@/components/InformationIcon';
 import { useShareCalendar } from '@/hooks/sharingCalendars/useShareCalendar';
 import { useAuth } from '@/hooks/useAuth';
 import { globalParameterStyles } from '@/utility/globalStyles';
@@ -130,11 +131,18 @@ export default function ShareModal({ isVisible, setVisible }: ShareModalProps) {
                   flexDirection: 'row',
                   marginTop: 'auto',
                   alignItems: 'center',
-                  gap: 4,
+                  justifyContent: 'center',
+                  gap: 8,
                 }}
               >
                 <Text style={styles.title}>Share Calendars</Text>
-                <Ionicons name="information-circle-outline" size={20} />
+                <InformationIcon
+                  size={20}
+                  title={'Share Google Calendars'}
+                  description={
+                    "Easily share your Google Calendars without leaving the app. This feature uses Google's official sharing system under the hood, wrapped in our custom design. Once sent, the recipient will get a standard Gmail invitation and must accept it to view or edit the calendar."
+                  }
+                />
               </View>
               <Text style={styles.subtitle}>Enter recipient's email:</Text>
             </View>

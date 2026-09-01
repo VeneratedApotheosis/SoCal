@@ -1,8 +1,10 @@
 import { useUIContext } from '@/components/contexts/ui-context';
+import InformationIcon from '@/components/InformationIcon';
 import { baseFlexStyles, getBasicThemeStyles, getBasicTypographyStyles } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { useEffect, useRef, useState } from 'react';
 import { Keyboard, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import ColorPicker, { ColorFormatsObject, HueSlider } from 'reanimated-color-picker';
 
 export interface AppearanceColorSortModalInterface {
   isVisible: boolean;
@@ -34,14 +36,14 @@ export default function AppearanceColorSortModal({
 
   const handleSave = () => {
     const input = Number(localStartHue);
-    if (input >= 360) return;
+    if (input > 360) return;
     handleSort(input);
     setVisible(false);
     setStartHue(input);
   };
 
   const updateHue = (hue: number) => {
-    if (hue >= 360) setValidHue(false);
+    if (hue > 360) setValidHue(false);
     else setValidHue(true);
   };
 
@@ -53,7 +55,7 @@ export default function AppearanceColorSortModal({
       onRequestClose={() => {
         setVisible(false);
         Keyboard.dismiss();
-      }} // Handles Android hardware back button><Modal/>);
+      }}
     >
       {/* --- BACKDROP BUTTON --- */}
       <Pressable
@@ -65,7 +67,16 @@ export default function AppearanceColorSortModal({
       {/* --- CENTERED SETTINGS BOX --- */}
       <View style={styles.centeredContainer} pointerEvents="box-none">
         <View style={[styles.menuBox]}>
-          <Text style={styles.title}>Sort Starting Hue</Text>
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', flex: 1 }}>
+            <Text style={styles.title}>Sort Starting Hue</Text>
+            <InformationIcon
+              size={20}
+              title={'Sort Starting Hue'}
+              description={
+                'Reorder your palette starting from this color. For example, a starting hue of blue would order the palette blue, purple, red, orange, yellow, green.'
+              }
+            ></InformationIcon>
+          </View>
 
           <TextInput
             ref={inputRef}
@@ -79,6 +90,22 @@ export default function AppearanceColorSortModal({
             placeholder="Set Start Hue"
             returnKeyType="done"
           />
+          <ColorPicker
+            style={{ width: '100%' }}
+            value={`hsv(${localStartHue || 0}, 13%, 100%)`}
+            onComplete={(colors: ColorFormatsObject) => {
+              const match = colors.hsv.match(/hsv\(\s*(\d+)/i);
+              const hue = match ? parseInt(match[1], 10) : null;
+
+              if (hue !== null) {
+                updateHue(hue);
+                setLocalStartHue(hue);
+              }
+            }}
+            boundedThumb={true}
+          >
+            <HueSlider />
+          </ColorPicker>
 
           <View style={styles.buttonRow}>
             <Pressable style={({ pressed }) => [styles.button, pressed && styles.pressedButton]} onPress={() => setVisible(false)}>
@@ -120,6 +147,8 @@ export const getSortModalStyles = (isDark: boolean) => {
       maxWidth: 300,
       boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.25)',
       elevation: 10,
+      flexDirection: 'column',
+      gap: 16,
     },
     colorButton: {
       width: 20,
@@ -135,7 +164,6 @@ export const getSortModalStyles = (isDark: boolean) => {
     },
     title: {
       ...baseText.subtitle,
-      marginBottom: 12,
     },
     input: {
       ...baseTheme.backgroundMuted,
@@ -146,7 +174,6 @@ export const getSortModalStyles = (isDark: boolean) => {
       ...baseText.noBorder,
     },
     buttonRow: {
-      paddingTop: 16,
       flexDirection: 'row',
       justifyContent: 'flex-end',
       gap: 16,

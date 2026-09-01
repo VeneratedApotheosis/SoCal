@@ -33,7 +33,6 @@ export function useColorGroups() {
           if (saved.palette) setPaletteData(saved.palette);
           if (saved.groups) setGroupsData(saved.groups);
         }
-        console.log('DONE LOADING FROM STORAGE');
       } catch (e) {
         console.error('Failed to load color groups from storage', e);
       } finally {
@@ -59,7 +58,6 @@ export function useColorGroups() {
       if (data.error) throw new Error(data.error);
       if (data.palette) setPaletteData(data.palette);
       if (data.groups) setGroupsData(data.groups);
-      console.log('DONE LOADING FROM BACKEND');
 
       await storage.save(COLOR_GROUPS_STORAGE_KEY, { palette: data.palette ?? paletteData, groups: data.groups ?? groupsData });
     } catch (err: any) {

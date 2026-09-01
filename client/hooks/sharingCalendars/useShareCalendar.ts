@@ -7,12 +7,7 @@ export const useShareCalendar = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const share = useCallback(async (
-    calId: string,
-    email: string,
-    token: string,
-    role: accessRole
-  ) => {
+  const share = useCallback(async (calId: string, email: string, token: string, role: accessRole) => {
     setIsLoading(true);
     setError(null);
 
@@ -22,7 +17,7 @@ export const useShareCalendar = () => {
       return { success: true, data: response };
     } catch (err: any) {
       setIsLoading(false);
-      const errorMessage = err instanceof Error ? err.message : "Failed to share calendar";
+      const errorMessage = err instanceof Error ? err.message : 'Failed to share calendar';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     }

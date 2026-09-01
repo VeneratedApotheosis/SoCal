@@ -189,13 +189,13 @@ export const patchEventRecurrenceInGoogleCalendar = (t: string, e: EventObj) => 
 
 // ─── Backend API Sharing Functions ───────────────────────────────────────────────────────────
 
-export const shareCalendar = (calId: string, email: string, t: string, r: accessRole) =>
-  bReq('/share-calendar', 'post', t, {
+export const shareCalendar = (calId: string, email: string, t: string, r: accessRole) => {
+  return bReq('/share-calendar', 'post', t, {
     calId: calId,
     email: email,
     role: r,
   });
-
+};
 export const unshareCalendar = (calId: string, email: string, t: string) =>
   bReq('/unshare-calendar', 'delete', t, {
     calId: calId,
@@ -203,6 +203,6 @@ export const unshareCalendar = (calId: string, email: string, t: string) =>
   });
 
 export const unsuscribeCalendar = (calId: string, t: string) =>
-  bReq('/unsuscribe-calendar', 'delete', t, {
+  bReq('/unsubscribe-calendar', 'delete', t, {
     calId: calId,
   });

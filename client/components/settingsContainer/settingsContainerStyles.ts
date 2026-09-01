@@ -552,6 +552,7 @@ export const getShareModalStyles = (isDark: boolean) => {
     },
     title: {
       ...baseText.title,
+      textAlignVertical: 'center',
     },
     subtitle: {
       ...baseText.body,
