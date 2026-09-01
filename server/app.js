@@ -98,7 +98,7 @@ const authenticate = async (req, res, next) => {
 
 const getAccessToken = async (userId, refreshToken) => {
   if (!refreshToken) {
-    throw new Error('Missing refresh token for user ${userId}');
+    throw new Error(`Missing refresh token for user ${userId}`);
   }
 
   const cachedToken = accessTokenCache.get(userId);
@@ -190,13 +190,12 @@ app.delete('/api/delete-account', authenticate, handleRoute('Failed to delete ac
 }));
 
 // ─── Sharing Functions ───────────────────────────────────────────────────────────
-
 app.post('/api/share-calendar', authenticate, handleRoute('Internal server error during sharing', async (req, res) => {
   const { calId, email, role = 'reader' } = req.body;
   if (!calId || !email) return res.status(400).json({ error: "Missing calendarId or email" });
 
-  const userData = db.getUserRefreshToken(req.userId);
-  if (!userData?.refreshToken) return res.status(404).json({ error: 'User refresh token not found' });
+  const userData = await db.getUserRefreshToken(req.userId);
+  if (!userData?.refreshToken) return res.status(401).json({ error: 'User refresh token not found' });
 
   const { accessToken } = await getAccessToken(req.userId, userData.refreshToken);
   const data = await googleFetch(`calendars/${encodeURIComponent(calId)}/acl`, 'POST', accessToken, {
@@ -210,8 +209,8 @@ app.delete('/api/unshare-calendar', authenticate, handleRoute('Internal server e
   const { calId, email } = req.body;
   if (!calId || !email) return res.status(400).json({ error: "Missing calendarId or email" });
 
-  const userData = db.getUserRefreshToken(req.userId);
-  if (!userData?.refreshToken) return res.status(404).json({ error: 'User refresh token not found' });
+  const userData = await db.getUserRefreshToken(req.userId);
+  if (!userData?.refreshToken) return res.status(401).json({ error: 'User refresh token not found' });
 
   const { accessToken } = await getAccessToken(req.userId, userData.refreshToken);
   await googleFetch(`calendars/${encodeURIComponent(calId)}/acl/user:${email}`, 'DELETE', accessToken);
@@ -219,12 +218,12 @@ app.delete('/api/unshare-calendar', authenticate, handleRoute('Internal server e
   res.status(200).json({ message: 'Access revoked successfully' });
 }));
 
-app.delete('/api/unsuscribe-calendar', authenticate, handleRoute('Internal server error during unsubscribe', async (req, res) => {
+app.delete('/api/unsubscribe-calendar', authenticate, handleRoute('Internal server error during unsubscribe', async (req, res) => {
   const { calId } = req.body;
-  if (!calId) return res.status(400).json({ error: "user calendar not found" });
+  if (!calId) return res.status(400).json({ error: "User calendar not found" });
 
-  const userData = db.getUserRefreshToken(req.userId);
-  if (!userData?.refreshToken) return res.status(404).json({ error: "user refresh token not found" });
+  const userData = await db.getUserRefreshToken(req.userId);
+  if (!userData?.refreshToken) return res.status(401).json({ error: "User refresh token not found" });
 
   const { accessToken } = await getAccessToken(req.userId, userData.refreshToken);
   await googleFetch(`users/me/calendarList/${encodeURIComponent(calId)}`, 'DELETE', accessToken);
@@ -331,30 +330,6 @@ app.get('/api/places/details', authenticate, handleRoute('Details failed', async
     return res.status(400).json({ error: data.error_message || data.status });
   }
   res.json(data.result || {});
-}));
-
-// ─── Debug Routes ──────────────────────────────────────────
-
-app.get('/getData', async (req, res) => {
-  const data = await db.getAllData(req.query.table);
-  res.json(data);
-});
-
-app.get('/token', handleRoute('Failed to get family data', async (req, res) => {
-  const profile = await db.getUserProfile(req.query.id);
-  res.json({ parent: profile, children: [] });
-}));
-
-app.get('/tokenreal', handleRoute('Failed to get family data', async (req, res) => {
-  const parentId = req.query.id;
-  const parentData = await db.getUserRefreshToken(parentId);
-
-  if (!parentData) return res.status(404).json({ error: 'User not found' });
-
-  res.json({
-    parent: await fetchAndFormatUserToken(parentId, parentData.refreshToken, parentData.id),
-    children: []
-  });
 }));
 
 // ─── Initialization ───────────────────────────────────────────────────────────
