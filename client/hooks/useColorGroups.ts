@@ -75,7 +75,7 @@ export function useColorGroups() {
   // ─── Save Data To local Storage and Backend ───────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || localLoading) return;
     const saveData = async () => {
       console.log('[SAVE LOCALLY AND POST] Saving color palette data');
       const payload = { palette: paletteData, groups: groupsData };
@@ -93,7 +93,7 @@ export function useColorGroups() {
   }, [paletteData]);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || localLoading) return;
     const saveData = async () => {
       console.log('[SAVE LOCALLY AND POST] Saving group data');
       const payload = { palette: paletteData, groups: groupsData };

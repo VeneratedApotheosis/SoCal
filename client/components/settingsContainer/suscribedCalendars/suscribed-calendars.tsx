@@ -77,7 +77,9 @@ export default function SuscribedCalendars() {
                   style={({ pressed }) => [accordionStyles.accordionHeader, pressed && accordionStyles.pressedButton]}
                   onPress={() => handleToggle(group.dataOwner)}
                 >
-                  <Text style={accordionStyles.accordionTitle}>{group.dataOwner}</Text>
+                  <Text style={accordionStyles.accordionTitle} numberOfLines={1}>
+                    {group.dataOwner}
+                  </Text>
                   <View style={accordionStyles.badge}>
                     <Text style={accordionStyles.badgeText}>{group.calendars.length}</Text>
                   </View>

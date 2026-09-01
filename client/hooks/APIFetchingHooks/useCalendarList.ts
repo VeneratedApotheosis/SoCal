@@ -63,7 +63,7 @@ export function useCalendarList() {
     }
     setIsLoading(true);
     setError(null);
-    console.log('fetching calendar objects');
+    console.log('[FETCH] calendar objects');
 
     try {
       const tokens = await getValidAccessToken(jwtToken);
@@ -90,8 +90,6 @@ export function useCalendarList() {
   useEffect(() => {
     fetchUserEvents();
   }, [fetchUserEvents, validJwt]);
-
-  //const [reference, setReference] = useState<calendarObj[]>(referenceCalendarObjects);;
 
   return { calendarObjs, setCalendarObjs, sharedObjs, isLoading, error, refetch: fetchUserEvents };
 }

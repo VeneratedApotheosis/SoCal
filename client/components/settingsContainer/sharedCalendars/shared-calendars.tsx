@@ -153,7 +153,9 @@ export default function SharedCalendars() {
                         style={({ pressed }) => [styles.accordionHeader, pressed && styles.pressedButton]}
                         onPress={() => handleToggle(cal.id)}
                       >
-                        <Text style={styles.accordionTitle}>{cal.name}</Text>
+                        <Text style={styles.accordionTitle} numberOfLines={1}>
+                          {cal.name}
+                        </Text>
                         <View style={styles.badge}>
                           <Text style={styles.badgeText}>{cal.sharedIds.length}</Text>
                         </View>

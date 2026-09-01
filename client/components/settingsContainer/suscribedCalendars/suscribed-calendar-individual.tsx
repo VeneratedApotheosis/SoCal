@@ -27,7 +27,9 @@ export default function SuscribedCalendarIndividual({ cal }: SharedCalIndividual
   return (
     <View key={cal.calendarId} style={shareStyles.detailRow}>
       <AccessRoleIndicator accessRole={cal.accessRole} />
-      <Text style={shareStyles.detailName}>{cal.calendarName}</Text>
+      <Text style={shareStyles.detailName} numberOfLines={1}>
+        {cal.calendarName}
+      </Text>
 
       {/* --- SETTINGS BUTTON --- */}
       <View ref={buttonRef} collapsable={false}>

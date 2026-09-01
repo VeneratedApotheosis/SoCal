@@ -24,7 +24,6 @@ export interface EventsContextType {
   };
   isWriting: boolean;
   writeError: string | null;
-  refetchCalendar: (fetchStart: number | null, fetchEnd: number | null) => Promise<void>;
   fetchForward: (fetchEnd: number, n: number) => void;
   fetchBackward: (fetchEnd: number, n: number) => void;
   reloadCalendar: () => void;
@@ -42,12 +41,12 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   const { isWriting, writeError } = useCalendarWrite();
 
   // TIME ZONE HOOK
-  const { timeZone, setTimeZone, isStorageLoaded: isTimeZoneLoaded } = useTimeZoneContext();
+  const { timeZone, isStorageLoaded: isTimeZoneLoaded } = useTimeZoneContext();
 
   // ─── Calendar Object and Events Hooks ───────────────────────────────────────────────────────────
 
   // Calendar Object Hook
-  const { hiddenCalendarHook: hiddenCalendar, calendarObjs, calViewMode, suppressOther } = useCalendarObjects();
+  const { hiddenCalendarHook: hiddenCalendar, calendarObjs, calViewMode, suppressOther, refetchCalendarList } = useCalendarObjects();
   // Calendar Event Hook
   const {
     calendars,
@@ -57,7 +56,7 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
     uniqueCalendars,
     setUniqueCalendars,
     refetch: refetchCalendar,
-  } = useCalendar(timeZone, isTimeZoneLoaded);
+  } = useCalendar(timeZone, isTimeZoneLoaded, calendarType);
 
   const isDisplayed = (calendarId: string) => {
     return !hiddenCalendar.hiddenCalendars.includes(calendarId || '');
@@ -95,8 +94,8 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (calendarType.type !== localCalType) {
       if (calendarType.type === 'W') {
-        const targetStart = -1 * (calendarType.num + 8) * 7;
-        const targetEnd = (calendarType.num + 8) * 7;
+        const targetStart = -1 * (calendarType.weekNum + 8) * 7;
+        const targetEnd = (calendarType.weekNum + 8) * 7;
         refetchCalendar(Math.min(targetStart, fetchStart), Math.max(targetEnd, fetchEnd));
         setFetchStart(Math.min(targetStart, fetchStart));
         setFetchEnd(Math.max(targetEnd, fetchEnd));
@@ -117,6 +116,7 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
 
   const reloadCalendar = () => {
     refetchCalendar(fetchStart, fetchEnd);
+    refetchCalendarList();
   };
 
   return (
@@ -128,7 +128,6 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
         mutateEvent,
         isWriting,
         writeError,
-        refetchCalendar,
         fetchForward,
         fetchBackward,
         reloadCalendar,

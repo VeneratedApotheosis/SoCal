@@ -5,11 +5,11 @@ import { storage } from '@/services/storage';
 import { BUFFER_INCREMENT } from '@/utility/constants';
 import { processCalendar } from '@/utility/eventUtils';
 import { getValidAccessToken } from '@/utility/tokenUtils';
-import { CalendarData, calendarObj, EventObj, FamilyCalendarState } from '@/utility/types';
+import { CalendarData, calendarObj, CalendarView, EventObj, FamilyCalendarState } from '@/utility/types';
 import { addDays } from 'date-fns';
 import { useCallback, useEffect, useState } from 'react';
 
-export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean) {
+export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calendarType: CalendarView) {
   const [calendars, setCalendars] = useState<FamilyCalendarState | null>(null);
   const [uniqueCalendars, setUniqueCalendars] = useState<CalendarData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +28,7 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean) {
   };
 
   const fetchUserEvents = useCallback(
-    async (fetchStart: number | null, fetchEnd: number | null) => {
+    async (fetchStart: number, fetchEnd: number) => {
       const jwtToken = await getValidJwt();
       if (!jwtToken || !isTimeZoneLoaded || !timeZone) {
         clearCalendarEvents();
@@ -38,24 +38,9 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean) {
       //Fetching Start and End Date Calculation
       let fetchStartDate: Date = new Date();
       let fetchEndDate: Date = new Date();
-      if (fetchStart && fetchEnd) {
-        fetchStartDate = addDays(fetchStartDate, fetchStart);
-        fetchEndDate = addDays(fetchEndDate, fetchEnd);
-      } else if (!fetchStart && !fetchEnd) {
-        //Days Starting Fetch
-        fetchStartDate = addDays(fetchStartDate, -2 * BUFFER_INCREMENT);
-        fetchEndDate = addDays(fetchEndDate, 2 * BUFFER_INCREMENT);
-      } else if (fetchStart) {
-        //fetch backward/start
-        fetchStartDate = addDays(fetchStartDate, fetchStart - BUFFER_INCREMENT);
-        fetchEndDate = addDays(fetchEndDate, fetchStart);
-      } else if (fetchEnd) {
-        //fetch forward/end
-        fetchStartDate = addDays(fetchStartDate, fetchEnd);
-        fetchEndDate = addDays(fetchEndDate, fetchEnd + BUFFER_INCREMENT);
-        console.log(fetchEnd, fetchEnd + BUFFER_INCREMENT);
-      }
-      console.log('[FETCH] calendar events');
+      fetchStartDate = addDays(fetchStartDate, fetchStart);
+      fetchEndDate = addDays(fetchEndDate, fetchEnd);
+      console.log('[FETCH] calendar events', fetchStart, fetchEnd);
 
       setIsLoading(true);
       setError(null);
@@ -154,7 +139,12 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean) {
       clearCalendarEvents();
     }
     setLocalTimeZone(timeZone);
-    fetchUserEvents(null, null);
+    //Initial Fetch Bounds
+    if (calendarType.type === 'W') {
+      fetchUserEvents(-1 * (calendarType.weekNum + 8) * 7, (calendarType.weekNum + 8) * 7);
+    } else {
+      fetchUserEvents(-2 * BUFFER_INCREMENT, 2 * BUFFER_INCREMENT);
+    }
   }, [timeZone, isTimeZoneLoaded, fetchUserEvents]);
 
   return { calendars, setCalendars, isLoading, error, uniqueCalendars, setUniqueCalendars, refetch: fetchUserEvents };
