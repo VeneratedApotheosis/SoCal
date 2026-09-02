@@ -370,6 +370,7 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate, setError }: Eve
           onCustom={handleCustomRecurrence}
           webVisible={webVisible}
           setWebVisible={setWebVisible}
+          eventStartDate={event.startDate}
         />
       ) : (
         <RecurrencePickerModal
@@ -377,6 +378,7 @@ export const EventTimeDatePicker = ({ event, editable, onUpdate, setError }: Eve
           current={event.recurrence}
           onSelect={(val) => onUpdate('recurrence', val)}
           onCustom={handleCustomRecurrence}
+          eventStartDate={event.startDate}
         />
       )}
 

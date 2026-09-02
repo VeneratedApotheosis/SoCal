@@ -54,6 +54,8 @@ interface RecurrencePickerModalProps {
   onCustom: () => void;
   webVisible: boolean;
   setWebVisible: React.Dispatch<React.SetStateAction<boolean>>;
+
+  eventStartDate: Date;
 }
 
 export const WebRecurrencePickerModal = ({
@@ -63,6 +65,7 @@ export const WebRecurrencePickerModal = ({
   onCustom,
   webVisible,
   setWebVisible,
+  eventStartDate,
 }: RecurrencePickerModalProps) => {
   const { theme } = useUIContext();
   const styles = recurrenceStyles(theme.isDark);
@@ -142,6 +145,7 @@ export const WebRecurrencePickerModal = ({
         onSave={(newRuleString: string) => {
           onSelect([newRuleString]);
         }}
+        eventStartDate={eventStartDate}
       />
     </>
   );

@@ -52,9 +52,10 @@ interface RecurrencePickerModalProps {
   current: string[] | null | undefined;
   onSelect: (value: string[] | null) => void;
   onCustom: () => void;
+  eventStartDate: Date;
 }
 
-export const RecurrencePickerModal = ({ sheetRef, current, onSelect, onCustom }: RecurrencePickerModalProps) => {
+export const RecurrencePickerModal = ({ sheetRef, current, onSelect, onCustom, eventStartDate }: RecurrencePickerModalProps) => {
   const snapPoints = useMemo(() => ['50%'], []);
   const { theme } = useUIContext();
   const styles = recurrenceStyles(theme.isDark);
@@ -122,6 +123,7 @@ export const RecurrencePickerModal = ({ sheetRef, current, onSelect, onCustom }:
         onSave={(newRuleString: string) => {
           onSelect([newRuleString]);
         }}
+        eventStartDate={eventStartDate}
       />
     </>
   );

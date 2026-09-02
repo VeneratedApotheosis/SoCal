@@ -5,8 +5,8 @@ export interface DateContextType {
   setCurDate: (curDate: Date) => void;
   currentMonthText: string;
   setCurrentMonthText: React.Dispatch<React.SetStateAction<string>>;
-  resetDate: number;
-  setResetDate: React.Dispatch<React.SetStateAction<number>>;
+  currentYear: number;
+  setCurrentYear: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export const CalendarIndexContext = createContext<DateContextType>({} as DateContextType);
@@ -14,10 +14,10 @@ export const CalendarIndexContext = createContext<DateContextType>({} as DateCon
 export const DateProvider = ({ children }: { children: ReactNode }) => {
   const [curDate, setCurDate] = useState<Date>(new Date());
   const [currentMonthText, setCurrentMonthText] = useState<string>(curDate.toLocaleString('default', { month: 'long' }));
-  const [resetDate, setResetDate] = useState<number>(0);
+  const [currentYear, setCurrentYear] = useState<number>(0);
 
   return (
-    <CalendarIndexContext.Provider value={{ curDate, setCurDate, currentMonthText, setCurrentMonthText, resetDate, setResetDate }}>
+    <CalendarIndexContext.Provider value={{ curDate, setCurDate, currentMonthText, setCurrentMonthText, currentYear, setCurrentYear }}>
       {children}
     </CalendarIndexContext.Provider>
   );

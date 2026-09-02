@@ -77,6 +77,8 @@ A cross-platform native application built with TypeScript, Expo, and React Nativ
  - Update All-Day to have last day INCLUSIVE
  - Font Size Settings
  - Add UI feedback to hover, press, and selected buttons
+
+ - Added year to header on weekly view //Done
  - Consider checking if calendarList is properly being refreshed //Done
  - FIXED: sharing doesnt work
  - Save Additional User Data in db instead of saving locally //Done

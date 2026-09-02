@@ -58,7 +58,7 @@ const emptyPool = Array(10).fill({ isActive: false, eventId: '', name: '', color
 export default function MultiDayContainer({ calendarType, events }: { calendarType: CalendarView; events: EventObj[] }) {
   // contexts
   const { days } = useCalendarRange();
-  const { currentMonthText, setCurrentMonthText, resetDate } = useCalendarIndex();
+  const { currentMonthText, setCurrentMonthText } = useCalendarIndex();
   const { timeZone } = useTimeZoneContext();
   const { theme, sideBar, multiDayInHeader } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;

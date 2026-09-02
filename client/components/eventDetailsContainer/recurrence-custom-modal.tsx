@@ -2,7 +2,7 @@ import { COLORS } from '@/utility/theme';
 import { applyDateString, formatDateShort } from '@/utility/timeUtil';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { Modal, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Modal, Pressable, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
 import { Frequency, RRule } from 'rrule';
 import { useUIContext } from '../contexts/ui-context';
 import { modalStyles } from './eventDetailsStyles';
@@ -12,6 +12,7 @@ interface CustomRecurrenceModalProps {
   onClose: () => void;
   rruleString: string;
   onSave: (newRruleString: string) => void;
+  eventStartDate: Date;
 }
 
 // Map standard text labels to RRule numeric frequency constants
@@ -25,7 +26,7 @@ const FREQ_OPTIONS = [
 const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const RRULE_WEEKDAYS = [RRule.SU, RRule.MO, RRule.TU, RRule.WE, RRule.TH, RRule.FR, RRule.SA];
 
-export const CustomRecurrenceModal = ({ isOpen, onClose, rruleString, onSave }: CustomRecurrenceModalProps) => {
+export const CustomRecurrenceModal = ({ isOpen, onClose, rruleString, onSave, eventStartDate }: CustomRecurrenceModalProps) => {
   const { theme } = useUIContext();
   const styles = modalStyles(theme.isDark);
 
@@ -45,10 +46,20 @@ export const CustomRecurrenceModal = ({ isOpen, onClose, rruleString, onSave }: 
   useEffect(() => {
     if (isOpen) {
       try {
-        // Fallback to a basic rule if string is empty
-        const cleanString = rruleString?.startsWith('RRULE:') ? rruleString : `RRULE:${rruleString || 'FREQ=WEEKLY'}`;
+        // 1. Get today's local day as an RRule string (e.g., 'TU' for Tuesday, 'WE' for Wednesday)
+        const localDayIndex = eventStartDate.getDay();
+        const localDayStr = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'][localDayIndex];
+
+        // 2. Explicitly include BYDAY in the fallback so RRule doesn't guess based on UTC
+        const fallback = `FREQ=WEEKLY;BYDAY=${localDayStr}`;
+
+        // 3. Construct the clean string
+        const cleanString = rruleString?.startsWith('RRULE:') ? rruleString : `RRULE:${rruleString || fallback}`;
+
         const parsedRule = RRule.fromString(cleanString);
         const options = parsedRule.options;
+
+        console.log(cleanString);
 
         setCustomInterval(options.interval || 1);
         setCustomFreq(options.freq);
@@ -175,15 +186,15 @@ export const CustomRecurrenceModal = ({ isOpen, onClose, rruleString, onSave }: 
 
                   {/* Custom Dropdown Trigger */}
                   <View style={{ zIndex: 10 }}>
-                    <TouchableOpacity style={styles.dropdownTrigger} onPress={() => setShowFreqDropdown(!showFreqDropdown)}>
+                    <Pressable style={styles.dropdownTrigger} onPress={() => setShowFreqDropdown(!showFreqDropdown)}>
                       <Text style={styles.dropdownTriggerText}>{currentFreqLabel}</Text>
                       <Ionicons name="chevron-down" size={14} color={theme.isDark ? COLORS.border.mutedLight : COLORS.border.mutedLight} />
-                    </TouchableOpacity>
+                    </Pressable>
 
                     {showFreqDropdown && (
                       <View style={styles.dropdownMenu}>
                         {FREQ_OPTIONS.map((opt) => (
-                          <TouchableOpacity
+                          <Pressable
                             key={opt.key}
                             style={styles.dropdownItem}
                             onPress={() => {
@@ -192,7 +203,7 @@ export const CustomRecurrenceModal = ({ isOpen, onClose, rruleString, onSave }: 
                             }}
                           >
                             <Text style={styles.dropdownItemText}>{opt.label}</Text>
-                          </TouchableOpacity>
+                          </Pressable>
                         ))}
                       </View>
                     )}
@@ -208,13 +219,13 @@ export const CustomRecurrenceModal = ({ isOpen, onClose, rruleString, onSave }: 
                     {DAY_LETTERS.map((letter, i) => {
                       const isSelected = customDays.has(i);
                       return (
-                        <TouchableOpacity
+                        <Pressable
                           key={i}
                           onPress={() => toggleCustomDay(i)}
                           style={[styles.dayCircle, isSelected ? styles.dayCircleActive : styles.dayCircleInactive]}
                         >
                           <Text style={[styles.dayText, isSelected ? styles.dayTextActive : styles.dayTextInactive]}>{letter}</Text>
-                        </TouchableOpacity>
+                        </Pressable>
                       );
                     })}
                   </View>
@@ -227,22 +238,22 @@ export const CustomRecurrenceModal = ({ isOpen, onClose, rruleString, onSave }: 
                 <View style={[styles.radioGroup, { justifyContent: 'space-evenly' }]}>
                   {/* Option: Never */}
                   <View style={styles.radioRow}>
-                    <TouchableOpacity style={styles.radioRowInline} onPress={() => setEndsType('never')}>
+                    <Pressable style={styles.radioRowInline} onPress={() => setEndsType('never')}>
                       <View style={[styles.radioOuter, endsType === 'never' && styles.radioOuterActive]}>
                         {endsType === 'never' && <View style={styles.radioInner} />}
                       </View>
                       <Text style={styles.radioText}>Never</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                   </View>
 
                   {/* Option: On Date */}
                   <View style={styles.radioRow}>
-                    <TouchableOpacity style={styles.radioRowInline} onPress={() => setEndsType('on')}>
+                    <Pressable style={styles.radioRowInline} onPress={() => setEndsType('on')}>
                       <View style={[styles.radioOuter, endsType === 'on' && styles.radioOuterActive]}>
                         {endsType === 'on' && <View style={styles.radioInner} />}
                       </View>
                       <Text style={[styles.radioText, { width: 32 }]}>On</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                     <TextInput
                       placeholder="DD/MM/YYYY"
                       placeholderTextColor={theme.isDark ? COLORS.text.subtleDark : COLORS.text.subtleLight}
@@ -274,12 +285,12 @@ export const CustomRecurrenceModal = ({ isOpen, onClose, rruleString, onSave }: 
 
                   {/* Option: After Occurrences */}
                   <View style={styles.radioRow}>
-                    <TouchableOpacity style={styles.radioRowInline} onPress={() => setEndsType('after')}>
+                    <Pressable style={styles.radioRowInline} onPress={() => setEndsType('after')}>
                       <View style={[styles.radioOuter, endsType === 'after' && styles.radioOuterActive]}>
                         {endsType === 'after' && <View style={styles.radioInner} />}
                       </View>
                       <Text style={[styles.radioText]}>After</Text>
-                    </TouchableOpacity>
+                    </Pressable>
 
                     <View
                       style={[
@@ -316,12 +327,12 @@ export const CustomRecurrenceModal = ({ isOpen, onClose, rruleString, onSave }: 
 
               {/* --- Footer Buttons --- */}
               <View style={styles.footerRow}>
-                <TouchableOpacity onPress={onClose} style={styles.btnCancel}>
+                <Pressable onPress={onClose} style={styles.btnCancel}>
                   <Text style={styles.btnCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={handleDone} style={styles.btnDone}>
+                </Pressable>
+                <Pressable onPress={handleDone} style={styles.btnDone}>
                   <Text style={styles.btnDoneText}>Done</Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             </View>
           </TouchableWithoutFeedback>

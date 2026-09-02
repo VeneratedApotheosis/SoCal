@@ -193,6 +193,8 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
     } else handleEdit('this');
   };
 
+  console.log(event.recurrence);
+
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.container}>

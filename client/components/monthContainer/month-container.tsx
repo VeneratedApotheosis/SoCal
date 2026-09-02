@@ -29,7 +29,7 @@ const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat'];
 
 export default function MonthContainer({ calendarType, events }: { calendarType: CalendarView; events: EventObj[] }) {
   const { sundays } = useCalendarRange();
-  const { currentMonthText, setCurrentMonthText, resetDate } = useCalendarIndex();
+  const { currentMonthText, setCurrentMonthText, setCurrentYear } = useCalendarIndex();
   const { timeZone } = useTimeZoneContext();
   const { theme, sideBar, multiDayInHeader } = useUIContext();
   const styles = monthstyles(theme.isDark);
@@ -217,6 +217,7 @@ export default function MonthContainer({ calendarType, events }: { calendarType:
           date.setHours(12, 0, 0, 0);
           date.setDate(date.getDate() + currentIndex * 7 + 3);
           setCurrentMonthText(MONTHS[date.getMonth()]);
+          setCurrentYear(date.getFullYear());
         }
 
         if (currentIndex * 7 > localFetchEnd.current) {

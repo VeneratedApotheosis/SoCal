@@ -13,9 +13,9 @@ import CalendarTypePicker from './calendar-type';
 import { FetchStatusIcon } from './fetch-status-icon';
 
 export default function CalendarHeader() {
-  const { validJwt } = useAuthContext();
+  const { validJwt, calendarType } = useAuthContext();
   const navigation = useNavigation();
-  const { currentMonthText } = useCalendarIndex();
+  const { currentMonthText, currentYear } = useCalendarIndex();
   const { now, theme, sideBar, setLoginVisible } = useUIContext();
   const { isWeb, fixedSidebar, headerHeight } = useScreenSize();
   const styles = getHeaderStyles(theme.isDark);
@@ -37,6 +37,8 @@ export default function CalendarHeader() {
     setLoginVisible(true);
   };
 
+  const monthText = calendarType.type === 'D' ? currentMonthText : currentMonthText + ' ' + String(currentYear);
+
   return (
     <>
       {validJwt ? (
@@ -55,7 +57,7 @@ export default function CalendarHeader() {
 
           {/* --- Date --- */}
           <View style={{ justifyContent: 'center' }}>
-            <TextInput style={styles.headerText} editable={false} value={currentMonthText} />
+            <TextInput style={styles.headerText} editable={false} value={monthText} />
           </View>
 
           {/* --- Extra Buttons on the Right --- */}
