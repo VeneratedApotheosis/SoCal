@@ -24,7 +24,6 @@ const darkStyles = getAllDayChipStyles(true);
 const lightStyles = getAllDayChipStyles(false);
 
 function AllDayEvents({ event, day, layout, handlePress, dayWidth, selectedEventId, isDummy, idx, singleEvent }: Props) {
-  //console.log('creating event');
   const { theme, transparentOpacity } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;
   const { calendarObjs, calViewMode } = useCalendarObjects();

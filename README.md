@@ -71,13 +71,13 @@ A cross-platform native application built with TypeScript, Expo, and React Nativ
 
 ### 3. TODO:
  - TouchScreen Vertical Scroll
- - BUG FIX: Smth wrong with dragging the calendars in the sidebar
  - Setting to add a weekly space btwn months in weekly View
  - Create Logo
  - Update All-Day to have last day INCLUSIVE
  - Font Size Settings
  - Add UI feedback to hover, press, and selected buttons
 
+ - FIXED: Smth wrong with dragging the calendars in the sidebar
  - Added year to header on weekly view //Done
  - Consider checking if calendarList is properly being refreshed //Done
  - FIXED: sharing doesnt work

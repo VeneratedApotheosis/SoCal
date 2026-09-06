@@ -58,7 +58,6 @@ export const useColorCache = (calendarObjs: calendarObj[] | null) => {
 
             // If the color assigned to this calendar isn't in the new palette anymore...
             if (!updatedPalette.includes(currentColor)) {
-              console.log(calId);
               const cal = calendarObjs?.find((c) => c.calendarId === calId);
               // ...recalculate the closest match from the updated palette
               nextMap[calId] = findClosestColor(cal?.calendarDefaultColor || '#000000', updatedPalette);

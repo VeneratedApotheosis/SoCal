@@ -172,7 +172,6 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
       const temp = newGroups[index];
       newGroups[index] = newGroups[targetIndex];
       newGroups[targetIndex] = temp;
-      console.log(index, targetIndex);
       return [...newGroups]; //
     });
   };

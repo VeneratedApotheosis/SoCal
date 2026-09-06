@@ -12,7 +12,6 @@ export default function WelcomeScreen() {
   const { validJwt } = useAuthContext();
   const { theme } = useUIContext();
   const styles = welcomeScreenStyles(theme.isDark);
-  console.log(isLoading);
 
   return (
     <View style={styles.homepg}>

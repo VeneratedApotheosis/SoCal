@@ -90,16 +90,16 @@ export const getFolderIndividual = (isDark: boolean) => {
       flexDirection: 'row',
       justifyContent: 'space-between',
       gap: 8,
-      paddingTop: 16,
+      paddingTop: 12,
       height: DRAWER_DRAGGABLE_HEIGHT,
     },
     folderFront: {
       flexDirection: 'row',
-      marginTop: 'auto',
       gap: 8,
     },
     sectionHeaderText: {
       ...baseText.body,
+      textAlignVertical: 'center',
     },
     iconButton: {
       padding: 4,

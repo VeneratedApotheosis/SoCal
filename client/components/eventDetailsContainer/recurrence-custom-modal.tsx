@@ -59,8 +59,6 @@ export const CustomRecurrenceModal = ({ isOpen, onClose, rruleString, onSave, ev
         const parsedRule = RRule.fromString(cleanString);
         const options = parsedRule.options;
 
-        console.log(cleanString);
-
         setCustomInterval(options.interval || 1);
         setCustomFreq(options.freq);
 

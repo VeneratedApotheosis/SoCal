@@ -272,7 +272,7 @@ export default function CustomDrawerContent(props: any) {
               <Text style={themeStyles.viewModeText}>remove {viewMode}</Text>
             </Pressable>
           )}
-          <View style={{ gap: 6 }}>
+          <View style={{}}>
             {flatData.map((data, index) => (
               <DraggableCalendar
                 key={data.folder ? `folder-${data.id}` : `cal-${data.calendar?.calendarId}`}

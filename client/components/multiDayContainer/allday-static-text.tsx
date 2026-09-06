@@ -49,8 +49,6 @@ export default function AllDayPoolChip({
     const slot = eventPool.value[index];
     const length = widthsDictionary[eventPool.value[index].eventId] ?? 0;
 
-    console.log(eventPool.value[index].eventId, length);
-
     return {
       color: slot.isActive ? slot.color : 'transparent',
       width: slot.isActive ? length : 0,
@@ -59,7 +57,6 @@ export default function AllDayPoolChip({
 
   const handleContentSizeChange = (event: any) => {
     const width = event.nativeEvent.contentSize.width;
-    console.log(width);
   };
 
   return (
