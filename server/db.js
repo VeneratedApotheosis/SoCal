@@ -31,7 +31,7 @@ const initDb = async () => {
       id TEXT PRIMARY KEY REFERENCES "userInfo"(id) ON DELETE CASCADE,
       palette JSONB,
       groups JSONB,
-      hiddenCalendars JSONB,
+      "hiddenCalendars" JSONB
       )
       `)
 
