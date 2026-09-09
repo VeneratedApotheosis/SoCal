@@ -128,12 +128,12 @@ const deleteUserProfile = async (userId) => {
 
 const upsertUserCalendarPreferences = async (userId, palette, groups, hiddenCalendars) => {
   const query = `
-    INSERT INTO "userCalendarPreferences" (id, palette, groups, hiddenCalendars)
+    INSERT INTO "userCalendarPreferences" (id, palette, groups, "hiddenCalendars")
     VALUES ($1, $2, $3, $4)
     ON CONFLICT (id) DO UPDATE SET
       palette = EXCLUDED.palette
       groups = EXCLUDED.groups
-      hiddenCalendars = ECLUDED.hiddenCalendars
+      "hiddenCalendars" = ECLUDED."hiddenCalendars"
   `
   return await pool.query(query, [userId, palette, groups, hiddenCalendars]);
 }
@@ -161,10 +161,10 @@ const upsertUserGroups = async (userId, groups) => {
 
 const upsertUserHiddenCalendars = async (userId, hiddenCalendars) => {
   const query = `
-    INSERT INTO "userCalendarPreferences" (id, hiddenCalendars)
+    INSERT INTO "userCalendarPreferences" (id, "hiddenCalendars")
     VALUES ($1, $2::jsonb)
     ON CONFLICT (id) DO UPDATE SET
-      hiddenCalendars = EXCLUDED.hiddenCalendars;
+      "hiddenCalendars" = EXCLUDED."hiddenCalendars";
   `;
   return await pool.query(query, [userId, JSON.stringify(hiddenCalendars)]);
 };
@@ -191,7 +191,7 @@ const getUserCalendarGroups = async (userId) => {
 
 const getUserHiddenCalendars = async (userId) => {
   const query = `
-    SELECT id, hiddenCalendars
+    SELECT id, "hiddenCalendars"
     FROM "userCalendarPreferences" 
     WHERE id = $1
   `;
