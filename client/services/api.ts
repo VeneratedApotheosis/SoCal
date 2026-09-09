@@ -105,11 +105,7 @@ export const getCalendarSharingSettings = (calId: string, t: string) => gReq(`/c
 
 // ─── Backend API Color Palette & Groups Functions ─────────────────────────
 
-export const fetchColorGroups = (t: string) => bReq('/get-color-groups', 'POST', t);
-
-export const saveColorGroups = (t: string, palette?: any, groups?: any) => {
-  return bReq('/save-color-groups', 'POST', t, { palette: palette, groups: groups });
-};
+export const fetchColorGroups = (t: string) => bReq('/get-calendar-preferences', 'POST', t);
 
 export const saveColorPalette = (t: string, palette?: colorCache[]) => {
   return bReq('/save-color-palette', 'POST', t, { palette: palette });

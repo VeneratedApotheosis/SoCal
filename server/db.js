@@ -8,7 +8,8 @@ const pool = new Pool({
   }
 });
 
-// Database Initialization Function
+// ─── Database Initialization ───────────────────────────────────────────────────────────
+
 const initDb = async () => {
   const client = await pool.connect();
   try {
@@ -26,10 +27,11 @@ const initDb = async () => {
     `);
 
     await client.query(`
-      CREATE TABLE IF NOT EXISTS "userColorGroups" (
+      CREATE TABLE IF NOT EXISTS "userCalendarPreferences" (
       id TEXT PRIMARY KEY REFERENCES "userInfo"(id) ON DELETE CASCADE,
       palette JSONB,
-      groups JSONB
+      groups JSONB,
+      hiddenCalendars JSONB,
       )
       `)
 
@@ -45,6 +47,8 @@ const initDb = async () => {
 
 // Execute initialization
 initDb().catch((err) => console.error('Failed to initialize DB:', err));
+
+// ─── User Info ───────────────────────────────────────────────────────────
 
 // saves information into userInfo table
 const saveUserProfile = async (googleId, email, name, picture, refreshToken) => {
@@ -120,20 +124,23 @@ const deleteUserProfile = async (userId) => {
   return res.rowCount > 0; // Returns true if a row was deleted
 };
 
-const upsertUserColorGroups = async (userId, palette, groups) => {
+// ─── User Calendar Preferences ───────────────────────────────────────────────────────────
+
+const upsertUserCalendarPreferences = async (userId, palette, groups, hiddenCalendars) => {
   const query = `
-    INSERT INTO "userColorGroups" (id, palette, groups)
-    VALUES ($1, $2, $3)
+    INSERT INTO "userCalendarPreferences" (id, palette, groups, hiddenCalendars)
+    VALUES ($1, $2, $3, $4)
     ON CONFLICT (id) DO UPDATE SET
       palette = EXCLUDED.palette
       groups = EXCLUDED.groups
+      hiddenCalendars = ECLUDED.hiddenCalendars
   `
-  return await pool.query(query, [userId, palette, groups]);
+  return await pool.query(query, [userId, palette, groups, hiddenCalendars]);
 }
 
 const upsertUserColorPalette = async (userId, palette) => {
   const query = `
-    INSERT INTO "userColorGroups" (id, palette)
+    INSERT INTO "userCalendarPreferences" (id, palette)
     VALUES ($1, $2::jsonb)
     ON CONFLICT (id) DO UPDATE SET
       palette = EXCLUDED.palette;
@@ -144,7 +151,7 @@ const upsertUserColorPalette = async (userId, palette) => {
 
 const upsertUserGroups = async (userId, groups) => {
   const query = `
-    INSERT INTO "userColorGroups" (id, groups)
+    INSERT INTO "userCalendarPreferences" (id, groups)
     VALUES ($1, $2::jsonb)
     ON CONFLICT (id) DO UPDATE SET
       groups = EXCLUDED.groups;
@@ -152,29 +159,49 @@ const upsertUserGroups = async (userId, groups) => {
   return await pool.query(query, [userId, JSON.stringify(groups)]);
 };
 
+const upsertUserHiddenCalendars = async (userId, hiddenCalendars) => {
+  const query = `
+    INSERT INTO "userCalendarPreferences" (id, hiddenCalendars)
+    VALUES ($1, $2::jsonb)
+    ON CONFLICT (id) DO UPDATE SET
+      hiddenCalendars = EXCLUDED.hiddenCalendars;
+  `;
+  return await pool.query(query, [userId, JSON.stringify(hiddenCalendars)]);
+};
+
 const getUserColorPalette = async (userId) => {
   const query = `
     SELECT id, palette
-    FROM "userColorGroups" 
+    FROM "userCalendarPreferences" 
     WHERE id = $1
   `;
   const res = await pool.query(query, [userId]);
   return res.rows[0] || null;
 }
 
-const getUserColorGroups = async (userId) => {
+const getUserCalendarGroups = async (userId) => {
   const query = `
     SELECT id, groups
-    FROM "userColorGroups" 
+    FROM "userCalendarPreferences" 
     WHERE id = $1
   `;
   const res = await pool.query(query, [userId]);
   return res.rows[0] || null;
 }
 
-const deleteUserColorGroups = async (userId) => {
+const getUserHiddenCalendars = async (userId) => {
   const query = `
-    DELETE FROM "userColorGroups"
+    SELECT id, hiddenCalendars
+    FROM "userCalendarPreferences" 
+    WHERE id = $1
+  `;
+  const res = await pool.query(query, [userId]);
+  return res.rows[0] || null;
+}
+
+const deleteUserCalendarPreferences = async (userId) => {
+  const query = `
+    DELETE FROM "userCalendarPreferences"
     WHERE id = $1;
   `;
   const res = await pool.query(query, [userId]);
@@ -190,10 +217,12 @@ module.exports = {
   getAllData,
   deleteUserProfile,
 
-  upsertUserColorGroups,
+  upsertUserCalendarPreferences,
   upsertUserColorPalette,
   upsertUserGroups,
+  upsertUserHiddenCalendars,
   getUserColorPalette,
-  getUserColorGroups,
-  deleteUserColorGroups,
+  getUserCalendarGroups,
+  getUserHiddenCalendars,
+  deleteUserCalendarPreferences,
 };

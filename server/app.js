@@ -234,34 +234,21 @@ app.delete('/api/unsubscribe-calendar', authenticate, handleRoute('Internal serv
 // ─── Color Palette & Groups Routes ──────────────────────────────────────────
 
 // Fetch color palette and groups for the authenticated user
-app.post('/api/get-color-groups', authenticate, handleRoute('Failed to get color groups', async (req, res) => {
-  console.log('/api/get-color-groups called');
+app.post('/api/get-calendar-preferences', authenticate, handleRoute('Failed to get calendar preferences', async (req, res) => {
+  console.log('/api/get-calendar-preferences called');
   const paletteResult = await db.getUserColorPalette(req.userId);
-  const groupsResult = await db.getUserColorGroups(req.userId);
+  const groupsResult = await db.getUserCalendarGroups(req.userId);
+  const hiddenCalendars = await db.getUserHiddenCalendars(req.userId);
 
   // Return clean JSON payloads instead of nesting the DB record wrappers
   res.json({
     palette: paletteResult?.palette || null,
-    groups: groupsResult?.groups || null
+    groups: groupsResult?.groups || null,
+    hiddenCalendars: hiddenCalendars?.hiddenCalendars || null
   });
 }));
 
-// Save or update color palette and groups
-app.post('/api/save-color-groups', authenticate, handleRoute('Failed to save color groups', async (req, res) => {
-  const { palette, groups } = req.body;
-
-  const cleanPalette = (Array.isArray(palette) && palette.length === 0) ? null : palette;
-  const cleanGroups = (Array.isArray(groups) && groups.length === 0) ? null : groups;
-
-  if (cleanPalette === null && cleanGroups === null) {
-    return res.status(400).json({ error: 'Payload must contain non-empty palette or groups data' });
-  }
-
-  await db.upsertUserColorGroups(req.userId, cleanPalette, cleanGroups);
-  res.status(200).json({ message: 'Color palette and groups saved successfully' });
-}));
-
-// Save or update color palette and groups
+// Save or update color palette
 app.post('/api/save-color-palette', authenticate, handleRoute('Failed to save color palette', async (req, res) => {
   const { palette } = req.body;
 
@@ -275,7 +262,7 @@ app.post('/api/save-color-palette', authenticate, handleRoute('Failed to save co
   res.status(200).json({ message: 'Color palette saved successfully' });
 }));
 
-// Save or update color palette and groups
+// Save or update calendar groups
 app.post('/api/save-groups', authenticate, handleRoute('Failed to save groups', async (req, res) => {
   const { groups } = req.body;
 
@@ -289,9 +276,23 @@ app.post('/api/save-groups', authenticate, handleRoute('Failed to save groups', 
   res.status(200).json({ message: 'Groups saved successfully' });
 }));
 
+// Save or update hidden calendars
+app.post('/api/save-hidden-calendars', authenticate, handleRoute('Failed to hidden calendars', async (req, res) => {
+  const { hiddenCalendars } = req.body;
+
+  const cleanHiddenCalendars = (Array.isArray(hiddenCalendars) && hiddenCalendars.length === 0) ? null : hiddenCalendars;
+
+  if (cleanHiddenCalendars === null) {
+    return res.status(400).json({ error: 'Payload must contain non-empty hidden calendaars data' });
+  }
+
+  await db.upsertUserHiddenCalendars(req.userId, cleanHiddenCalendars);
+  res.status(200).json({ message: 'Hidden Calendars saved successfully' });
+}));
+
 // Delete/reset color palette and groups
 app.delete('/api/delete-color-groups', authenticate, handleRoute('Failed to delete color groups', async (req, res) => {
-  const success = await db.deleteUserColorGroups(req.userId);
+  const success = await db.deleteUserCalendarPreferences(req.userId);
 
   if (!success) {
     return res.status(404).json({ error: 'No color groups found to delete' });
@@ -309,7 +310,6 @@ app.get('/api/places/autocomplete', authenticate, handleRoute('Autocomplete fail
   const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${process.env.GOOGLE_PLACES_API_KEY}`;
   const response = await fetch(url);
   const data = await response.json();
-  console.log("aC:",data.predictions);
 
   if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
     return res.status(400).json({ error: data.error_message || data.status });
@@ -324,7 +324,6 @@ app.get('/api/places/details', authenticate, handleRoute('Details failed', async
   const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address&key=${process.env.GOOGLE_PLACES_API_KEY}`;
   const response = await fetch(url);
   const data = await response.json();
-  console.log("DET:",data);
 
   if (data.status !== 'OK') {
     return res.status(400).json({ error: data.error_message || data.status });

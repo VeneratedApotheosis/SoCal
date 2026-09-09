@@ -1,9 +1,8 @@
 import { useAuthContext } from '@/components/contexts/auth-context';
-import { COLOR_GROUPS_STORAGE_KEY, DEFAULT_COLORS } from '@/utility/constants';
+import { DEFAULT_COLORS } from '@/utility/constants';
 import { calendarGroup, colorCache } from '@/utility/types';
 import { useCallback, useEffect, useState } from 'react';
 import { fetchColorGroups, saveColorPalette, saveGroups } from '../services/api';
-import { storage } from '../services/storage';
 import { useAuth } from './useAuth';
 
 export function useColorGroups() {
@@ -16,34 +15,11 @@ export function useColorGroups() {
     } as colorCache,
   ]);
   const [groupsData, setGroupsData] = useState<calendarGroup[]>([]);
-  const [localLoading, setLocalLoading] = useState(true);
+  const [localLoading, setLocalLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // Start true to block early overwrites
   const [error, setError] = useState<string | null>(null);
   const { validJwt } = useAuthContext();
   const { getValidJwt } = useAuth();
-
-  // ─── Load Data ───────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    let isMounted = true;
-    const loadFromStorage = async () => {
-      try {
-        const saved = await storage.get(COLOR_GROUPS_STORAGE_KEY);
-        if (saved && isMounted) {
-          if (saved.palette) setPaletteData(saved.palette);
-          if (saved.groups) setGroupsData(saved.groups);
-        }
-      } catch (e) {
-        console.error('Failed to load color groups from storage', e);
-      } finally {
-        if (isMounted) setLocalLoading(false);
-      }
-    };
-    loadFromStorage();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   // ─── Fetch Data from Backend ───────────────────────────────────────────────────────────
 
@@ -58,8 +34,6 @@ export function useColorGroups() {
       if (data.error) throw new Error(data.error);
       if (data.palette) setPaletteData(data.palette);
       if (data.groups) setGroupsData(data.groups);
-
-      await storage.save(COLOR_GROUPS_STORAGE_KEY, { palette: data.palette ?? paletteData, groups: data.groups ?? groupsData });
     } catch (err: any) {
       console.error('Fetch color groups error:', err);
       setError(err.message || 'Failed to fetch color groups');
@@ -72,16 +46,13 @@ export function useColorGroups() {
     if (validJwt) refreshColorGroups();
   }, [validJwt, refreshColorGroups, localLoading]);
 
-  // ─── Save Data To local Storage and Backend ───────────────────────────────────────────────────────────
+  // ─── Save Data To Backend ───────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (isLoading || localLoading) return;
     const saveData = async () => {
-      console.log('[SAVE LOCALLY AND POST] Saving color palette data');
-      const payload = { palette: paletteData, groups: groupsData };
-      await storage.save(COLOR_GROUPS_STORAGE_KEY, payload);
+      console.log('[POST] Saving color palette data');
 
-      // Sync to backend
       const jwtToken = await getValidJwt();
       if (!jwtToken || !validJwt) return;
 
@@ -95,11 +66,8 @@ export function useColorGroups() {
   useEffect(() => {
     if (isLoading || localLoading) return;
     const saveData = async () => {
-      console.log('[SAVE LOCALLY AND POST] Saving group data');
-      const payload = { palette: paletteData, groups: groupsData };
-      await storage.save(COLOR_GROUPS_STORAGE_KEY, payload);
+      console.log('[POST] Saving group data');
 
-      // Sync to backend
       const jwtToken = await getValidJwt();
       if (!jwtToken || !validJwt) return;
 

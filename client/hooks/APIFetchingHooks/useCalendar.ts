@@ -1,7 +1,6 @@
 // useCalendar.ts
 import { useAuth } from '@/hooks/useAuth';
 import { fetchCalendarList, fetchGivenCalendarRange, fetchMultiGivenCalendarRange } from '@/services/api';
-import { storage } from '@/services/storage';
 import { BUFFER_INCREMENT } from '@/utility/constants';
 import { processCalendar } from '@/utility/eventUtils';
 import { getValidAccessToken } from '@/utility/tokenUtils';
@@ -16,10 +15,6 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
   const [error, setError] = useState<string | null>(null);
   const [localTimeZone, setLocalTimeZone] = useState<string | null>(null);
   const { getValidJwt } = useAuth();
-
-  useEffect(() => {
-    storage.get('calendar').then((c) => c && setCalendars(c));
-  }, []);
 
   const clearCalendarEvents = () => {
     setCalendars(null);

@@ -46,11 +46,8 @@ The client uses a custom `storage` abstraction (typically backed by `AsyncStorag
 
 | Storage Key | Constant Name | Value Type | Reader Hook(s) | Writer Hook(s) | Store / Fetch / Post Timings & Triggers |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `'calendar'` | *(Literal)* | `FamilyCalendarState` | `useCalendar.ts` | None | **Fetched**: Once on mount to populate the calendar UI instantly with cached events.<br>**Stored**: *Note: Event mutations modify React state but do not sync back to this key. Currently read-only caching.* |
 | `'calendar_type'` | `CALENDAR_TYPE_KEY` | `CalendarView` | `useCalendarType.ts` | `useCalendarType.ts` | **Fetched**: Once on mount to restore user's preferred layout (Day, Week, Month).<br>**Stored**: Triggered instantly whenever `calendarType` state is changed. |
-| `'color_groups'` | `COLOR_GROUPS_STORAGE_KEY` | `{ palette, groups }` | `useColorGroups.ts` | `useColorGroups.ts` | **Fetched**: Once on mount as fallback. Overridden by database queries.<br>**Stored**: Auto-saved on `paletteData` or `groupsData` state changes. Syncs to cloud if JWT is valid. |
 | `'hidden_calendars'` | `HIDDEN_CALENDAR_KEY` | `string[]` | `useHiddenCalendar.ts` | `useHiddenCalendar.ts` | **Fetched**: On mount. Immediately updates visibility flags on loaded calendars.<br>**Stored**: Triggered instantly when user toggles visibility for a calendar ID. |
-| `'family_profile'` | `PROFILE_STORAGE_KEY` | `FamilyProfileObjs` | `useProfiles.ts` | `useProfiles.ts` | **Fetched**: On mount to allow quick profile lookups.<br>**Stored**: Triggered automatically on `familyProfiles` React state changes. |
 | `'theme'` | `THEME_STORAGE_KEY` | `string` | `useTheme.ts` | `useTheme.ts` | **Fetched**: On mount.<br>**Stored**: Triggered instantly whenever `themeMode` is modified manually. |
 | `'timeZone'` | `TIME_ZONE_KEY` | `string` | `useTimeZone.ts` | `useTimeZone.ts` | **Fetched**: On mount to recover preferred timezone.<br>**Stored**: Triggered when system or manual timezone defaults change. |
 | `'visibleSettings'` | `VISIBLE_SETTINGS_KEY` | `string[]` | `useVisibleSettings.ts` | `useVisibleSettings.ts` | **Fetched**: On mount.<br>**Stored**: Triggered when user checks/unchecks options inside setting modules. |

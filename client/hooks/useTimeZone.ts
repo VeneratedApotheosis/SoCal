@@ -25,11 +25,11 @@ const getFallbackTimeZone = (): string => {
 };
 
 export const useTimeZone = () => {
-  // Initialize state using the robust helper immediately on mount
   const [timeZone, setTimeZone] = useState<string>(getFallbackTimeZone);
   const [isStorageLoaded, setIsStorageLoaded] = useState<boolean>(false);
 
   // ─── Load From Storage ───────────────────────────────────────────────────
+
   useEffect(() => {
     const loadFromStorage = async () => {
       try {
@@ -48,8 +48,8 @@ export const useTimeZone = () => {
   }, []);
 
   // ─── Save To Storage ─────────────────────────────────────────────────────
+
   useEffect(() => {
-    // Guard clause: Prevent overriding existing storage with default values on mount
     if (!isStorageLoaded) return;
 
     const saveToStorage = async () => {
