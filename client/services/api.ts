@@ -115,6 +115,10 @@ export const saveGroups = (t: string, groups?: calendarGroup[]) => {
   return bReq('/save-groups', 'POST', t, { groups: groups });
 };
 
+export const saveHiddenCalendars = (t: string, hiddenCalendars?: string[]) => {
+  return bReq('/save-hidden-calendars', 'POST', t, { hiddenCalendars: hiddenCalendars });
+};
+
 export const deleteColorGroups = (t: string) => bReq('/delete-color-groups', 'DELETE', t);
 
 // ─── Google API Specific Event Fetches ───────────────────────────────────────────────────────────

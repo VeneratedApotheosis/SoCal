@@ -47,7 +47,6 @@ The client uses a custom `storage` abstraction (typically backed by `AsyncStorag
 | Storage Key | Constant Name | Value Type | Reader Hook(s) | Writer Hook(s) | Store / Fetch / Post Timings & Triggers |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `'calendar_type'` | `CALENDAR_TYPE_KEY` | `CalendarView` | `useCalendarType.ts` | `useCalendarType.ts` | **Fetched**: Once on mount to restore user's preferred layout (Day, Week, Month).<br>**Stored**: Triggered instantly whenever `calendarType` state is changed. |
-| `'hidden_calendars'` | `HIDDEN_CALENDAR_KEY` | `string[]` | `useHiddenCalendar.ts` | `useHiddenCalendar.ts` | **Fetched**: On mount. Immediately updates visibility flags on loaded calendars.<br>**Stored**: Triggered instantly when user toggles visibility for a calendar ID. |
 | `'theme'` | `THEME_STORAGE_KEY` | `string` | `useTheme.ts` | `useTheme.ts` | **Fetched**: On mount.<br>**Stored**: Triggered instantly whenever `themeMode` is modified manually. |
 | `'timeZone'` | `TIME_ZONE_KEY` | `string` | `useTimeZone.ts` | `useTimeZone.ts` | **Fetched**: On mount to recover preferred timezone.<br>**Stored**: Triggered when system or manual timezone defaults change. |
 | `'visibleSettings'` | `VISIBLE_SETTINGS_KEY` | `string[]` | `useVisibleSettings.ts` | `useVisibleSettings.ts` | **Fetched**: On mount.<br>**Stored**: Triggered when user checks/unchecks options inside setting modules. |
@@ -172,8 +171,5 @@ Developers maintaining this directory should keep the following design anomalies
 3.  **Empty Files**:
     *   **File**: `client/hooks/calendarHooks/useCalendarRange.ts`
     *   **Quirk**: Contains `0 bytes` and has no active functions. Safe to prune if no longer required.
-4.  **One-way local cache on Calendar Events**:
-    *   **File**: `APIFetchingHooks/useCalendar.ts`
-    *   **Quirk**: On startup, cached calendars and events are loaded via `storage.get('calendar')` to speed up display rendering. However, the hook never writes newly fetched or mutated calendar states back into storage. This means startup caching is static/read-only.
 
 

@@ -283,7 +283,7 @@ app.post('/api/save-hidden-calendars', authenticate, handleRoute('Failed to hidd
   const cleanHiddenCalendars = (Array.isArray(hiddenCalendars) && hiddenCalendars.length === 0) ? null : hiddenCalendars;
 
   if (cleanHiddenCalendars === null) {
-    return res.status(400).json({ error: 'Payload must contain non-empty hidden calendaars data' });
+    return res.status(400).json({ error: 'Payload must contain non-empty hidden calendars data' });
   }
 
   await db.upsertUserHiddenCalendars(req.userId, cleanHiddenCalendars);

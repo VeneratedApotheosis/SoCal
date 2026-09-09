@@ -2,10 +2,10 @@ import { useAuthContext } from '@/components/contexts/auth-context';
 import { DEFAULT_COLORS } from '@/utility/constants';
 import { calendarGroup, colorCache } from '@/utility/types';
 import { useCallback, useEffect, useState } from 'react';
-import { fetchColorGroups, saveColorPalette, saveGroups } from '../services/api';
+import { fetchColorGroups, saveColorPalette, saveGroups, saveHiddenCalendars } from '../services/api';
 import { useAuth } from './useAuth';
 
-export function useColorGroups() {
+export function useCalendarPreferences() {
   const [paletteData, setPaletteData] = useState<colorCache[]>([
     {
       paletteId: 0,
@@ -15,7 +15,7 @@ export function useColorGroups() {
     } as colorCache,
   ]);
   const [groupsData, setGroupsData] = useState<calendarGroup[]>([]);
-  const [localLoading, setLocalLoading] = useState(false);
+  const [hiddenCalendarsData, setHiddenCalendarsData] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true); // Start true to block early overwrites
   const [error, setError] = useState<string | null>(null);
   const { validJwt } = useAuthContext();
@@ -25,7 +25,7 @@ export function useColorGroups() {
 
   const refreshColorGroups = useCallback(async () => {
     const jwtToken = await getValidJwt();
-    if (!jwtToken || !validJwt || localLoading) return;
+    if (!jwtToken || !validJwt) return;
     setIsLoading(true);
     setError(null);
 
@@ -34,9 +34,10 @@ export function useColorGroups() {
       if (data.error) throw new Error(data.error);
       if (data.palette) setPaletteData(data.palette);
       if (data.groups) setGroupsData(data.groups);
+      if (data.hiddenCalendars) setHiddenCalendarsData(data.hiddenCalendars);
     } catch (err: any) {
-      console.error('Fetch color groups error:', err);
-      setError(err.message || 'Failed to fetch color groups');
+      console.error('Fetch calendar preferences error:', err);
+      setError(err.message || 'Failed to fetch calendar preferences groups');
     } finally {
       setIsLoading(false);
     }
@@ -44,12 +45,12 @@ export function useColorGroups() {
 
   useEffect(() => {
     if (validJwt) refreshColorGroups();
-  }, [validJwt, refreshColorGroups, localLoading]);
+  }, [validJwt, refreshColorGroups]);
 
   // ─── Save Data To Backend ───────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (isLoading || localLoading) return;
+    if (isLoading) return;
     const saveData = async () => {
       console.log('[POST] Saving color palette data');
 
@@ -64,7 +65,7 @@ export function useColorGroups() {
   }, [paletteData]);
 
   useEffect(() => {
-    if (isLoading || localLoading) return;
+    if (isLoading) return;
     const saveData = async () => {
       console.log('[POST] Saving group data');
 
@@ -78,5 +79,32 @@ export function useColorGroups() {
     saveData();
   }, [groupsData]);
 
-  return { paletteData, groupsData, isLoading, setPaletteData, setGroupsData, error, refreshColorGroups };
+  useEffect(() => {
+    if (isLoading) return;
+    const saveData = async () => {
+      console.log('[POST] Saving hidden calendar data');
+
+      const jwtToken = await getValidJwt();
+      if (!jwtToken || !validJwt) return;
+
+      if (validJwt && hiddenCalendarsData && hiddenCalendarsData.length > 0) {
+        await saveHiddenCalendars(jwtToken, hiddenCalendarsData).catch((err) =>
+          console.error('Failed to update backend hidden calendars:', err),
+        );
+      }
+    };
+    saveData();
+  }, [hiddenCalendarsData]);
+
+  return {
+    paletteData,
+    groupsData,
+    hiddenCalendarsData,
+    isLoading,
+    setPaletteData,
+    setGroupsData,
+    setHiddenCalendarsData,
+    error,
+    refreshColorGroups,
+  };
 }

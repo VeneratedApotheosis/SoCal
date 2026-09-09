@@ -1,10 +1,9 @@
-import { storage } from '@/services/storage';
-import { HIDDEN_CALENDAR_KEY } from '@/utility/constants';
+import { useCalendarPreferencesContext } from '@/components/contexts/calendar-preferences-context';
 import { calendarObj } from '@/utility/types';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 
 export const useHiddenCalendar = (setCalendarObjs: Dispatch<SetStateAction<calendarObj[]>>) => {
-  const [hiddenCalendars, setHiddenCalendars] = useState<string[]>([]);
+  const { hiddenCalendarsData: hiddenCalendars, setHiddenCalendarsData: setHiddenCalendars } = useCalendarPreferencesContext();
   const [isStorageLoaded, setIsStorageLoaded] = useState(false);
 
   //Update calendarObjs in sync with hidden calendars without double re-render
@@ -20,38 +19,6 @@ export const useHiddenCalendar = (setCalendarObjs: Dispatch<SetStateAction<calen
       })),
     );
   };
-
-  // ─── Storage Load ───────────────────────────────────────────────────────────
-  useEffect(() => {
-    const loadFromStorage = async () => {
-      try {
-        const savedCaches = (await storage.get(HIDDEN_CALENDAR_KEY)) ?? [];
-        setHiddenCalendars(savedCaches);
-        processHiddenCalendars(savedCaches);
-      } catch (e) {
-        console.error('Failed to load storage', e);
-      } finally {
-        setIsStorageLoaded(true);
-      }
-    };
-
-    loadFromStorage();
-  }, []);
-
-  // ─── Storage Svae ────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!isStorageLoaded) return;
-
-    const saveToStorage = async () => {
-      try {
-        await storage.save(HIDDEN_CALENDAR_KEY, hiddenCalendars);
-      } catch (e) {
-        console.error('Failed to save color cache to storage', e);
-      }
-    };
-
-    saveToStorage();
-  }, [hiddenCalendars, isStorageLoaded]);
 
   // ─── Helper Functions ────────────────────────────────────────────────────────
   const toggleCalendar = (id: string) => {

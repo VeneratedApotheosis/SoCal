@@ -1,9 +1,9 @@
 // calendar-events-context.tsx
 import { useCalendarGroup } from '@/hooks/useCalendarGroup';
-import { useColorGroups } from '@/hooks/useColorGroups';
-import { calendarGroup, calendarObj, colorCache } from '@/utility/types';
+import { calendarGroup, calendarObj } from '@/utility/types';
 import { createContext, ReactNode, useCallback, useContext, useMemo } from 'react';
 import { useCalendarObjects } from './calendar-obj-context';
+import { useHiddenCalendarsContext } from './hidden-calendars-context';
 import { useProfileContext } from './profile-context';
 
 export interface GroupsContextType {
@@ -19,20 +19,13 @@ export interface GroupsContextType {
   hiddenCalendarGroups: string[];
   hideGroup: (id: string) => void;
   showGroup: (id: string) => void;
-  colorGroups: {
-    paletteData: colorCache[];
-    groupsData: calendarGroup[];
-    isLoading: boolean;
-    setPaletteData: React.Dispatch<React.SetStateAction<colorCache[]>>;
-    setGroupsData: React.Dispatch<React.SetStateAction<calendarGroup[]>>;
-  };
 }
 
 export const GroupsContext = createContext<GroupsContextType>({} as GroupsContextType);
 
 export const GroupsProvider = ({ children }: { children: ReactNode }) => {
-  const colorGroups = useColorGroups();
-  const { calendarObjs, hiddenCalendarHook } = useCalendarObjects();
+  const { calendarObjs } = useCalendarObjects();
+  const { hiddenCalendarHook } = useHiddenCalendarsContext();
   const { familyProfiles } = useProfileContext();
   const calendarGroups = useCalendarGroup(calendarObjs, familyProfiles && familyProfiles.parent ? familyProfiles.parent.id : null);
 
@@ -87,7 +80,6 @@ export const GroupsProvider = ({ children }: { children: ReactNode }) => {
         hiddenCalendarGroups,
         hideGroup,
         showGroup,
-        colorGroups,
       }}
     >
       {children}

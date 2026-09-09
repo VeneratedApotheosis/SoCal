@@ -2,7 +2,7 @@ import { getPositions } from '@/utility/drawerUtil';
 import { lightenColor } from '@/utility/eventColorUtil';
 import { calendarObj } from '@/utility/types';
 
-import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
+import { useHiddenCalendarsContext } from '@/components/contexts/hidden-calendars-context';
 import { useScreenSize } from '@/components/contexts/screen-size-context';
 import { getIconColor } from '@/utility/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,7 +26,7 @@ export default function CalendarDrawerList({
 }) {
   const { colorCache, theme } = useUIContext();
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
-  const { hiddenCalendarHook } = useCalendarObjects();
+  const { hiddenCalendarHook } = useHiddenCalendarsContext();
 
   const [isVisible, setVisible] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });

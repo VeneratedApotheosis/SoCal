@@ -17,6 +17,7 @@ import { toTitleCase } from '@/utility/drawerUtil';
 import { baseFlexStyles, getBasicThemeStyles, globalParameterStyles } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { Plus } from 'lucide-react-native';
+import { useHiddenCalendarsContext } from '../contexts/hidden-calendars-context';
 import { getColorPaletteStyles } from '../settingsContainer/settingsContainerStyles';
 import { getDrawerStyles } from './customDrawer';
 import DraggableCalendar from './drawer-draggable-calendar';
@@ -26,7 +27,8 @@ export default function CustomDrawerContent(props: any) {
   const { familyProfiles } = useProfileContext();
   const userId = familyProfiles && familyProfiles.parent ? familyProfiles.parent.id : null;
   const { fixedSidebar, isWeb } = useScreenSize();
-  const { hiddenCalendarHook, calViewMode: viewMode, resetViewMode, suppressOther, toggleSuppress } = useCalendarObjects();
+  const { calViewMode: viewMode, resetViewMode, suppressOther, toggleSuppress } = useCalendarObjects();
+  const { hiddenCalendarHook } = useHiddenCalendarsContext();
   const { calendarGroups } = useCalendarGroupsContext();
 
   const { setLoginVisible, theme: uiTheme, visibleSettings } = useUIContext();

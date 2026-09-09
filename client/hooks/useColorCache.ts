@@ -1,10 +1,10 @@
-import { useColorGroupsContext } from '@/components/contexts/color-groups-sync-context';
+import { useCalendarPreferencesContext } from '@/components/contexts/calendar-preferences-context';
 import { findClosestColor } from '@/utility/colorCacheUtil';
 import { calendarObj, colorCache } from '@/utility/types';
 import { useCallback, useEffect, useState } from 'react';
 
 export const useColorCache = (calendarObjs: calendarObj[] | null) => {
-  const { paletteData: allCaches, isLoading: isStorageLoaded, setPaletteData: setAllCaches } = useColorGroupsContext();
+  const { paletteData: allCaches, isLoading: isStorageLoaded, setPaletteData: setAllCaches } = useCalendarPreferencesContext();
   const [activeCacheId, setActiveCacheId] = useState<number>(0);
 
   // ─── Helper Functions ───────────────────────────────────────────────────────────

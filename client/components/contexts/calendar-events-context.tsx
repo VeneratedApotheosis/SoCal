@@ -7,6 +7,7 @@ import { CalendarData, EventObj } from '@/utility/types';
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuthContext } from './auth-context';
 import { useCalendarObjects } from './calendar-obj-context';
+import { useHiddenCalendarsContext } from './hidden-calendars-context';
 import { useTimeZoneContext } from './time-zone-context';
 
 export interface EventsContextType {
@@ -46,7 +47,8 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   // ─── Calendar Object and Events Hooks ───────────────────────────────────────────────────────────
 
   // Calendar Object Hook
-  const { hiddenCalendarHook: hiddenCalendar, calendarObjs, calViewMode, suppressOther, refetchCalendarList } = useCalendarObjects();
+  const { calendarObjs, calViewMode, suppressOther, refetchCalendarList } = useCalendarObjects();
+  const { hiddenCalendarHook: hiddenCalendar } = useHiddenCalendarsContext();
   // Calendar Event Hook
   const {
     calendars,

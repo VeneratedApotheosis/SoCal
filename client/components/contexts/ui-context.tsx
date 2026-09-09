@@ -4,7 +4,6 @@ import { useVisibleSettings } from '@/hooks/useVisibleSettings';
 import { DEFAULT_TRANSPARENCY } from '@/utility/constants';
 import { calendarObj, colorCache } from '@/utility/types';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { useCalendarGroupsContext } from './calendar-groups-context';
 import { useCalendarObjects } from './calendar-obj-context';
 
 interface UIContextType {
@@ -45,7 +44,6 @@ export const UIContext = createContext<UIContextType>({} as UIContextType);
 export const UIProvider = ({ children }: { children: ReactNode }) => {
   const [isLoginVisible, setLoginVisible] = useState(false);
   const { calendarObjs } = useCalendarObjects();
-  const { colorGroups } = useCalendarGroupsContext();
   const colorCache = useColorCache(calendarObjs);
   const theme = useTheme();
 

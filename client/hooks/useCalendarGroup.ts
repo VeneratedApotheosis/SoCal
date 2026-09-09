@@ -1,9 +1,9 @@
-import { useColorGroupsContext } from '@/components/contexts/color-groups-sync-context';
+import { useCalendarPreferencesContext } from '@/components/contexts/calendar-preferences-context';
 import { calendarGroup, calendarObj } from '@/utility/types';
 import { useEffect, useMemo } from 'react';
 
 export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: string | null) => {
-  const { groupsData: groupedCalendars, isLoading, setGroupsData: setGroupedCalendars } = useColorGroupsContext();
+  const { groupsData: groupedCalendars, isLoading, setGroupsData: setGroupedCalendars } = useCalendarPreferencesContext();
 
   const currentUserGroups = useMemo(() => {
     if (!userId) return [];

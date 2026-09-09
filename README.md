@@ -77,6 +77,7 @@ A cross-platform native application built with TypeScript, Expo, and React Nativ
  - Font Size Settings
  - Add UI feedback to hover, press, and selected buttons
 
+ - Clean local storage data //Done
  - FIXED: Smth wrong with dragging the calendars in the sidebar
  - Added year to header on weekly view //Done
  - Consider checking if calendarList is properly being refreshed //Done
