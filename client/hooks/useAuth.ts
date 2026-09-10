@@ -2,6 +2,7 @@ import { useAuthContext } from '@/components/contexts/auth-context';
 import { supabase } from '@/lib/supabase';
 import { deleteAccount, postUpdateToken } from '@/services/api';
 import { storage } from '@/services/storage';
+import { DEMO_JWT } from '@/utility/constants';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export const useAuth = () => {
@@ -9,12 +10,17 @@ export const useAuth = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
-  const { setValidJwt } = useAuthContext();
+  const { setValidJwt, demo, setIsDemo } = useAuthContext();
 
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
   const hasProcessedToken = useRef(false);
 
   const handleLogout = useCallback(async () => {
+    if (demo) {
+      setValidJwt(false);
+      setIsDemo(false);
+      return;
+    }
     const { error } = await supabase.auth.signOut();
 
     if (error) {
@@ -22,9 +28,10 @@ export const useAuth = () => {
     }
     if (setValidJwt) setValidJwt(false);
     await storage.clearAll();
-  }, [setValidJwt]);
+  }, [setValidJwt, setIsDemo, demo]);
 
   const getValidJwt = useCallback(async (): Promise<string | null> => {
+    if (demo) return DEMO_JWT;
     const {
       data: { session },
       error,
@@ -34,7 +41,7 @@ export const useAuth = () => {
       return null;
     }
     return session.access_token;
-  }, []);
+  }, [demo]);
 
   useEffect(() => {
     // Initial load check
@@ -128,6 +135,7 @@ export const useAuth = () => {
   };
 
   const handleDeleteAccount = useCallback(async () => {
+    if (demo) return;
     setIsDeleting(true);
     setError(null);
 
@@ -156,7 +164,7 @@ export const useAuth = () => {
     } finally {
       setIsDeleting(false);
     }
-  }, [handleLogout]);
+  }, [handleLogout, demo]);
 
   return { getValidJwt, isLoading, error, promptAsync, handleLogout, handleDeleteAccount, isDeleting };
 };

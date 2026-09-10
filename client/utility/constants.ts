@@ -32,6 +32,8 @@ export const COLOR_GROUPS_STORAGE_KEY = '@color_groups';
 export const PORTAL_HOME_NAME = 'layoutPortal';
 export const PORTAL_HOME_NAME_2 = 'layoutPortal2';
 
+export const DEMO_JWT = 'demo_jwt';
+
 export const DEFAULT_COLORS = [
   '#f8deff', //287°, 13%, 100%
   '#ffdef2', //324°, 13%, 100%

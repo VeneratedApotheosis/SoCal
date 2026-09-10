@@ -1,7 +1,8 @@
 // useCalendar.ts
 import { useAuth } from '@/hooks/useAuth';
 import { fetchCalendarList, fetchGivenCalendarRange, fetchMultiGivenCalendarRange } from '@/services/api';
-import { BUFFER_INCREMENT } from '@/utility/constants';
+import { BUFFER_INCREMENT, DEMO_JWT } from '@/utility/constants';
+import { demoEvents } from '@/utility/demoEvents/demoEvents0';
 import { processCalendar } from '@/utility/eventUtils';
 import { getValidAccessToken } from '@/utility/tokenUtils';
 import { CalendarData, calendarObj, CalendarView, EventObj, FamilyCalendarState } from '@/utility/types';
@@ -28,6 +29,12 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
       if (!jwtToken || !isTimeZoneLoaded || !timeZone) {
         clearCalendarEvents();
         return;
+      }
+      if (jwtToken == DEMO_JWT) {
+        setCalendars({
+          parent: demoEvents,
+          children: [],
+        });
       }
 
       //Fetching Start and End Date Calculation

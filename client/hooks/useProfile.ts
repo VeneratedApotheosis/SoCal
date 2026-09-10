@@ -1,4 +1,6 @@
 import { useAuthContext } from '@/components/contexts/auth-context';
+import { DEMO_JWT } from '@/utility/constants';
+import { demoProfile } from '@/utility/demoData';
 import { FamilyProfileObjs } from '@/utility/types';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchFamilyProfiles } from '../services/api';
@@ -16,6 +18,10 @@ export function useProfiles() {
   const fetchProfiles = useCallback(async () => {
     const jwtToken = await getValidJwt();
     if (!jwtToken) return;
+    if (jwtToken == DEMO_JWT) {
+      setFamilyProfiles({ parent: demoProfile, children: [] });
+      return;
+    }
 
     setIsLoading(true);
     setError(null);

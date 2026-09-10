@@ -1,3 +1,4 @@
+import { DEMO_JWT } from '@/utility/constants';
 import { useCallback, useState } from 'react';
 import { fetchPlacesAutocomplete, fetchPlacesDetails } from '../services/api';
 import { useAuth } from './useAuth';
@@ -22,7 +23,7 @@ export function usePlacesAutocomplete({ onLocationSelect }: UsePlacesAutocomplet
 
   const getPredictions = useCallback(async (text: string) => {
     const jwtToken = await getValidJwt();
-    if (!jwtToken || text.trim().length < 3) {
+    if (!jwtToken || jwtToken == DEMO_JWT || text.trim().length < 3) {
       setPredictions([]);
       return;
     }
@@ -47,7 +48,7 @@ export function usePlacesAutocomplete({ onLocationSelect }: UsePlacesAutocomplet
   const selectPlace = useCallback(
     async (prediction: Prediction) => {
       const jwtToken = await getValidJwt();
-      if (!jwtToken) return null;
+      if (!jwtToken || jwtToken == DEMO_JWT) return null;
 
       setIsLoading(true);
       setError(null);

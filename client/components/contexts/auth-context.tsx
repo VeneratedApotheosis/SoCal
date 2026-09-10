@@ -12,6 +12,9 @@ export interface AuthContextType {
 
   calendarType: CalendarView;
   setCalendarType: React.Dispatch<React.SetStateAction<CalendarView>>;
+
+  demo: boolean;
+  setIsDemo: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -19,32 +22,11 @@ export const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [jwtToken, setJwtToken] = useState<JwtTokenObj | null>(null);
   const [validJwt, setValidJwt] = useState<boolean>(false);
+  const [demo, setIsDemo] = useState<boolean>(false);
 
   //PROFILE HOOK
   const { isWeb } = useScreenSize();
   const { calendarType, setCalendarType } = useCalendarType(!!isWeb);
-
-  const [isHydrated, setIsHydrated] = useState(true);
-
-  // Initial Hydration
-  // useEffect(() => {
-  //   const hydrateAuth = async () => {
-  //     try {
-  //       const [tokenResult, calendarResult] = await Promise.all([storage.getSecure('jwt_token'), storage.get('calendar_type')]);
-
-  //       if (tokenResult) setJwtToken(tokenResult as JwtTokenObj);
-  //       if (calendarResult) setCalendarType(calendarResult as CalendarView);
-  //     } catch (err) {
-  //       console.error('AuthProvider Hydration Error:', err);
-  //     } finally {
-  //       setIsHydrated(true);
-  //     }
-  //   };
-
-  //   hydrateAuth();
-  // }, []);
-
-  if (!isHydrated) return null;
 
   return (
     <AuthContext.Provider
@@ -55,6 +37,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setValidJwt,
         calendarType,
         setCalendarType,
+        demo,
+        setIsDemo,
       }}
     >
       {children}

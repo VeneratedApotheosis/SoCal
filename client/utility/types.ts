@@ -14,10 +14,12 @@ export interface AccessTokenObj {
   expiryDate: string;
 }
 export interface FamilyProfileObjs {
+  //fix this
   parent: ProfileObj;
   children: ProfileObj[];
 }
 export interface FamilyAccessTokenObjs {
+  //fix this
   parent: AccessTokenObj;
   children: AccessTokenObj[];
 }
@@ -38,10 +40,10 @@ export interface calendarObj {
   calendarName: string;
   calendarId: string;
   calendarDefaultColor: string;
-  owner: boolean;
+  owner: boolean; //fix this
   accessRole: accessRole;
-  shown: shown;
-  visibility: visibility;
+  shown: shown; //fix this
+  visibility: visibility; //fix this
   dataOwner: string;
 }
 
@@ -96,7 +98,7 @@ export interface calendarGroup {
 }
 
 export type GroupedCalendarObj = calendarObj & {
-  isActive?: boolean;
+  isActive?: boolean; //Used to keep track of calendars when u loose access?
 };
 
 export interface FamilyCalendarState {
