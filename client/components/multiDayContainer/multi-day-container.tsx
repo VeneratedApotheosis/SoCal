@@ -384,7 +384,7 @@ export default function MultiDayContainer({ calendarType, events }: { calendarTy
       });
     });
 
-  const finalGesture = isWeb ? createEventGesture : verticalPan;
+  const finalGesture = Gesture.Race(createEventGesture, verticalPan);
 
   // ─── Fetching and Month Changing ───────────────────────────────────────────────────────────
 
