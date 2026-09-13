@@ -115,13 +115,14 @@ export default function DayContainer({
   dragCurrentDayMin,
   isDraggingCreate,
 }: DayContainerProps) {
-  const isToday = useMemo(() => isSameDay(day, new Date()), [day]);
-  const isWeekend = useMemo(() => day.getDay() === 6 || day.getDay() === 0, [day]);
   const { timeZone } = useTimeZoneContext();
-  const { theme } = useUIContext();
+  const { theme, now } = useUIContext();
   const styles = theme.isDark ? darkStyles : lightStyles;
   const eventStyles = theme.isDark ? darkEventStyles : lightEventStyles;
   const { height: SCREEN_HEIGHT, isWeb, headerHeight } = useScreenSize();
+
+  const isToday = useMemo(() => isSameDay(day, now), [day, now]);
+  const isWeekend = useMemo(() => day.getDay() === 6 || day.getDay() === 0, [day]);
 
   const msPerDay = 86400000;
   const thisDay = new Date(day).setHours(0, 0, 0, 0);

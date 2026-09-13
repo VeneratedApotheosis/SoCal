@@ -110,16 +110,18 @@ export default function DayBox({ day, weekHeight, dayWidth, event, handlePress, 
         ]}
       >
         <View style={style.dateTextContainer}>
-          <Text
-            style={[
-              style.dateText,
-              thisMonth && { fontWeight: '500' },
-              !thisMonth && { color: theme.isDark ? COLORS.text.subtleDark : COLORS.text.subtleLight },
-              isToday && style.todayText,
-            ]}
-          >
-            {dayText}
-          </Text>
+          <View style={[isToday && style.todayTextContainer]}>
+            <Text
+              style={[
+                style.dateText,
+                thisMonth && { fontWeight: '500' },
+                !thisMonth && { color: theme.isDark ? COLORS.text.subtleDark : COLORS.text.subtleLight },
+                isToday && style.todayText,
+              ]}
+            >
+              {dayText}
+            </Text>
+          </View>
         </View>
         {displayedEvents.map((event, idx) => {
           const key = event && event.event && event.event.id ? event.event.id + day.toISOString() : idx + day.toISOString();
@@ -185,6 +187,15 @@ export const getDayStyles = (isDark: boolean) => {
       height: ALL_DAY_HEIGHT,
       ...baseFlexStyles.centerAll,
     },
+    todayTextContainer: {
+      height: ALL_DAY_HEIGHT,
+      ...baseFlexStyles.centerAll,
+      ...baseTheme.backgroundBlue,
+      aspectRatio: 1,
+      borderRadius: 999,
+      marginVertical: 2,
+      flex: 1,
+    },
     moreText: {
       ...baseText.body,
       fontSize: 12,
@@ -192,6 +203,6 @@ export const getDayStyles = (isDark: boolean) => {
       width: '100%',
       textAlignVertical: 'center',
     },
-    todayText: { ...baseTheme.blueAccentColor, fontWeight: '500' },
+    todayText: { color: 'white', fontWeight: '500' },
   });
 };

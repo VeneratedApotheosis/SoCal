@@ -70,13 +70,14 @@ A cross-platform native application built with TypeScript, Expo, and React Nativ
     - `storage.ts`: Handles cross-platform encrypted key/value state persistence (native vs. web).
 
 ### 3. TODO:
- - TouchScreen Vertical Scroll
  - Setting to add a weekly space btwn months in weekly View
  - Create Logo
  - Update All-Day to have last day INCLUSIVE
  - Font Size Settings
  - Add UI feedback to hover, press, and selected buttons
+ - Make the today box more visible
 
+ - TouchScreen Vertical Scroll //Done
  - Clean local storage data //Done
  - FIXED: Smth wrong with dragging the calendars in the sidebar
  - Added year to header on weekly view //Done
