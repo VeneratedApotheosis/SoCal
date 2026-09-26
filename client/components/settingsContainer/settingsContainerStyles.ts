@@ -141,17 +141,20 @@ export const getSettingThemeStyles = (isDark: boolean) => {
     },
     // Button
     buttonSelected: {
-      ...baseTheme.borderInverted,
-      ...baseTheme.background,
+      borderColor: isDark ? COLORS.primaryy.backgroundDark : COLORS.primaryy.backgroundLight,
+      backgroundColor: isDark ? COLORS.primaryy.backgroundDark : COLORS.primaryy.backgroundLight,
     },
     buttonUnselected: {
-      ...baseTheme.border,
-      ...baseTheme.background,
+      borderColor: isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight,
+      ...baseTheme.backgroundMuted,
     },
     buttonText: {
       ...baseText.subtitle,
       ...baseText.darkGrayColor,
       marginTop: 8,
+    },
+    buttonTextSelected: {
+      ...baseTheme.blueAccentColor,
     },
   });
 };
@@ -169,15 +172,22 @@ export const getColorPaletteStyles = (isDark: boolean) => {
       ...baseText.subtitle,
       color: isDark ? COLORS.text.subtleLight : COLORS.text.subtleDark,
     },
+    modifyButton: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 12,
+      width: '100%',
+      ...baseTheme.backgroundMuted,
+      ...baseFlexStyles.centerAll,
+    },
     modifyText: {
       ...baseText.subtitle,
-      color: isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark,
     },
     colorCircle: {
       width: 40, // w-10
       height: 40, // h-10
       borderRadius: 20, // rounded-full
-      borderWidth: 2,
+      borderWidth: 3,
     },
     //add new palette button
     actionButton: {
@@ -302,20 +312,20 @@ export const getColorEditStyles = (isDark: boolean) => {
     // Buttons
     buttonGroup: {
       ...baseFlexStyles.rowLeft,
-      gap: 8,
+      gap: 12,
     },
     saveBtn: {
-      backgroundColor: isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark,
+      backgroundColor: isDark ? COLORS.primaryy.backgroundDark : COLORS.primaryy.backgroundLight,
       paddingHorizontal: 12,
       paddingVertical: 8,
       borderRadius: 8,
     },
-    saveBtnText: { ...baseText.subtitle, color: COLORS.white },
+    saveBtnText: { ...baseText.subtitle, ...baseTheme.blueAccentColor },
     cancelBtn: {
       paddingHorizontal: 12,
       paddingVertical: 6,
     },
-    cancelBtnText: { ...baseText.subtitle, ...baseText.subtleColor },
+    cancelBtnText: { ...baseText.subtitle },
     removeBtn: {
       backgroundColor: isDark ? COLORS.secondary.backgroundDark : COLORS.secondary.backgroundLight,
       paddingHorizontal: 12,
@@ -426,6 +436,16 @@ export const getSharedCalStyles = (isDark: boolean) => {
   const baseText = getBasicTypographyStyles(isDark);
 
   return StyleSheet.create({
+    shareButton: {
+      ...baseTheme.backgroundMutedBlue,
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'row',
+      gap: 4,
+    },
     toggleButtonContainer: {
       flexDirection: 'row',
       borderRadius: 10,
@@ -547,7 +567,6 @@ export const getShareModalStyles = (isDark: boolean) => {
     },
     headerContainer: {
       ...baseFlexStyles.rowBetween,
-      marginTop: 'auto',
       marginBottom: 10,
     },
     title: {
@@ -597,18 +616,23 @@ export const getShareModalStyles = (isDark: boolean) => {
       fontWeight: '600',
     },
     shareButton: {
-      ...baseTheme.backgroundBlue,
+      ...baseTheme.backgroundMutedBlue,
       borderRadius: 12,
-      padding: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
       alignItems: 'center',
-      marginTop: 'auto',
       justifyContent: 'center',
       flexDirection: 'row',
-      gap: 5,
+      gap: 4,
     },
-    shareButtonDisabled: { backgroundColor: isDark ? COLORS.primaryy.mutedBackgroundDark : COLORS.primaryy.mutedBackgroundLight },
+    shareButtonDisabled: {
+      backgroundColor: isDark ? COLORS.primaryy.mutedBackgroundDark : COLORS.primaryy.mutedBackgroundLight,
+    },
     shareButtonText: {
-      ...baseText.title,
+      ...baseText.subtitle,
+      ...baseTheme.blueAccentColor,
+    },
+    shareButtonTextDisabled: {
       color: 'white',
     },
     errorText: {

@@ -69,9 +69,13 @@ export default function CustomDrawerContent(props: any) {
 
   const getButtonStyle = (option: CalendarView, pressed: boolean) => [
     styles.viewButton,
-    calendarType === option && globalStyles.activeButton,
-    calendarType === option && { backgroundColor: uiTheme.isDark ? COLORS.background.dark : COLORS.background.light },
-    pressed && globalStyles.pressedButton,
+    calendarType.dayNum === option.dayNum && {
+      backgroundColor: uiTheme.isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight,
+    },
+    pressed && [
+      globalStyles.pressedButton,
+      { backgroundColor: uiTheme.isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight },
+    ],
   ];
 
   //open up settings/login page
@@ -223,22 +227,24 @@ export default function CustomDrawerContent(props: any) {
         {!isWeb && (
           <View style={styles.viewToggleContainer}>
             <Text style={styles.headerText}>View Mode</Text>
-            {[1, 2, 3, 7].map((option) => (
-              <Pressable
-                key={option}
-                onPress={() => {
-                  setCalendarType((prev) => {
-                    return { type: 'D', num: option, dayNum: option, weekNum: prev.weekNum };
-                  });
-                  if (!fixedSidebar) props.navigation.closeDrawer();
-                }}
-                style={({ pressed }) => getButtonStyle({ type: 'D', dayNum: option, weekNum: 0 }, pressed)}
-              >
-                <Text style={[globalStyles.smallButtonText, calendarType.dayNum === option && globalStyles.activeSmallButtonText]}>
-                  {`${option} days`}
-                </Text>
-              </Pressable>
-            ))}
+            <View style={{ flexDirection: 'row', backgroundColor: 'white', padding: 4, borderRadius: 12, gap: 4 }}>
+              {[1, 2, 3, 4, 7].map((option) => (
+                <Pressable
+                  key={option}
+                  onPress={() => {
+                    setCalendarType((prev) => {
+                      return { type: 'D', num: option, dayNum: option, weekNum: prev.weekNum };
+                    });
+                    //if (!fixedSidebar) props.navigation.closeDrawer();
+                  }}
+                  style={({ pressed }) => getButtonStyle({ type: 'D', dayNum: option, weekNum: 0 }, pressed)}
+                >
+                  <Text style={[globalStyles.smallButtonText, calendarType.dayNum === option && globalStyles.activeSmallButtonText]}>
+                    {`${option}`}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
         )}
         {/* --- Show Subiscribed Calendars --- */}

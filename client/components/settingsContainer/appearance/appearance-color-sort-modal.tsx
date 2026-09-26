@@ -187,7 +187,7 @@ export const getSortModalStyles = (isDark: boolean) => {
       paddingVertical: 8,
       paddingHorizontal: 12,
       borderRadius: 8,
-      ...baseTheme.backgroundBlue,
+      backgroundColor: isDark ? COLORS.primaryy.backgroundDark : COLORS.primaryy.backgroundLight,
     },
     cancelText: {
       ...baseText.subtleColor,
@@ -195,8 +195,7 @@ export const getSortModalStyles = (isDark: boolean) => {
     },
     sortText: {
       ...baseText.subtitle,
-      fontWeight: '600',
-      color: 'white',
+      ...baseTheme.blueAccentColor,
     },
     defaultButton: {
       paddingVertical: 8,

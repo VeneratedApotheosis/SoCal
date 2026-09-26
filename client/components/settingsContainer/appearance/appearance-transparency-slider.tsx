@@ -31,7 +31,7 @@ export default function AppearanceTransparency() {
       <View style={styles.container}>
         {/* Label and Current Value */}
         <View style={styles.headerRow}>
-          <Text style={styles.labelText}>Adjust opacity for isolation and transparency</Text>
+          <Text style={styles.labelText}>Adjust opacity for isolate and transparent</Text>
           <View style={styles.valueBadge}>
             <Text style={styles.valueText}>{localValue} px</Text>
           </View>
@@ -82,16 +82,12 @@ const getHourHeightStyles = (isDark: boolean) => {
     },
     labelText: {
       ...baseText.subtitle,
-      ...baseText.darkGrayColor,
-      fontWeight: '400',
     },
     valueBadge: {
-      paddingHorizontal: 12,
-      paddingVertical: 6,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
       borderRadius: 12,
-      backgroundColor: isDark ? COLORS.primaryy.backgroundDark : COLORS.primaryy.backgroundLight,
-      borderWidth: 1,
-      borderColor: isDark ? COLORS.primaryy.light : COLORS.primaryy.dark,
+      ...baseTheme.backgroundMuted,
     },
     valueText: {
       ...baseText.subtitle,

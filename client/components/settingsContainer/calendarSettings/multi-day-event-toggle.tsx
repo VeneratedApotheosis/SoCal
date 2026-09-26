@@ -56,7 +56,7 @@ export default function CalendarSettingsToggles() {
               styles.customSwitch,
               multiDayInHeader
                 ? { ...baseTheme.backgroundBlue } // Assuming backgroundBlue exists in your baseTheme
-                : { backgroundColor: theme.isDark ? '#3a3a3a' : '#d1d1dd' },
+                : { backgroundColor: theme.isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight },
             ]}
             accessibilityRole="switch"
             accessibilityState={{ checked: multiDayInHeader }}
@@ -81,7 +81,7 @@ export default function CalendarSettingsToggles() {
               styles.customSwitch,
               !suppressOther
                 ? { ...baseTheme.backgroundBlue } // Assuming backgroundBlue exists in your baseTheme
-                : { backgroundColor: theme.isDark ? '#3a3a3a' : '#d1d1dd' },
+                : { backgroundColor: theme.isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight },
             ]}
             accessibilityRole="switch"
             accessibilityState={{ checked: !suppressOther }}

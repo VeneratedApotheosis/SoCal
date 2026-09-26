@@ -30,12 +30,16 @@ export const getDrawerStyles = (isDark: boolean) => {
     },
     viewToggleContainer: {
       justifyContent: 'space-between',
+      flexDirection: 'column',
+      gap: 8,
       marginBottom: 10,
     },
     viewButton: {
+      flex: 1,
       padding: 8,
       marginVertical: 2,
       borderRadius: 8,
+      ...baseFlexStyles.centerAll,
     },
     headerRow: {
       ...baseFlexStyles.rowLeft,

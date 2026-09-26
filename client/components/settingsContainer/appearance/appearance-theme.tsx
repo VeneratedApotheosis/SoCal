@@ -1,5 +1,6 @@
 import DropDownCard from '@/components/dropdown-card';
 import { getIconColor } from '@/utility/globalStyles';
+import { COLORS } from '@/utility/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, Pressable, Text, UIManager, View } from 'react-native';
 import { useUIContext } from '../../contexts/ui-context';
@@ -35,8 +36,12 @@ export default function AppearanceTheme() {
               onPress={() => uiTheme.setThemeMode(theme.value)}
               style={[themeStyles.themeButton, isSelected ? themeStyles.buttonSelected : themeStyles.buttonUnselected]}
             >
-              <Ionicons name={theme.name} size={20} color={iconColor} />
-              <Text style={themeStyles.buttonText}>{theme.label}</Text>
+              <Ionicons
+                name={theme.name}
+                size={20}
+                color={!isSelected ? iconColor : uiTheme.isDark ? COLORS.primaryy.dark : COLORS.primaryy.light}
+              />
+              <Text style={[themeStyles.buttonText, isSelected && themeStyles.buttonTextSelected]}>{theme.label}</Text>
             </Pressable>
           );
         })}

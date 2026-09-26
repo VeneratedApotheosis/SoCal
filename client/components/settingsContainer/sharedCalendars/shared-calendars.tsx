@@ -3,7 +3,6 @@ import { useUIContext } from '@/components/contexts/ui-context';
 import { getIconColor } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { Plus } from 'lucide-react-native';
 import { useMemo, useRef, useState } from 'react';
 import { Animated, LayoutAnimation, Pressable, Text, View } from 'react-native';
 import { getColorPaletteStyles, getSettingCardStyles, getSharedCalStyles } from '../settingsContainerStyles';
@@ -95,8 +94,8 @@ export default function SharedCalendars() {
           <Text style={cardStyles.label}>Shared Calendars</Text>
         </View>
         <View style={cardStyles.triggerLeft}>
-          <Pressable hitSlop={10} style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => setVisible(true)}>
-            <Plus size={16} color={uiTheme.isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark} style={[themeStyles.plusIcon]} />
+          <Pressable hitSlop={10} style={styles.shareButton} onPress={() => setVisible(true)}>
+            <Ionicons name="arrow-forward-outline" color={uiTheme.isDark ? COLORS.primaryy.light : COLORS.primaryy.dark} size={16} />
             <Text
               style={{
                 fontSize: 14,

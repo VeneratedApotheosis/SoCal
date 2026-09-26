@@ -57,7 +57,7 @@ export default function SidebarSettingsToggles() {
               styles.customSwitch,
               visibleSettings.has('User Profile')
                 ? { ...baseTheme.backgroundBlue } // Assuming backgroundBlue exists in your baseTheme
-                : { backgroundColor: theme.isDark ? '#3a3a3a' : '#d1d1dd' },
+                : { backgroundColor: theme.isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight },
             ]}
             accessibilityRole="switch"
             accessibilityState={{ checked: visibleSettings.has('User Profile') }}
@@ -87,7 +87,7 @@ export default function SidebarSettingsToggles() {
               styles.customSwitch,
               visibleSettings.has('Subscribed Calendars Toggle')
                 ? { ...baseTheme.backgroundBlue } // Assuming backgroundBlue exists in your baseTheme
-                : { backgroundColor: theme.isDark ? '#3a3a3a' : '#d1d1dd' },
+                : { backgroundColor: theme.isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight },
             ]}
             accessibilityRole="switch"
             accessibilityState={{ checked: visibleSettings.has('Subscribed Calendars Toggle') }}

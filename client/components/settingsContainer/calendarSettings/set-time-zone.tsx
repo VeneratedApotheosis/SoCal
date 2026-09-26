@@ -108,8 +108,6 @@ const getTimeZoneStyles = (isDark: boolean) => {
       padding: 12,
       borderRadius: 12,
       ...baseTheme.backgroundMuted,
-      borderWidth: 1,
-      borderColor: isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight,
     },
     selectorLabel: {
       ...baseText.subtitle,

@@ -72,6 +72,9 @@ export const getBasicThemeStyles = (isDark: boolean) =>
     backgroundBlue: {
       backgroundColor: isDark ? COLORS.primaryy.light : COLORS.primaryy.dark,
     },
+    backgroundMutedBlue: {
+      backgroundColor: isDark ? COLORS.primaryy.backgroundDark : COLORS.primaryy.backgroundLight,
+    },
     border: {
       borderColor: isDark ? COLORS.border.dark : COLORS.border.light,
     },
@@ -239,8 +242,7 @@ export const globalParameterStyles = (isDark: boolean) => {
       boxShadow: '0px 0px 0px rgba(0, 0, 0, 0.1)',
     },
     smallButtonText: {
-      ...baseText.body,
-      fontWeight: FONT_WEIGHTS.light,
+      ...baseText.subtitle,
     },
     activeSmallButtonText: {
       ...baseText.defaultColor,
@@ -317,24 +319,20 @@ export const getHeaderStyles = (isDark: boolean) => {
       flexDirection: 'row',
       justifyContent: 'flex-end',
       alignItems: 'center',
-      gap: 16,
+      gap: 12,
     },
     headerButton: {
       width: 35,
       height: 35,
-      ...baseTheme.backgroundBlue,
+      ...baseTheme.backgroundMutedBlue,
       borderRadius: 999,
       ...baseFlexStyles.centerAll,
       aspectRatio: 1,
       fontWeight: '700',
-
-      // --- Shadows ---
-      boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-      elevation: 3,
     },
     headerButtonText: {
       ...baseText.subtitle,
-      color: 'white',
+      ...baseTheme.blueAccentColor,
     },
     createContainer: {
       flexDirection: 'row',

@@ -95,8 +95,7 @@ export default function AppearanceColorPalette() {
         <>
           {/* Header Row: Label + Modify Button */}
           <View style={themeStyles.headerRow}>
-            <Text style={themeStyles.subLabel}> </Text>
-            <Pressable hitSlop={10} onPress={() => handleModify()}>
+            <Pressable hitSlop={10} onPress={() => handleModify()} style={themeStyles.modifyButton}>
               <Text style={themeStyles.modifyText}>Modify</Text>
             </Pressable>
           </View>
@@ -133,7 +132,7 @@ export default function AppearanceColorPalette() {
               <Text style={editStyles.cancelBtnText}>Sort</Text>
             </Pressable>
             <View style={editStyles.buttonGroup}>
-              <Pressable style={editStyles.cancelBtn} onPress={() => handleCancelEdit()}>
+              <Pressable style={[editStyles.removeBtn, editStyles.revertBtn]} onPress={() => handleCancelEdit()}>
                 <Text style={editStyles.cancelBtnText}>Cancel</Text>
               </Pressable>
               <Pressable style={editStyles.saveBtn} onPress={() => handleSave()}>

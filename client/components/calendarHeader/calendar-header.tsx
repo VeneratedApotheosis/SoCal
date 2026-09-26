@@ -84,14 +84,14 @@ export default function CalendarHeader() {
                     DeviceEventEmitter.emit('CREATE_EVENT');
                   }}
                 >
-                  <Ionicons name="add-outline" size={24} color={theme.isDark ? COLORS.text.light : COLORS.text.dark} />
+                  <Ionicons name="add-outline" size={20} color={theme.isDark ? COLORS.text.light : COLORS.text.dark} />
                 </Pressable>
               )}
             </View>
             {!!isWeb && <CalendarTypePicker />}
             <View style={{ justifyContent: 'center' }}>
-              <Pressable onPress={handleSettingspress}>
-                <Ionicons name={'settings-outline'} size={24} color={iconColor} />
+              <Pressable onPress={handleSettingspress} style={[styles.createButton, { borderRadius: 24 }]}>
+                <Ionicons name={'settings-outline'} size={20} color={iconColor} />
               </Pressable>
             </View>
             <View style={{ justifyContent: 'center' }}>

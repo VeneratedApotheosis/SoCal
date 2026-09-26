@@ -30,6 +30,7 @@ export default function ShareModal({ isVisible, setVisible }: ShareModalProps) {
   const { theme } = useUIContext();
   const styles = getShareModalStyles(theme.isDark);
   const globalStyles = globalParameterStyles(theme.isDark);
+  const blueAccentColor = theme.isDark ? COLORS.primaryy.light : COLORS.primaryy.dark;
 
   // ─── Owned Calendars calculation ───────────────────────────────────────────────────────────
 
@@ -108,6 +109,8 @@ export default function ShareModal({ isVisible, setVisible }: ShareModalProps) {
     }
   }, [status]);
 
+  const shared = !email || selectedIds.length === 0 || isLoading;
+
   return (
     <Modal
       visible={isVisible}
@@ -149,27 +152,21 @@ export default function ShareModal({ isVisible, setVisible }: ShareModalProps) {
 
             {/* --- Share Button --- */}
             <Pressable
-              style={({ pressed }) => [
-                styles.shareButton,
-                (!email || selectedIds.length === 0 || isLoading) && styles.shareButtonDisabled,
-                pressed && globalStyles.pressedButton,
-              ]}
+              style={({ pressed }) => [styles.shareButton, shared && styles.shareButtonDisabled, pressed && globalStyles.pressedButton]}
               onPress={handleShareClick}
               disabled={!email || selectedIds.length === 0 || isLoading}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                {isLoading ? (
-                  <>
-                    <ActivityIndicator color="white" size="small" />
-                    <Text style={styles.shareButtonText}>Sharing...</Text>
-                  </>
-                ) : (
-                  <>
-                    <Ionicons name="arrow-forward-outline" color={'white'} size={16} />
-                    <Text style={styles.shareButtonText}>Share</Text>{' '}
-                  </>
-                )}
-              </View>
+              {isLoading ? (
+                <>
+                  <ActivityIndicator color={!shared ? blueAccentColor : 'white'} size="small" />
+                  <Text style={[styles.shareButtonText, shared && styles.shareButtonTextDisabled]}>Sharing...</Text>
+                </>
+              ) : (
+                <>
+                  <Ionicons name="arrow-forward-outline" color={!shared ? blueAccentColor : 'white'} size={16} />
+                  <Text style={[styles.shareButtonText, shared && styles.shareButtonTextDisabled]}>Share</Text>
+                </>
+              )}
             </Pressable>
           </View>
 
