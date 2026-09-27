@@ -1,7 +1,7 @@
 import { useAuthContext } from '@/components/contexts/auth-context';
 import { fetchCalendarList, getCalendarSharingSettings } from '@/services/api';
 import { DEMO_JWT } from '@/utility/constants';
-import { demoCalendarObjs } from '@/utility/demoData';
+import { demoCalendarObjs, sharedCalendars } from '@/utility/demoData';
 import { getValidAccessToken } from '@/utility/tokenUtils';
 import { calendarObj, sharedObj } from '@/utility/types';
 import { useCallback, useEffect, useState } from 'react';
@@ -65,7 +65,7 @@ export function useCalendarList() {
     }
     if (jwtToken == DEMO_JWT) {
       setCalendarObjs(demoCalendarObjs);
-      setSharedObjs([]);
+      setSharedObjs(sharedCalendars);
       return;
     }
     setIsLoading(true);

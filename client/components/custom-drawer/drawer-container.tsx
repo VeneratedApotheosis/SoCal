@@ -72,10 +72,7 @@ export default function CustomDrawerContent(props: any) {
     calendarType.dayNum === option.dayNum && {
       backgroundColor: uiTheme.isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight,
     },
-    pressed && [
-      globalStyles.pressedButton,
-      { backgroundColor: uiTheme.isDark ? COLORS.background.mutedDark : COLORS.background.mutedLight },
-    ],
+    pressed && [globalStyles.pressedButton],
   ];
 
   //open up settings/login page
@@ -194,10 +191,10 @@ export default function CustomDrawerContent(props: any) {
   if (!validJwt) return null;
 
   return (
-    <SafeAreaView style={[styles.headerContainer, { padding: fixedSidebar ? 0 : 20 }]}>
+    <SafeAreaView style={[styles.headerContainer]}>
       {/* --- USER INFO --- */}
       {!fixedSidebar && visibleSettings.has('User Profile') && (
-        <View style={styles.profile}>
+        <View style={[styles.profile, { padding: fixedSidebar ? 0 : 20 }]}>
           <Pressable onPress={handleSettingspress} style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ ...baseFlexStyles.centerAll, padding: 2 }}>
               {familyProfiles?.parent && familyProfiles?.parent.picture && (
@@ -223,94 +220,95 @@ export default function CustomDrawerContent(props: any) {
         </View>
       )}
       <ScrollView ref={drawerScrollViewRef}>
-        {/* --- CALENDAR TYPE TOGGLE --- */}
-        {!isWeb && (
-          <View style={styles.viewToggleContainer}>
-            <Text style={styles.headerText}>View Mode</Text>
-            <View style={{ flexDirection: 'row', backgroundColor: 'white', padding: 4, borderRadius: 12, gap: 4 }}>
-              {[1, 2, 3, 4, 7].map((option) => (
-                <Pressable
-                  key={option}
-                  onPress={() => {
-                    setCalendarType((prev) => {
-                      return { type: 'D', num: option, dayNum: option, weekNum: prev.weekNum };
-                    });
-                    //if (!fixedSidebar) props.navigation.closeDrawer();
-                  }}
-                  style={({ pressed }) => getButtonStyle({ type: 'D', dayNum: option, weekNum: 0 }, pressed)}
-                >
-                  <Text style={[globalStyles.smallButtonText, calendarType.dayNum === option && globalStyles.activeSmallButtonText]}>
-                    {`${option}`}
-                  </Text>
-                </Pressable>
+        <View style={{ padding: fixedSidebar ? 0 : 20 }}>
+          {/* --- CALENDAR TYPE TOGGLE --- */}
+          {!isWeb && (
+            <View style={styles.viewToggleContainer}>
+              <Text style={styles.headerText}>View Mode</Text>
+              <View style={{ flexDirection: 'row', backgroundColor: 'white', padding: 4, borderRadius: 12, gap: 4 }}>
+                {[1, 2, 3, 4, 7].map((option) => (
+                  <Pressable
+                    key={option}
+                    onPress={() => {
+                      setCalendarType((prev) => {
+                        return { type: 'D', num: option, dayNum: option, weekNum: prev.weekNum };
+                      });
+                      //if (!fixedSidebar) props.navigation.closeDrawer();
+                    }}
+                    style={({ pressed }) => getButtonStyle({ type: 'D', dayNum: option, weekNum: 0 }, pressed)}
+                  >
+                    <Text style={[globalStyles.smallButtonText, calendarType.dayNum === option && globalStyles.activeSmallButtonText]}>
+                      {`${option}`}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          )}
+          {/* --- Show Subscribed Calendars --- */}
+          {visibleSettings.has('Subscribed Calendars Toggle') && (
+            <View style={styles.headerRow}>
+              <View style={styles.headerLeft}>
+                <Text style={styles.labelText}>Show Suscribed Calendars</Text>
+              </View>
+              <Pressable
+                onPress={() => toggleSuppress()}
+                style={[
+                  styles.customSwitch,
+                  !suppressOther
+                    ? { ...baseTheme.backgroundBlue } // Assuming backgroundBlue exists in your baseTheme
+                    : { backgroundColor: uiTheme.isDark ? '#3a3a3a' : '#d1d1dd' },
+                ]}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: !suppressOther }}
+              >
+                <Animated.View style={[styles.customThumb, { transform: [{ translateX: suppressTransformX }] }]} />
+              </Pressable>
+            </View>
+          )}
+          {/* --- CALENDAR VISIBILITY TOGGLE --- */}
+          <View style={{ marginBottom: 10 }}>
+            <Text style={[styles.headerText]}>Calendars</Text>
+            {viewMode !== 'default' && (
+              <Pressable
+                style={({ pressed }) => [themeStyles.viewModeButton, pressed && themeStyles.actionButtonPressed, { flex: 1 }]}
+                onPress={() => resetViewMode()}
+              >
+                <Text style={themeStyles.viewModeText}>remove {viewMode}</Text>
+              </Pressable>
+            )}
+            <View style={{}}>
+              {flatData.map((data, index) => (
+                <DraggableCalendar
+                  key={data.folder ? `folder-${data.id}` : `cal-${data.calendar?.calendarId}`}
+                  cal={data}
+                  onDrop={handleDrop}
+                  toggleCalendar={hiddenCalendarHook.toggleCalendar}
+                  thisIndex={index}
+                  hoverIndex={hoverIndex}
+                  activeIndex={activeIndex}
+                  isHovering={isHovering}
+                  drawerScrollViewRef={drawerScrollViewRef}
+                />
               ))}
             </View>
           </View>
-        )}
-        {/* --- Show Subiscribed Calendars --- */}
-        {visibleSettings.has('Subscribed Calendars Toggle') && (
-          <View style={styles.headerRow}>
-            <View style={styles.headerLeft}>
-              <Text style={styles.labelText}>Show Suscribed Calendars</Text>
-            </View>
-
-            <Pressable
-              onPress={() => toggleSuppress()}
-              style={[
-                styles.customSwitch,
-                !suppressOther
-                  ? { ...baseTheme.backgroundBlue } // Assuming backgroundBlue exists in your baseTheme
-                  : { backgroundColor: uiTheme.isDark ? '#3a3a3a' : '#d1d1dd' },
-              ]}
-              accessibilityRole="switch"
-              accessibilityState={{ checked: !suppressOther }}
-            >
-              <Animated.View style={[styles.customThumb, { transform: [{ translateX: suppressTransformX }] }]} />
-            </Pressable>
-          </View>
-        )}
-        {/* --- CALENDAR VISIBILITY TOGGLE --- */}
-        <View style={{ marginBottom: 10 }}>
-          <Text style={[styles.headerText]}>Calendars</Text>
-          {viewMode !== 'default' && (
-            <Pressable
-              style={({ pressed }) => [themeStyles.viewModeButton, pressed && themeStyles.actionButtonPressed, { flex: 1 }]}
-              onPress={() => resetViewMode()}
-            >
-              <Text style={themeStyles.viewModeText}>remove {viewMode}</Text>
-            </Pressable>
-          )}
           <View style={{}}>
-            {flatData.map((data, index) => (
-              <DraggableCalendar
-                key={data.folder ? `folder-${data.id}` : `cal-${data.calendar?.calendarId}`}
-                cal={data}
-                onDrop={handleDrop}
-                toggleCalendar={hiddenCalendarHook.toggleCalendar}
-                thisIndex={index}
-                hoverIndex={hoverIndex}
-                activeIndex={activeIndex}
-                isHovering={isHovering}
-                drawerScrollViewRef={drawerScrollViewRef}
-              />
-            ))}
+            <Pressable
+              style={({ pressed }) => [
+                themeStyles.actionButton,
+                { paddingVertical: 8, backgroundColor: uiTheme.isDark ? COLORS.background.dark : COLORS.background.light },
+                pressed && themeStyles.actionButtonPressed,
+              ]}
+              onPress={() => {
+                if (isHovering.get() === false) {
+                  calendarGroups.addGroup(null);
+                }
+              }}
+            >
+              <Plus size={16} color={uiTheme.isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark} style={themeStyles.plusIcon} />
+            </Pressable>
           </View>
-        </View>
-        <View style={{}}>
-          <Pressable
-            style={({ pressed }) => [
-              themeStyles.actionButton,
-              { paddingVertical: 8, backgroundColor: uiTheme.isDark ? COLORS.background.dark : COLORS.background.light },
-              pressed && themeStyles.actionButtonPressed,
-            ]}
-            onPress={() => {
-              if (isHovering.get() === false) {
-                calendarGroups.addGroup(null);
-              }
-            }}
-          >
-            <Plus size={16} color={uiTheme.isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark} style={themeStyles.plusIcon} />
-          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>

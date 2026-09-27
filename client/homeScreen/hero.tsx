@@ -5,9 +5,11 @@ import { baseFlexStyles } from '@/utility/globalStyles';
 import { COLORS, FONT_WEIGHTS, LAYOUT, RADII, SPACING, textStyles, TYPOGRAPHY } from './homeScreenStyles';
 import { MockCalendar, MockEvent } from './mock-calendar';
 
+import { useAuthContext } from '@/components/contexts/auth-context';
+import { Ionicons } from '@expo/vector-icons';
 import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import React, { useRef, useState } from 'react';
-import { Animated, Platform, StyleSheet, Text, View } from 'react-native';
+import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GoogleWeb } from './google-icon';
 
 export default function Hero() {
@@ -15,6 +17,7 @@ export default function Hero() {
   const { isWeb } = useScreenSize();
 
   const { promptAsync, isLoading } = useAuth();
+  const { setIsDemo, setValidJwt } = useAuthContext();
 
   // ─── Get Width of Mock Container ───────────────────────────────────────────────────────────
 
@@ -37,10 +40,16 @@ export default function Hero() {
 
       <View style={styles.heroInner}>
         <View style={styles.heroText}>
-          <View style={styles.betaPill}>
-            <View style={styles.greenDot} />
-            <Text style={styles.betaText}>Now in beta — free to use</Text>
-          </View>
+          <Pressable
+            style={styles.betaPill}
+            onPress={() => {
+              setIsDemo(true);
+              setValidJwt(true);
+            }}
+          >
+            <Ionicons name="arrow-forward-outline" color={'#2e75df'} size={16} />
+            <Text style={styles.betaText}>Demo</Text>
+          </Pressable>
 
           <Text style={styles.heroTitle}>
             Your group's{'\n'}
@@ -118,7 +127,7 @@ export default function Hero() {
           <MockEvent
             color={DEFAULT_COLORS[7]}
             top={top + 40 * 1}
-            height={40 * 7.5}
+            height={40 * 2}
             left={WEB_WHITE_X_PADDING + boxWidth}
             width={boxWidth - 10}
             offset={0}

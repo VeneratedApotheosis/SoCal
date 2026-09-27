@@ -91,7 +91,9 @@ export default function SharedCalendars() {
       <Pressable onPress={toggleSection} style={cardStyles.trigger}>
         <View style={cardStyles.triggerLeft}>
           <Ionicons name="person-outline" size={20} color={iconColor} />
-          <Text style={cardStyles.label}>Shared Calendars</Text>
+          <Text style={cardStyles.label} numberOfLines={1}>
+            Shared Calendars
+          </Text>
         </View>
         <View style={cardStyles.triggerLeft}>
           <Pressable hitSlop={10} style={styles.shareButton} onPress={() => setVisible(true)}>

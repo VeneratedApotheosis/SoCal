@@ -27,6 +27,7 @@ export const GroupsProvider = ({ children }: { children: ReactNode }) => {
   const { calendarObjs } = useCalendarObjects();
   const { hiddenCalendarHook } = useHiddenCalendarsContext();
   const { familyProfiles } = useProfileContext();
+
   const calendarGroups = useCalendarGroup(calendarObjs, familyProfiles && familyProfiles.parent ? familyProfiles.parent.id : null);
 
   // ─── hiddenCalendarGroups Functions ───────────────────────────────────────────────────────────

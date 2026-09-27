@@ -1,11 +1,14 @@
+import { useAuthContext } from '@/components/contexts/auth-context';
 import { useCalendarPreferencesContext } from '@/components/contexts/calendar-preferences-context';
 import { calendarGroup, calendarObj } from '@/utility/types';
 import { useEffect, useMemo } from 'react';
 
 export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: string | null) => {
   const { groupsData: groupedCalendars, isLoading, setGroupsData: setGroupedCalendars } = useCalendarPreferencesContext();
+  const { demo } = useAuthContext();
 
   const currentUserGroups = useMemo(() => {
+    if (demo) return groupedCalendars;
     if (!userId) return [];
 
     return groupedCalendars

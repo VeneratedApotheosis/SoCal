@@ -11,12 +11,13 @@ export function useProfiles() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { getValidJwt } = useAuth();
-  const { validJwt } = useAuthContext();
+  const { validJwt, demo } = useAuthContext();
 
   // ─── Fetch from Backend ───────────────────────────────────────────────────────────
 
   const fetchProfiles = useCallback(async () => {
     const jwtToken = await getValidJwt();
+    console.log(jwtToken);
     if (!jwtToken) return;
     if (jwtToken == DEMO_JWT) {
       setFamilyProfiles({ parent: demoProfile, children: [] });
@@ -43,7 +44,7 @@ export function useProfiles() {
     } finally {
       setIsLoading(false);
     }
-  }, [setFamilyProfiles]);
+  }, [setFamilyProfiles, getValidJwt]);
 
   // Automatically fetch when the token changes
   useEffect(() => {

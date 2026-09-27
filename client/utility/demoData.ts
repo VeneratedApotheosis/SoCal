@@ -3,7 +3,7 @@ import { accessRole, calendarGroup, calendarObj, ProfileObj, sharedObj, visibili
 
 export const demoCalendars = [
   {
-    calendarName: 'joe@gmail.com',
+    calendarName: 'joe@example.com',
     calendarId: 'joe@example.com',
     calendarDefaultColor: DEFAULT_COLORS[0],
     owner: true,
@@ -20,7 +20,7 @@ export const demoCalendars = [
     calendarName: "Joe's Work",
     calendarId: 'demo-joe-schedule-1@example.com',
     calendarDefaultColor: DEFAULT_COLORS[1],
-    owner: false,
+    owner: true,
     dataOwner: 'joe@example.com',
     shown: {
       displayed: true,
@@ -34,7 +34,7 @@ export const demoCalendars = [
     calendarName: 'Gym, Joe',
     calendarId: 'demo-joe-schedule-2@example.com',
     calendarDefaultColor: DEFAULT_COLORS[2],
-    owner: false,
+    owner: true,
     dataOwner: 'joe@example.com',
     shown: {
       displayed: true,
@@ -48,7 +48,7 @@ export const demoCalendars = [
     calendarName: 'Meetings, Joe',
     calendarId: 'demo-joe-schedule-3@example.com',
     calendarDefaultColor: DEFAULT_COLORS[3],
-    owner: false,
+    owner: true,
     dataOwner: 'joe@example.com',
     shown: {
       displayed: true,
@@ -191,116 +191,65 @@ export const demoHiddenCalendars = [demoCalendarObjs[3].calendarId, demoCalendar
 
 export const sharedCalendars: sharedObj[] = [
   {
-    id: 'demo-jordan-clubs@group.calendar.google.com',
-    name: 'Jordan Clubs',
+    id: 'joe@example.com',
+    name: 'joe@example.com',
     sharedIds: [
       {
-        id: 'demo-jordan-clubs@group.calendar.google.com',
-        accessRole: 'owner',
-      },
-      {
-        id: 'jordan@example.com',
-        accessRole: 'owner',
-      },
-      {
-        id: 'example.com',
-        accessRole: 'freeBusyReader',
-      },
-      {
-        id: 'taylor@example.com',
+        id: 'james1234567891011121314151617181920@example.com',
         accessRole: 'reader',
       },
       {
-        id: 'alexander@example.com',
+        id: 'alt.joe@example.com',
+        accessRole: 'writer',
+      },
+      {
+        id: 'johnjohnjohn34@example.com',
         accessRole: 'reader',
       },
     ],
   },
 
   {
-    id: 'jordan@example.com',
-    name: 'jordan@example.com',
+    id: 'demo-joe-schedule-1@example.com',
+    name: "Joe's Work",
     sharedIds: [
       {
-        id: 'jordan@example.com',
-        accessRole: 'owner',
+        id: 'alt.joe@example.com',
+        accessRole: 'writer',
       },
       {
-        id: 'example.com',
-        accessRole: 'freeBusyReader',
-      },
-      {
-        id: 'taylor@example.com',
-        accessRole: 'reader',
-      },
-      {
-        id: 'alexander@example.com',
+        id: 'johnjohnjohn34@example.com',
         accessRole: 'writer',
       },
     ],
   },
 
   {
-    id: 'demo-jordan-personal-schedule@group.calendar.google.com',
-    name: 'Schedule, Jordan',
+    id: 'demo-joe-schedule-2@example.com',
+    name: 'Gym, Joe',
     sharedIds: [
       {
-        id: 'demo-jordan-personal-schedule@group.calendar.google.com',
-        accessRole: 'owner',
+        id: 'james1234567891011121314151617181920@example.com',
+        accessRole: 'writer',
       },
       {
-        id: 'jordan@example.com',
-        accessRole: 'owner',
-      },
-      {
-        id: 'example.com',
-        accessRole: 'freeBusyReader',
-      },
-      {
-        id: 'taylor@example.com',
-        accessRole: 'reader',
-      },
-      {
-        id: 'alexander@example.com',
+        id: 'alt.joe@example.com',
         accessRole: 'writer',
       },
     ],
   },
 
   {
-    id: 'demo-jordan-finals@group.calendar.google.com',
-    name: 'Finals, Jordan',
+    id: 'demo-joe-schedule-3@example.com',
+    name: 'Meetings, Joe',
     sharedIds: [
       {
-        id: 'demo-jordan-finals@group.calendar.google.com',
-        accessRole: 'owner',
+        id: 'alt.joe@example.com',
+        accessRole: 'writer',
       },
       {
-        id: 'jordan@example.com',
-        accessRole: 'owner',
-      },
-      {
-        id: 'example.com',
-        accessRole: 'freeBusyReader',
-      },
-    ],
-  },
-
-  {
-    id: 'demo-class-work@group.calendar.google.com',
-    name: 'Class Work',
-    sharedIds: [
-      {
-        id: 'demo-class-work@group.calendar.google.com',
-        accessRole: 'owner',
-      },
-      {
-        id: 'jordan@example.com',
-        accessRole: 'owner',
-      },
-      {
-        id: 'example.com',
-        accessRole: 'freeBusyReader',
+        id: 'joes_coworker@example.com',
+        accessRole: 'writer',
       },
     ],
   },
@@ -333,8 +282,8 @@ export const demoCalendarGroups: calendarGroup[] = [
 ];
 
 export const demoProfile: ProfileObj = {
-  id: 'demo-user-1234',
-  email: 'demodemodemotestingtestingtesting@example.com',
+  id: 'joe@example.com',
+  email: 'joe@example.com',
   name: 'Demo User',
-  picture: 'https://i.pravatar.cc/150?img=12',
+  picture: 'https://api.dicebear.com/10.x/initials/svg?seed=D&backgroundColor=4f46e5&borderRadius=50',
 };

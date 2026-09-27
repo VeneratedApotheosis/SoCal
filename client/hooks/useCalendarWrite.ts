@@ -18,7 +18,8 @@ export function useCalendarWrite() {
 
   const executeMutation = async (apiFunc: Function, event: EventObj) => {
     const jwtToken = await getValidJwt();
-    if (!jwtToken || jwtToken == DEMO_JWT) throw new Error('useCalendarWrite; No token');
+    if (jwtToken == DEMO_JWT) return;
+    if (!jwtToken) throw new Error('useCalendarWrite; No token');
     setLoading(true);
     setError(null);
     try {

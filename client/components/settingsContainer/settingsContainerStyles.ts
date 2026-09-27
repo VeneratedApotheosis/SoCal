@@ -60,6 +60,7 @@ export const getSettingCardStyles = (isDark: boolean) => {
       padding: 20,
     },
     triggerLeft: {
+      flex: 1,
       ...baseFlexStyles.rowLeft,
       gap: 12, // gap-3
     },
@@ -98,6 +99,7 @@ export const getSettingProfileStyles = (isDark: boolean) => {
     emailText: {
       ...baseText.body,
       ...baseText.subtleColor,
+      flex: 1,
     },
     buttonContainer: {
       ...baseFlexStyles.centerAll,
@@ -437,6 +439,7 @@ export const getSharedCalStyles = (isDark: boolean) => {
 
   return StyleSheet.create({
     shareButton: {
+      flex: 1,
       ...baseTheme.backgroundMutedBlue,
       borderRadius: 12,
       paddingHorizontal: 12,

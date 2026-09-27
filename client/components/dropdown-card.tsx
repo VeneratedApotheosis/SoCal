@@ -50,7 +50,9 @@ export default function DropDownCard({ title, iconName, children, defaultExpande
       <Pressable onPress={toggleSection} style={cardStyles.trigger}>
         <View style={cardStyles.triggerLeft}>
           {iconName && <Ionicons name={iconName} size={20} color={iconColor} />}
-          <Text style={cardStyles.label}>{title}</Text>
+          <Text style={cardStyles.label} numberOfLines={1}>
+            {title}
+          </Text>
         </View>
         <Animated.View style={{ transform: [{ rotate: arrowRotation }] }}>
           <Ionicons name="chevron-down-outline" size={20} color={iconColor} />

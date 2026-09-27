@@ -26,61 +26,59 @@ export default function CalendarTypePicker() {
   const num = calendarType.type === 'D' ? calendarType.dayNum : calendarType.weekNum;
 
   return (
-    <View style={[{ zIndex: 10 }]}>
-      <View style={styles.row}>
-        {/* Number Input Container */}
-        <View style={[styles.stepperContainer, durationFocused && styles.stepperSelected]}>
-          <TextInput
-            keyboardType="number-pad"
-            maxLength={3}
-            value={String(num)}
-            onFocus={() => setDurationFocused(true)}
-            onBlur={() => {
-              if (num === 0)
-                setCalendarType((prev) => {
-                  const isDay = calendarType.type === 'D';
-                  return { type: calendarType.type, dayNum: isDay ? 1 : prev.dayNum, weekNum: isDay ? prev.weekNum : 1 };
-                });
-              setDurationFocused(false);
-            }}
-            onChangeText={(text) => {
-              const parsed = parseInt(text) || 0;
+    <View style={styles.row}>
+      {/* Number Input Container */}
+      <View style={[styles.stepperContainer, durationFocused && styles.stepperSelected]}>
+        <TextInput
+          keyboardType="number-pad"
+          maxLength={3}
+          value={String(num)}
+          onFocus={() => setDurationFocused(true)}
+          onBlur={() => {
+            if (num === 0)
               setCalendarType((prev) => {
                 const isDay = calendarType.type === 'D';
-                return { type: calendarType.type, dayNum: isDay ? parsed : prev.dayNum, weekNum: isDay ? prev.weekNum : parsed };
+                return { type: calendarType.type, dayNum: isDay ? 1 : prev.dayNum, weekNum: isDay ? prev.weekNum : 1 };
               });
-            }}
-            style={styles.stepperInput}
-          />
-        </View>
-
-        {/* Custom Dropdown Container */}
-        <View style={{ zIndex: 10 }}>
-          {/* Dropdown Trigger */}
-          <Pressable style={styles.dropdownTrigger} onPress={() => setShowPeriodDropdown(!showPeriodDropdown)}>
-            <Text style={styles.dropdownTriggerText}>{currentPeriodLabel}</Text>
-            <Ionicons name="chevron-down" size={14} color={theme.isDark ? COLORS.border.mutedLight : COLORS.border.mutedLight} />
-          </Pressable>
-
-          {/* Dropdown Menu */}
-          {showPeriodDropdown && (
-            <View style={styles.dropdownMenu}>
-              {PERIOD_OPTIONS.map((opt) => (
-                <Pressable
-                  key={opt.key}
-                  style={styles.dropdownItem}
-                  onPress={() => {
-                    setCalendarType((prev) => ({ type: opt.key, dayNum: prev.dayNum, weekNum: prev.weekNum }));
-                    setShowPeriodDropdown(false);
-                  }}
-                >
-                  <Text style={styles.dropdownItemText}>{opt.label}</Text>
-                </Pressable>
-              ))}
-            </View>
-          )}
-        </View>
+            setDurationFocused(false);
+          }}
+          onChangeText={(text) => {
+            const parsed = parseInt(text) || 0;
+            setCalendarType((prev) => {
+              const isDay = calendarType.type === 'D';
+              return { type: calendarType.type, dayNum: isDay ? parsed : prev.dayNum, weekNum: isDay ? prev.weekNum : parsed };
+            });
+          }}
+          style={styles.stepperInput}
+        />
       </View>
+
+      {/* Custom Dropdown Container */}
+      <>
+        {/* Dropdown Trigger */}
+        <Pressable style={styles.dropdownTrigger} onPress={() => setShowPeriodDropdown(!showPeriodDropdown)}>
+          <Text style={styles.dropdownTriggerText}>{currentPeriodLabel}</Text>
+          <Ionicons name="chevron-down" size={14} color={theme.isDark ? COLORS.border.mutedLight : COLORS.border.mutedLight} />
+        </Pressable>
+
+        {/* Dropdown Menu */}
+        {showPeriodDropdown && (
+          <View style={styles.dropdownMenu}>
+            {PERIOD_OPTIONS.map((opt) => (
+              <Pressable
+                key={opt.key}
+                style={styles.dropdownItem}
+                onPress={() => {
+                  setCalendarType((prev) => ({ type: opt.key, dayNum: prev.dayNum, weekNum: prev.weekNum }));
+                  setShowPeriodDropdown(false);
+                }}
+              >
+                <Text style={styles.dropdownItemText}>{opt.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+      </>
     </View>
   );
 }
@@ -93,8 +91,10 @@ export const CalendarTypeStyles = (isDark: boolean) => {
     row: {
       ...baseFlexStyles.rowLeft,
       gap: 12,
+      height: '100%',
     },
     stepperContainer: {
+      height: '100%',
       ...baseFlexStyles.rowLeft,
       borderRadius: 12,
       borderWidth: 1,
@@ -114,11 +114,12 @@ export const CalendarTypeStyles = (isDark: boolean) => {
       borderColor: isDark ? COLORS.primaryy.light : COLORS.primaryy.dark,
     },
     dropdownTrigger: {
+      height: '100%',
       flexDirection: 'row',
       alignItems: 'center',
       borderRadius: 12,
       ...baseTheme.background,
-      paddingHorizontal: 16,
+      paddingHorizontal: 12,
       paddingVertical: 12,
       gap: 8,
     },

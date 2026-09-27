@@ -40,11 +40,13 @@ export default function Login() {
               onError={(error) => console.log('Image Error:', error.nativeEvent.error)}
             />
           )}
-          <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-            <Text style={profileStyles.usernameText}>
+          <View style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+            <Text style={profileStyles.usernameText} numberOfLines={1}>
               {familyProfiles && familyProfiles.parent ? toTitleCase(familyProfiles.parent.name) : 'Username'}
             </Text>
-            <Text style={profileStyles.emailText}>{familyProfiles && familyProfiles.parent ? familyProfiles.parent.email : 'Email'}</Text>
+            <Text numberOfLines={1} style={profileStyles.emailText}>
+              {familyProfiles && familyProfiles.parent ? familyProfiles.parent.email : 'Email'}
+            </Text>
           </View>
           {/* --- logout button --- */}
           <View style={profileStyles.buttonContainer}>
