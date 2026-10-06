@@ -22,12 +22,14 @@ import { PortalHost } from '@gorhom/portal';
 import { useAuthContext } from '../components/contexts/auth-context';
 
 export default function Index() {
-  const { calendarType, validJwt } = useAuthContext();
+  const { calendarType, validJwt, isStorageLoaded } = useAuthContext();
   const { allEvents } = useCalendarEvents();
   const { isLoginVisible, setLoginVisible, theme } = useUIContext();
   const styles = indexStyles(theme.isDark);
   const { isWeb, fixedSidebar } = useScreenSize();
   useWebScrollbarStyle();
+
+  if (!isStorageLoaded) return null;
 
   return validJwt ? (
     <View style={styles.container}>

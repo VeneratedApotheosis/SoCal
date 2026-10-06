@@ -1,7 +1,6 @@
 import { useAuthContext } from '@/components/contexts/auth-context';
 import { supabase } from '@/lib/supabase';
 import { deleteAccount } from '@/services/api';
-import { storage } from '@/services/storage';
 import { DEMO_JWT } from '@/utility/constants';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -27,7 +26,7 @@ export const useAuth = () => {
       console.error('Error logging out:', error.message);
     }
     if (setValidJwt) setValidJwt(false);
-    await storage.clearAll();
+    //await storage.clearAll();
   }, [setValidJwt, setIsDemo, demo]);
 
   const getValidJwt = useCallback(async (): Promise<string | null> => {
@@ -91,8 +90,6 @@ export const useAuth = () => {
 
                   success = true;
                 } catch (err) {
-                  console.warn(`[EDGE FUNCTION] Attempt ${attempts} failed.`);
-
                   if (attempts < maxAttempts) {
                     await delay(2000);
                   } else {
@@ -109,9 +106,6 @@ export const useAuth = () => {
       if (event === 'SIGNED_OUT') {
         setValidJwt(false);
       }
-
-      // Note: Supabase also emits a 'TOKEN_REFRESHED' event,
-      // but because we are fetching on-demand now, we don't need to manually catch it.
     });
     return () => {
       subscription.unsubscribe();

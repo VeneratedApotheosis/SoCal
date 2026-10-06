@@ -1,4 +1,5 @@
 import { useCalendarType } from '@/hooks/useCalendarType';
+import { useValidJwt } from '@/hooks/useValidJwt';
 import { CalendarView, JwtTokenObj } from '@/utility/types';
 import { createContext, ReactNode, useContext, useState } from 'react';
 import { useScreenSize } from './screen-size-context';
@@ -9,6 +10,7 @@ export interface AuthContextType {
 
   validJwt: boolean;
   setValidJwt: React.Dispatch<React.SetStateAction<boolean>>;
+  isStorageLoaded: boolean;
 
   calendarType: CalendarView;
   setCalendarType: React.Dispatch<React.SetStateAction<CalendarView>>;
@@ -21,8 +23,8 @@ export const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [jwtToken, setJwtToken] = useState<JwtTokenObj | null>(null);
-  const [validJwt, setValidJwt] = useState<boolean>(false);
   const [demo, setIsDemo] = useState<boolean>(false);
+  const { validJwt, setValidJwt, isStorageLoaded } = useValidJwt();
 
   //PROFILE HOOK
   const { isWeb } = useScreenSize();
@@ -35,6 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setJwtToken,
         validJwt,
         setValidJwt,
+        isStorageLoaded,
         calendarType,
         setCalendarType,
         demo,
