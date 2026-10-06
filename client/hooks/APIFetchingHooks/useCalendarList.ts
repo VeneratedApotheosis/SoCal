@@ -73,8 +73,8 @@ export function useCalendarList() {
     console.log('[FETCH] calendar objects');
 
     try {
-      const tokens = await getValidAccessToken(jwtToken);
-      const accessToken = tokens.parent.accessToken;
+      const tokens = await getValidAccessToken();
+      const accessToken = tokens.accessToken;
       const { items: parentCalendars = [] } = await fetchCalendarList(accessToken);
 
       // Map synchronously without mutation

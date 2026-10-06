@@ -1,4 +1,6 @@
+import { supabase } from '@/lib/supabase';
 import { convertToGoogleEvent } from '@/utility/eventUtils';
+import { upsertUserColorPalette, upsertUserGroups, upsertUserHiddenCalendars } from '@/utility/supabaseFunctions';
 import { EventObj, accessRole, calendarGroup, colorCache } from '@/utility/types';
 
 const req = async (url: string, method: string = 'GET', token?: string, body?: any) => {
@@ -36,21 +38,21 @@ const gReq = (path: string, method: string, t: string, b?: any) => req(`https://
 
 // ─── Backend Fetches ───────────────────────────────────────────────────────────
 
-export const fetchFamilyProfiles = (t: string) => bReq('/get-family-profiles', 'POST', t);
+//export const fetchFamilyProfiles = (t: string) => bReq('/get-family-profiles', 'POST', t);
 
-export const fetchFamilyAccessTokens = (t: string) => bReq('/get-family-access-tokens', 'POST', t);
+//export const fetchFamilyAccessTokens = (t: string) => bReq('/get-family-access-tokens', 'POST', t);
 
 export const fetchPlacesAutocomplete = (t: string, input: string) =>
   bReq(`/places/autocomplete?input=${encodeURIComponent(input)}`, 'GET', t);
 
 export const fetchPlacesDetails = (t: string, placeId: string) => bReq(`/places/details?placeId=${placeId}`, 'GET', t);
 
-export const postUpdateToken = (userId: string, provider_referesh_token: string) => {
-  return bReq('/update-token', 'POST', undefined, {
-    userId: userId,
-    refreshToken: provider_referesh_token,
-  });
-};
+// export const postUpdateToken = (userId: string, provider_referesh_token: string) => {
+//   return bReq('/update-token', 'POST', undefined, {
+//     userId: userId,
+//     refreshToken: provider_referesh_token,
+//   });
+// };
 
 export const deleteAccount = async (t: string, userId: string) => {
   return bReq('/delete-account', 'delete', t, {
@@ -105,18 +107,20 @@ export const getCalendarSharingSettings = (calId: string, t: string) => gReq(`/c
 
 // ─── Backend API Color Palette & Groups Functions ─────────────────────────
 
-export const fetchColorGroups = (t: string) => bReq('/get-calendar-preferences', 'POST', t);
+export const fetchColorGroups = (t: string) => {
+  return t;
+};
 
 export const saveColorPalette = (t: string, palette?: colorCache[]) => {
-  return bReq('/save-color-palette', 'POST', t, { palette: palette });
+  return upsertUserColorPalette(t, palette);
 };
 
 export const saveGroups = (t: string, groups?: calendarGroup[]) => {
-  return bReq('/save-groups', 'POST', t, { groups: groups });
+  return upsertUserGroups(t, groups);
 };
 
 export const saveHiddenCalendars = (t: string, hiddenCalendars?: string[]) => {
-  return bReq('/save-hidden-calendars', 'POST', t, { hiddenCalendars: hiddenCalendars });
+  return upsertUserHiddenCalendars(t, hiddenCalendars);
 };
 
 export const deleteColorGroups = (t: string) => bReq('/delete-color-groups', 'DELETE', t);
@@ -189,20 +193,54 @@ export const patchEventRecurrenceInGoogleCalendar = (t: string, e: EventObj) => 
 
 // ─── Backend API Sharing Functions ───────────────────────────────────────────────────────────
 
-export const shareCalendar = (calId: string, email: string, t: string, r: accessRole) => {
-  return bReq('/share-calendar', 'post', t, {
-    calId: calId,
-    email: email,
-    role: r,
+// export const shareCalendar = (calId: string, email: string, t: string, r: accessRole) => {
+//   return bReq('/share-calendar', 'post', t, {
+//     calId: calId,
+//     email: email,
+//     role: r,
+//   });
+// };
+
+export const shareCalendar = async (calId: string, email: string, t: string, r: accessRole) => {
+  const { data, error } = await supabase.functions.invoke('share-calendar', {
+    body: {
+      calId: calId,
+      email: email,
+      role: r,
+    },
   });
+  return data;
 };
-export const unshareCalendar = (calId: string, email: string, t: string) =>
-  bReq('/unshare-calendar', 'delete', t, {
-    calId: calId,
-    email: email,
+
+export const unshareCalendar = async (calId: string, email: string, t: string) => {
+  const { data, error } = await supabase.functions.invoke('unshare-calendar', {
+    body: {
+      calId,
+      email,
+    },
   });
 
-export const unsuscribeCalendar = (calId: string, t: string) =>
-  bReq('/unsubscribe-calendar', 'delete', t, {
-    calId: calId,
+  if (error) {
+    console.error('Unshare failed:', error);
+    throw error;
+  }
+
+  console.log('Unshare successful:', data);
+  return data;
+};
+
+export const unsuscribeCalendar = async (calId: string, t: string) => {
+  const { data, error } = await supabase.functions.invoke('unsubscribe-calendar', {
+    body: {
+      calId,
+    },
   });
+
+  if (error) {
+    console.error('Unsubscribe failed:', error);
+    throw error;
+  }
+
+  console.log('Unsubscribe successful:', data);
+  return data;
+};

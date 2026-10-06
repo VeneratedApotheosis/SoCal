@@ -1,6 +1,6 @@
 import { useAuthContext } from '@/components/contexts/auth-context';
 import { supabase } from '@/lib/supabase';
-import { deleteAccount, postUpdateToken } from '@/services/api';
+import { deleteAccount } from '@/services/api';
 import { storage } from '@/services/storage';
 import { DEMO_JWT } from '@/utility/constants';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -69,21 +69,34 @@ export const useAuth = () => {
             const attemptTokenSave = async () => {
               let success = false;
               let attempts = 0;
-              const maxAttempts = 5; // Try up to 5 times (10 seconds total)
+              const maxAttempts = 5;
 
               while (!success && attempts < maxAttempts) {
                 attempts++;
+
                 try {
-                  if (!session.provider_refresh_token) throw Error('Invalid session provider refresh token');
-                  await postUpdateToken(session.user.id, session.provider_refresh_token);
-                  console.log('[POST] Token saved successfully. Attempts:', attempts);
+                  if (!session.provider_refresh_token) {
+                    throw new Error('Invalid session provider refresh token');
+                  }
+
+                  const { data, error } = await supabase.functions.invoke('update-google-token', {
+                    body: {
+                      refreshToken: session.provider_refresh_token,
+                    },
+                  });
+
+                  if (error) throw error;
+
+                  console.log('[EDGE FUNCTION] Token saved successfully. Attempts:', attempts);
+
                   success = true;
                 } catch (err) {
-                  console.warn(`[POST] Attempt ${attempts} failed. Row not ready yet.`);
+                  console.warn(`[EDGE FUNCTION] Attempt ${attempts} failed.`);
+
                   if (attempts < maxAttempts) {
-                    await delay(2000); // Wait 2 seconds before trying again
+                    await delay(2000);
                   } else {
-                    console.error('[POST] Gave up trying to save token after 5 attempts.');
+                    console.error('[EDGE FUNCTION] Gave up trying to save token after 5 attempts.');
                   }
                 }
               }

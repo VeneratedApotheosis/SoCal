@@ -32,7 +32,6 @@ export default function CalendarObjView({ calendarId, creatingEvent, calendarObj
 
     // Fallback: Find the primary calendar matching the parent's ID
     const parentId = familyProfiles?.parent?.email;
-    console.log(parentId);
     return calendarObjs?.find((c) => c.calendarId === parentId);
   });
 

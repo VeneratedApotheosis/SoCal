@@ -1,45 +1,54 @@
-import { fetchFamilyAccessTokens } from '@/services/api';
+import { supabase } from '@/lib/supabase';
 
-// Global in-memory cache variable
-let _cachedTokens: any = null;
-let _currentJwtToken: string | null = null;
-let _fetchPromise: Promise<any> | null = null;
-
-/**
- * Clears all access tokens from memory.
- */
-export const clearAccessTokens = () => {
-  _cachedTokens = null;
-  _currentJwtToken = null;
-  _fetchPromise = null;
+type GoogleAccessTokenResponse = {
+  accessToken: string;
+  expiresIn: number;
 };
 
-export const getValidAccessToken = async (jwtToken: string) => {
-  if (!jwtToken) {
-    clearAccessTokens();
-    throw new Error('No JWT Token provided. Cleared cache.');
+type CachedAccessToken = {
+  accessToken: string;
+  expiryDate: number;
+};
+
+let _cachedToken: CachedAccessToken | null = null;
+let _fetchPromise: Promise<CachedAccessToken> | null = null;
+
+export const getValidAccessToken = async (): Promise<CachedAccessToken> => {
+  // 1. Return cached token if it is still valid
+  if (_cachedToken) {
+    const isExpired = Date.now() + 600_000 > _cachedToken.expiryDate;
+
+    if (!isExpired) {
+      return _cachedToken;
+    }
   }
 
-  if (_currentJwtToken !== jwtToken) {
-    _cachedTokens = null;
-    _currentJwtToken = jwtToken;
+  // 2. If another request is already fetching a token,
+  // wait for that request instead of making another one.
+  if (_fetchPromise) {
+    return _fetchPromise;
   }
 
-  // 1. Check in-memory cache
-  if (_cachedTokens?.parent) {
-    const isExpired = Date.now() + 600000 > +_cachedTokens.parent.expiryDate;
-    if (!isExpired) return _cachedTokens;
-  }
+  // 3. Fetch a fresh token from the Edge Function
+  _fetchPromise = supabase.functions
+    .invoke<GoogleAccessTokenResponse>('google-access-token')
+    .then(({ data, error }) => {
+      if (error) {
+        throw error;
+      }
 
-  // 2. Return active fetch promise to prevent duplicate concurrent network requests
-  if (_fetchPromise) return _fetchPromise;
+      if (!data?.accessToken || data.expiresIn == null) {
+        throw new Error('Google access token was not returned by the Edge Function');
+      }
 
-  // 3. Fetch fresh tokens over network
-  _fetchPromise = fetchFamilyAccessTokens(jwtToken)
-    .then((data) => {
-      _cachedTokens = data;
-      _currentJwtToken = jwtToken;
-      return data;
+      const token: CachedAccessToken = {
+        accessToken: data.accessToken,
+        expiryDate: Date.now() + data.expiresIn * 1000,
+      };
+
+      _cachedToken = token;
+
+      return token;
     })
     .finally(() => {
       _fetchPromise = null;

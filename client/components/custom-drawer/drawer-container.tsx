@@ -278,19 +278,21 @@ export default function CustomDrawerContent(props: any) {
               </Pressable>
             )}
             <View style={{}}>
-              {flatData.map((data, index) => (
-                <DraggableCalendar
-                  key={data.folder ? `folder-${data.id}` : `cal-${data.calendar?.calendarId}`}
-                  cal={data}
-                  onDrop={handleDrop}
-                  toggleCalendar={hiddenCalendarHook.toggleCalendar}
-                  thisIndex={index}
-                  hoverIndex={hoverIndex}
-                  activeIndex={activeIndex}
-                  isHovering={isHovering}
-                  drawerScrollViewRef={drawerScrollViewRef}
-                />
-              ))}
+              {flatData.map((data, index) => {
+                return (
+                  <DraggableCalendar
+                    key={data.folder ? `folder-${data.id}` : `cal-${data?.calendar?.calendarId || index}`}
+                    cal={data}
+                    onDrop={handleDrop}
+                    toggleCalendar={hiddenCalendarHook.toggleCalendar}
+                    thisIndex={index}
+                    hoverIndex={hoverIndex}
+                    activeIndex={activeIndex}
+                    isHovering={isHovering}
+                    drawerScrollViewRef={drawerScrollViewRef}
+                  />
+                );
+              })}
             </View>
           </View>
           <View style={{}}>

@@ -4,8 +4,8 @@ import { processEvent } from '@/utility/eventUtils';
 import { getValidAccessToken } from '@/utility/tokenUtils';
 import { CalendarData, EventObj, FamilyCalendarState } from '@/utility/types';
 import { RRule, rrulestr } from 'rrule';
-import { useCalendarWrite } from './useCalendarWrite';
 import { useAuth } from './useAuth';
+import { useCalendarWrite } from './useCalendarWrite';
 
 export const useMutateEvent = (
   uniqueCalendars: CalendarData[],
@@ -32,9 +32,7 @@ export const useMutateEvent = (
       try {
         const sessionTokenString = await getValidJwt();
         if (!sessionTokenString) throw new Error('useMutateEvent, createEvent error: No token');
-        const {
-          parent: { accessToken },
-        } = await getValidAccessToken(sessionTokenString);
+        const { accessToken } = await getValidAccessToken();
 
         // Calculate timeMin and timeMax
         const today = new Date();

@@ -24,15 +24,17 @@ export default function SuscribedSettingsModal({ isVisible, setVisible, top, lef
   const { getValidJwt } = useAuth();
 
   const handleUnshare = async () => {
-    const jwtToken = await getValidJwt();
-    if (!calId || !jwtToken) return;
-    const result = await unsuscribeCalendar(calId, jwtToken);
-    if (result.success) {
+    try {
+      const jwtToken = await getValidJwt();
+      if (!calId || !jwtToken) return;
+      const result = await unsuscribeCalendar(calId, jwtToken);
       setTimeout(() => {
         refetchCalendarList();
       }, 1000);
+      setVisible(false);
+    } catch (err) {
+      console.error(err);
     }
-    setVisible(false);
   };
 
   return (

@@ -202,7 +202,7 @@ export default function DayContainer({
           {allDayEvents.map((event) => {
             return (
               <AllDayChip
-                key={event.event.id + day.toISOString}
+                key={event.event.id + day.toISOString() + event.offset}
                 event={event.event}
                 day={day}
                 layout={event}
@@ -217,7 +217,7 @@ export default function DayContainer({
           {newEvent && newEventAllDay && (
             <Animated.View style={[newAllDayAnimatedStyle]}>
               <AllDayChip
-                key={newEvent.id + day.toISOString}
+                key={newEvent.id + day.toISOString()}
                 event={newEvent}
                 day={day}
                 layout={{

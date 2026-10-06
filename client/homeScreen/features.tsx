@@ -250,7 +250,7 @@ function SidebarMockup() {
       <RNGHScrollView style={[styles.mockLight]} ref={drawerScrollViewRef}>
         {groups.map((data, index) => (
           <DraggableCalendar
-            key={data.folder ? `folder-${data.id}` : `cal-${data.calendar?.calendarId}`}
+            key={data.folder ? `folder-${data.id}` : `cal-${JSON.stringify(data) + index}`}
             cal={data}
             onDrop={() => {}}
             toggleCalendar={(id: string) => {}}

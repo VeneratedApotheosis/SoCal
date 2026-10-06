@@ -23,10 +23,8 @@ export function useCalendarWrite() {
     setLoading(true);
     setError(null);
     try {
-      const {
-        parent: { accessToken },
-      } = await getValidAccessToken(jwtToken);
-      return await apiFunc(accessToken, event);
+      const token = await getValidAccessToken();
+      return await apiFunc(token.accessToken, event);
     } catch (err: any) {
       setError(err.message);
       console.error('Execute Mutation Error:', err);

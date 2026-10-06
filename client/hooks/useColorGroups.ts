@@ -1,9 +1,10 @@
 import { useAuthContext } from '@/components/contexts/auth-context';
 import { DEFAULT_COLORS, DEMO_JWT } from '@/utility/constants';
 import { demoCalendarGroups, demoHiddenCalendars } from '@/utility/demoData';
+import { getUserCalendarGroups, getUserColorPalette, getUserHiddenCalendars } from '@/utility/supabaseFunctions';
 import { calendarGroup, colorCache } from '@/utility/types';
 import { useCallback, useEffect, useState } from 'react';
-import { fetchColorGroups, saveColorPalette, saveGroups, saveHiddenCalendars } from '../services/api';
+import { saveColorPalette, saveGroups, saveHiddenCalendars } from '../services/api';
 import { useAuth } from './useAuth';
 
 export function useCalendarPreferences() {
@@ -36,11 +37,13 @@ export function useCalendarPreferences() {
     setError(null);
 
     try {
-      const data = await fetchColorGroups(jwtToken);
-      if (data.error) throw new Error(data.error);
-      if (data.palette) setPaletteData(data.palette);
-      if (data.groups) setGroupsData(data.groups);
-      if (data.hiddenCalendars) setHiddenCalendarsData(data.hiddenCalendars);
+      const groupData = await getUserCalendarGroups(jwtToken);
+      const colorPaletteData = await getUserColorPalette(jwtToken);
+      const hiddenCalendarData = await getUserHiddenCalendars(jwtToken);
+
+      if (groupData) setGroupsData(groupData.groups);
+      if (colorPaletteData) setPaletteData(colorPaletteData.palette);
+      if (hiddenCalendarData) setHiddenCalendarsData(hiddenCalendarData.hiddenCalendars);
     } catch (err: any) {
       console.error('Fetch calendar preferences error:', err);
       setError(err.message || 'Failed to fetch calendar preferences groups');

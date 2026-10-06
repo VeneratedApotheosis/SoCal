@@ -48,10 +48,10 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
       setError(null);
 
       try {
-        const tokens = await getValidAccessToken(jwtToken); // get access token to fetch
+        const tokens = await getValidAccessToken(); // get access token to fetch
 
         // get all calendars (required to fetch events (which calendar to fetch events from?))
-        const { items: parentCalendars = [] } = await fetchCalendarList(tokens.parent.accessToken);
+        const { items: parentCalendars = [] } = await fetchCalendarList(tokens.accessToken);
 
         //ranges to fetch (newly loaded in ranges)
         const rfcStart = fetchStartDate.toISOString();
@@ -70,8 +70,8 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
             dataOwner: cal.dataOwner,
           };
 
-          const rawEvents = await fetchGivenCalendarRange(tokens.parent.accessToken, cal.id, rfcStart, rfcEnd, timeZone);
-          const uniqueEvents = await fetchMultiGivenCalendarRange(tokens.parent.accessToken, cal.id, rfcStart, rfcEnd, timeZone);
+          const rawEvents = await fetchGivenCalendarRange(tokens.accessToken, cal.id, rfcStart, rfcEnd, timeZone);
+          const uniqueEvents = await fetchMultiGivenCalendarRange(tokens.accessToken, cal.id, rfcStart, rfcEnd, timeZone);
 
           const processedRaw = processCalendar(rawEvents, cal.id, cal.summary, timeZone);
           const proccessedUnique = processCalendar(uniqueEvents, cal.id, cal.summary, timeZone);
