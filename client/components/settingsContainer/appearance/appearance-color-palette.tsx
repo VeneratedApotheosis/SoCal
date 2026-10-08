@@ -1,3 +1,4 @@
+import { useColorCacheContext } from '@/components/contexts/color-cache-context';
 import DropDownCard from '@/components/dropdown-card';
 import { hexToHSV, hsvToHex, lightenColor } from '@/utility/eventColorUtil';
 import { COLORS } from '@/utility/theme';
@@ -17,7 +18,7 @@ export default function AppearanceColorPalette() {
   // ─── Color Palettes ───────────────────────────────────────────────────────────
 
   // Global Palette
-  const { colorCache } = useUIContext();
+  const { colorCache } = useColorCacheContext();
   const [palettes, setPalettes] = useState(colorCache.allCaches); //local version of colorCache
   const [selectedIndex] = useState(colorCache.activeCacheId);
 

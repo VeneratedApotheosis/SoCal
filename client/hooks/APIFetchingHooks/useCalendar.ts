@@ -1,13 +1,34 @@
 // useCalendar.ts
+import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
 import { useAuth } from '@/hooks/useAuth';
-import { fetchCalendarList, fetchGivenCalendarRange, fetchMultiGivenCalendarRange } from '@/services/api';
+import { fetchGivenCalendarRange, fetchMultiGivenCalendarRange } from '@/services/api';
 import { BUFFER_INCREMENT, DEMO_JWT } from '@/utility/constants';
 import { demoEvents } from '@/utility/demoEvents/demoEvents0';
 import { processCalendar } from '@/utility/eventUtils';
 import { getValidAccessToken } from '@/utility/tokenUtils';
 import { CalendarData, calendarObj, CalendarView, EventObj, FamilyCalendarState } from '@/utility/types';
 import { addDays } from 'date-fns';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+const mergeCalendarArrays = (existing: CalendarData[], incoming: CalendarData[]) => {
+  const incomingMap = new Map(incoming.map((c) => [c.id, c]));
+
+  const merged = existing.map((existingCal) => {
+    const incomingCal = incomingMap.get(existingCal.id);
+    if (!incomingCal) return existingCal;
+
+    incomingMap.delete(existingCal.id);
+
+    // High performance event deduplication using Hash Map
+    const eventMap = new Map(existingCal.events.map((e) => [e.id, e]));
+    incomingCal.events.forEach((e) => eventMap.set(e.id, e));
+
+    return { ...existingCal, events: Array.from(eventMap.values()) };
+  });
+
+  // Append any brand new calendars that weren't in state yet
+  return [...merged, ...incomingMap.values()];
+};
 
 export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calendarType: CalendarView) {
   const [calendars, setCalendars] = useState<FamilyCalendarState | null>(null);
@@ -16,6 +37,9 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
   const [error, setError] = useState<string | null>(null);
   const [localTimeZone, setLocalTimeZone] = useState<string | null>(null);
   const { getValidJwt } = useAuth();
+  const { calendarObjs } = useCalendarObjects();
+
+  const hasProcessedC = useRef(false);
 
   const clearCalendarEvents = () => {
     setCalendars(null);
@@ -36,6 +60,7 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
           children: [],
         });
       }
+      if (!calendarObjs) return;
 
       //Fetching Start and End Date Calculation
       let fetchStartDate: Date = new Date();
@@ -50,93 +75,65 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
       try {
         const tokens = await getValidAccessToken(); // get access token to fetch
 
-        // get all calendars (required to fetch events (which calendar to fetch events from?))
-        const { items: parentCalendars = [] } = await fetchCalendarList(tokens.accessToken);
-
         //ranges to fetch (newly loaded in ranges)
         const rfcStart = fetchStartDate.toISOString();
         const rfcEnd = fetchEndDate.toISOString();
 
-        // all fetching logic and calendar reconstruction happens here
-        const parentCalendarPromises = parentCalendars.map(async (cal: any) => {
-          const newCalendarObj: calendarObj = {
-            calendarName: cal.summary,
-            calendarId: cal.id,
-            calendarDefaultColor: cal.backgroundColor || '#4285F4',
-            owner: cal.accessRole === 'owner',
-            shown: { displayed: true, suppressed: false },
-            visibility: 'default',
-            accessRole: cal.accessRole,
-            dataOwner: cal.dataOwner,
-          };
+        // fetching logic and calendar reconstruction for single events
+        const parentCalendarPromises = calendarObjs.map(async (cal: calendarObj) => {
+          const rawEvents = await fetchGivenCalendarRange(tokens.accessToken, cal.calendarId, rfcStart, rfcEnd, timeZone);
 
-          const rawEvents = await fetchGivenCalendarRange(tokens.accessToken, cal.id, rfcStart, rfcEnd, timeZone);
-          const uniqueEvents = await fetchMultiGivenCalendarRange(tokens.accessToken, cal.id, rfcStart, rfcEnd, timeZone);
-
-          const processedRaw = processCalendar(rawEvents, cal.id, cal.summary, timeZone);
-          const proccessedUnique = processCalendar(uniqueEvents, cal.id, cal.summary, timeZone);
-          const recurringEvents: EventObj[] = proccessedUnique.filter((event) => event.recurrence != null);
+          const processedRaw = processCalendar(rawEvents, cal.calendarId, cal.calendarName, timeZone);
 
           return {
-            normalCal: {
-              id: cal.id,
-              owner: cal.dataOwner,
-              name: cal.summary,
-              color: newCalendarObj.calendarDefaultColor,
-              events: processedRaw,
-            },
-            uniqueCal: {
-              id: cal.id,
-              owner: cal.dataOwner,
-              name: cal.summary,
-              color: newCalendarObj.calendarDefaultColor,
-              events: recurringEvents,
-            },
+            id: cal.calendarId,
+            owner: cal.dataOwner,
+            name: cal.calendarName,
+            color: cal.calendarDefaultColor,
+            events: processedRaw,
           };
         });
+
         const results = await Promise.all(parentCalendarPromises);
-
-        const newlyFetchedParentCalendars = results.map((r) => r.normalCal);
-        const newlyFetchedUniqueCalendars = results.map((r) => r.uniqueCal);
-
-        const mergeCalendarArrays = (existing: CalendarData[], incoming: CalendarData[]) => {
-          const incomingMap = new Map(incoming.map((c) => [c.id, c]));
-
-          const merged = existing.map((existingCal) => {
-            const incomingCal = incomingMap.get(existingCal.id);
-            if (!incomingCal) return existingCal;
-
-            incomingMap.delete(existingCal.id);
-
-            // High performance event deduplication using Hash Map
-            const eventMap = new Map(existingCal.events.map((e) => [e.id, e]));
-            incomingCal.events.forEach((e) => eventMap.set(e.id, e));
-
-            return { ...existingCal, events: Array.from(eventMap.values()) };
-          });
-
-          // Append any brand new calendars that weren't in state yet
-          return [...merged, ...incomingMap.values()];
-        };
-
-        setUniqueCalendars((prev) => mergeCalendarArrays(prev, newlyFetchedUniqueCalendars));
         setCalendars((prev) => {
-          if (!prev) return { parent: newlyFetchedParentCalendars, children: [] };
+          if (!prev) return { parent: results, children: [] };
           return {
-            parent: mergeCalendarArrays(prev.parent, newlyFetchedParentCalendars),
+            parent: mergeCalendarArrays(prev.parent, results),
             children: prev.children,
           };
         });
+
+        setIsLoading(false);
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+        // fetching logic and calendar reconstruction for UNIQUE events
+        const uniqueParentCalendarPromises = calendarObjs.map(async (cal: calendarObj) => {
+          const uniqueEvents = await fetchMultiGivenCalendarRange(tokens.accessToken, cal.calendarId, rfcStart, rfcEnd, timeZone);
+
+          const proccessedUnique = processCalendar(uniqueEvents, cal.calendarId, cal.calendarName, timeZone);
+          const recurringEvents: EventObj[] = proccessedUnique.filter((event) => event.recurrence != null);
+
+          return {
+            id: cal.calendarId,
+            owner: cal.dataOwner,
+            name: cal.calendarName,
+            color: cal.calendarDefaultColor,
+            events: recurringEvents,
+          };
+        });
+
+        const uniqueResults = await Promise.all(uniqueParentCalendarPromises);
+        setUniqueCalendars((prev) => mergeCalendarArrays(prev, uniqueResults));
       } catch (err: any) {
         setError(err.status || 'UNKOWN');
       } finally {
         setIsLoading(false);
       }
     },
-    [isTimeZoneLoaded, timeZone],
+    [isTimeZoneLoaded, timeZone, calendarObjs],
   );
 
-  useEffect(() => {
+  const checkThenFetch = () => {
     if (localTimeZone && localTimeZone !== timeZone) {
       clearCalendarEvents();
     }
@@ -147,7 +144,20 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
     } else {
       fetchUserEvents(-2 * BUFFER_INCREMENT, 2 * BUFFER_INCREMENT);
     }
-  }, [timeZone, isTimeZoneLoaded, fetchUserEvents]);
+  };
+
+  //triggers fetching
+  useEffect(() => {
+    checkThenFetch();
+  }, [timeZone, isTimeZoneLoaded, fetchUserEvents, calendarObjs]);
+
+  useEffect(() => {
+    if (!calendarObjs || calendarObjs.length === 0 || hasProcessedC.current === true) {
+      return;
+    }
+    hasProcessedC.current = true;
+    checkThenFetch();
+  }, [calendarObjs]);
 
   return { calendars, setCalendars, isLoading, error, uniqueCalendars, setUniqueCalendars, refetch: fetchUserEvents };
 }

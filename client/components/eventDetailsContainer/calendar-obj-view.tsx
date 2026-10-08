@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import AccessRoleIndicator from '../AccessRoleIndicator';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
+import { useColorCacheContext } from '../contexts/color-cache-context';
 import { useProfileContext } from '../contexts/profile-context';
 import { useUIContext } from '../contexts/ui-context';
 import CalendarSelectionModal from './calendar-obj-view-modal';
@@ -51,7 +52,7 @@ export default function CalendarObjView({ calendarId, creatingEvent, calendarObj
 
   // ─── Color ───────────────────────────────────────────────────────────
 
-  const { colorCache } = useUIContext();
+  const { colorCache } = useColorCacheContext();
   const [color, setColor] = useState<string>(theme.isDark ? COLORS.primaryy.light : COLORS.primaryy.dark);
   const iconColor = getIconColor(theme.isDark, true);
 

@@ -6,25 +6,33 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 import { useCalendarEvents } from '../contexts/calendar-events-context';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
 import { useCalendarPreferencesContext } from '../contexts/calendar-preferences-context';
-import { useProfileContext } from '../contexts/profile-context';
 import { useUIContext } from '../contexts/ui-context';
 
 export const FetchStatusIcon = () => {
   const { isLoading, error, reloadCalendar } = useCalendarEvents();
   const { refreshColorGroups } = useCalendarPreferencesContext();
-  const { refetchCalendarList } = useCalendarObjects();
-  const { familyProfiles } = useProfileContext();
+  const { refetchCalendarList, isLoading: listLoading } = useCalendarObjects();
   const { theme } = useUIContext();
   const iconColor = theme.isDark ? COLORS.border.mutedLight : COLORS.border.mutedDark;
 
+  const localLoading = listLoading || isLoading;
+
   const refetchUserData = () => {
-    reloadCalendar();
-    refreshColorGroups();
-    refetchCalendarList();
+    if (!listLoading && !isLoading) {
+      const fetching = async () => {
+        await refetchCalendarList();
+        await reloadCalendar();
+
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+        await refreshColorGroups();
+      };
+      fetching();
+    }
   };
 
   // 1. Loading State: Show the spinning circle
-  if (isLoading) {
+  if (localLoading) {
     return (
       <View>
         <ActivityIndicator size="small" color={iconColor} />

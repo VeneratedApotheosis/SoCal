@@ -11,7 +11,7 @@ export function useProfiles() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { getValidJwt } = useAuth();
-  const { validJwt, demo } = useAuthContext();
+  const { validJwt } = useAuthContext();
 
   // ─── Fetch from Backend ───────────────────────────────────────────────────────────
 
@@ -28,7 +28,7 @@ export function useProfiles() {
 
     try {
       //Fetch from Backend
-      const { data, error } = await await supabase.from('user_info').select('id, google_id, email, name, picture').single();
+      const { data, error } = await supabase.from('user_info').select('id, google_id, email, name, picture').single();
       if (error) {
         console.error('Backend Profile Fetch Error:', error);
         setError(JSON.stringify(error) || 'big error in profiles');
@@ -51,12 +51,12 @@ export function useProfiles() {
     } finally {
       setIsLoading(false);
     }
-  }, [setFamilyProfiles, getValidJwt]);
+  }, [setFamilyProfiles, getValidJwt, supabase]);
 
   // Automatically fetch when the token changes
   useEffect(() => {
-    fetchProfiles();
-  }, [fetchProfiles, validJwt]);
+    if (validJwt) fetchProfiles();
+  }, [validJwt]);
 
   const value = useMemo(
     () => ({

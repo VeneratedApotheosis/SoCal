@@ -1,23 +1,12 @@
-import { useColorCache } from '@/hooks/useColorCache';
 import { useTheme } from '@/hooks/useTheme';
 import { useVisibleSettings } from '@/hooks/useVisibleSettings';
 import { DEFAULT_TRANSPARENCY } from '@/utility/constants';
-import { calendarObj, colorCache } from '@/utility/types';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { useCalendarObjects } from './calendar-obj-context';
 
 interface UIContextType {
   now: Date;
   isLoginVisible: boolean;
   setLoginVisible: (visible: boolean) => void;
-  colorCache: {
-    allCaches: colorCache[];
-    activeCacheId: number;
-    changePalette: (newPaletteId: number, newPaletteName: string, newColors: string[]) => void;
-    syncCacheToPalette: (updatedPalette: string[]) => void;
-    setManualCalendarColor: (calendarId: string, hexColor: string) => void;
-    getCalendarColor: (calendarId: string, calendar?: calendarObj) => string;
-  };
   theme: {
     themeMode: string;
     isDark: boolean;
@@ -43,8 +32,6 @@ export const UIContext = createContext<UIContextType>({} as UIContextType);
 
 export const UIProvider = ({ children }: { children: ReactNode }) => {
   const [isLoginVisible, setLoginVisible] = useState(false);
-  const { calendarObjs } = useCalendarObjects();
-  const colorCache = useColorCache(calendarObjs);
   const theme = useTheme();
 
   const [isSidebarExpanded, setSidebarExpanded] = useState<boolean>(true);
@@ -67,7 +54,6 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
         now,
         isLoginVisible,
         setLoginVisible,
-        colorCache,
         theme,
         isSidebarExpanded,
         setSidebarExpanded,

@@ -26,24 +26,29 @@ export function useCalendarPreferences() {
   // ─── Fetch Data from Backend ───────────────────────────────────────────────────────────
 
   const refreshColorGroups = useCallback(async () => {
-    const jwtToken = await getValidJwt();
-    if (!jwtToken || !validJwt) return;
-    if (jwtToken == DEMO_JWT) {
-      setGroupsData(demoCalendarGroups);
-      setHiddenCalendarsData(demoHiddenCalendars);
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-
     try {
+      console.log('[FETCH] Calendar Preferences');
+      const jwtToken = await getValidJwt();
+      if (!jwtToken || !validJwt) return;
+      if (jwtToken == DEMO_JWT) {
+        setGroupsData(demoCalendarGroups);
+        setHiddenCalendarsData(demoHiddenCalendars);
+        return;
+      }
+      setIsLoading(true);
+      setError(null);
+
       const groupData = await getUserCalendarGroups(jwtToken);
       const colorPaletteData = await getUserColorPalette(jwtToken);
       const hiddenCalendarData = await getUserHiddenCalendars(jwtToken);
 
-      if (groupData) setGroupsData(groupData.groups);
-      if (colorPaletteData) setPaletteData(colorPaletteData.palette);
-      if (hiddenCalendarData) setHiddenCalendarsData(hiddenCalendarData.hiddenCalendars);
+      if (groupData) setGroupsData((prev) => (areCalendarGroupsEqual(prev, groupData.groups) ? prev : groupData.groups));
+      if (colorPaletteData)
+        setPaletteData((prev) => (areColorCachesEqual(prev, colorPaletteData.palette) ? prev : colorPaletteData.palette));
+      if (hiddenCalendarData)
+        setHiddenCalendarsData((prev) =>
+          areStringArraysEqual(prev, hiddenCalendarData.hiddenCalendars) ? prev : hiddenCalendarData.hiddenCalendars,
+        );
     } catch (err: any) {
       console.error('Fetch calendar preferences error:', err);
       setError(err.message || 'Failed to fetch calendar preferences groups');
@@ -117,3 +122,68 @@ export function useCalendarPreferences() {
     refreshColorGroups,
   };
 }
+
+export const areStringArraysEqual = (a: string[], b: string[]): boolean => {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+
+  return a.every((value, i) => value === b[i]);
+};
+
+export const areColorCachesEqual = (a: colorCache[], b: colorCache[]): boolean => {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+
+  return a.every((cache, i) => {
+    const other = b[i];
+
+    if (cache.paletteId !== other.paletteId || cache.name !== other.name) {
+      return false;
+    }
+
+    if (!areStringArraysEqual(cache.palette, other.palette)) {
+      return false;
+    }
+
+    const keysA = Object.keys(cache.colorMap);
+    const keysB = Object.keys(other.colorMap);
+
+    if (keysA.length !== keysB.length) return false;
+
+    return keysA.every((key) => cache.colorMap[key] === other.colorMap[key]);
+  });
+};
+
+export const areCalendarGroupsEqual = (a: calendarGroup[], b: calendarGroup[]): boolean => {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+
+  return a.every((group, i) => {
+    const other = b[i];
+
+    if (group.id !== other.id || group.userId !== other.userId) {
+      return false;
+    }
+
+    // Assuming GroupedCalendarObj is an object type
+    if (group.calendars.length !== other.calendars.length) {
+      return false;
+    }
+
+    return group.calendars.every((calendar, j) => {
+      const otherCalendar = other.calendars[j];
+
+      return (
+        calendar.calendarId === otherCalendar.calendarId &&
+        calendar.calendarName === otherCalendar.calendarName &&
+        calendar.calendarDefaultColor === otherCalendar.calendarDefaultColor &&
+        calendar.owner === otherCalendar.owner &&
+        calendar.dataOwner === otherCalendar.dataOwner &&
+        calendar.accessRole === otherCalendar.accessRole &&
+        calendar.visibility === otherCalendar.visibility &&
+        calendar.shown.displayed === otherCalendar.shown.displayed &&
+        calendar.shown.suppressed === otherCalendar.shown.suppressed
+      );
+    });
+  });
+};

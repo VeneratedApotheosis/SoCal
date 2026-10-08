@@ -4,11 +4,13 @@ import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, Text } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useCalendarEvents } from '../contexts/calendar-events-context';
+import { useCalendarObjects } from '../contexts/calendar-obj-context';
 import { useUIContext } from '../contexts/ui-context';
 
 export const FetchStatusPill = () => {
   const { isLoading, error } = useCalendarEvents();
   const { theme } = useUIContext();
+  const { isLoading: listLoading } = useCalendarObjects();
 
   // Animation values (start off-screen above the grid)
   const translateY = useSharedValue(-80);
@@ -19,7 +21,7 @@ export const FetchStatusPill = () => {
 
   // Determine dynamic content based on state
   const getStatusContent = () => {
-    if (isLoading) {
+    if (isLoading || listLoading) {
       return {
         icon: <ActivityIndicator size="small" color={iconColor} />,
         label: 'Syncing...',
@@ -59,7 +61,7 @@ export const FetchStatusPill = () => {
   // Control spring-in and auto-hide behavior
   useEffect(() => {
     const isError = error !== null;
-    const isActive = isLoading || isError;
+    const isActive = isLoading || listLoading || isError;
 
     if (isActive) {
       // Animate downward into view
@@ -77,7 +79,7 @@ export const FetchStatusPill = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [isLoading, error]);
+  }, [isLoading, listLoading, error]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],

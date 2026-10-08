@@ -278,7 +278,7 @@ export default function DayContainer({
         <TimeIndicator hourHeight={hourHeight} isToday={isToday} />
         {eventsWithLayout.map((item) => (
           <EventContainer
-            key={item.event.id}
+            key={item.event.id + item.event.organizer}
             eventWithOffset={item}
             dayWidth={dayWidth}
             hourHeight={hourHeight}

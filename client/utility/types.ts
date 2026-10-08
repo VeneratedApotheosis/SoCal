@@ -116,7 +116,6 @@ export interface EventWithLayout {
 }
 
 export interface colorCache {
-  getCalendarColor(calendarId: string): unknown;
   paletteId: number;
   name: string;
   palette: string[];

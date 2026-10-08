@@ -38,21 +38,10 @@ const gReq = (path: string, method: string, t: string, b?: any) => req(`https://
 
 // ─── Backend Fetches ───────────────────────────────────────────────────────────
 
-//export const fetchFamilyProfiles = (t: string) => bReq('/get-family-profiles', 'POST', t);
-
-//export const fetchFamilyAccessTokens = (t: string) => bReq('/get-family-access-tokens', 'POST', t);
-
 export const fetchPlacesAutocomplete = (t: string, input: string) =>
   bReq(`/places/autocomplete?input=${encodeURIComponent(input)}`, 'GET', t);
 
 export const fetchPlacesDetails = (t: string, placeId: string) => bReq(`/places/details?placeId=${placeId}`, 'GET', t);
-
-// export const postUpdateToken = (userId: string, provider_referesh_token: string) => {
-//   return bReq('/update-token', 'POST', undefined, {
-//     userId: userId,
-//     refreshToken: provider_referesh_token,
-//   });
-// };
 
 export const deleteAccount = async (t: string, userId: string) => {
   return bReq('/delete-account', 'delete', t, {
@@ -192,14 +181,6 @@ export const patchEventRecurrenceInGoogleCalendar = (t: string, e: EventObj) => 
 };
 
 // ─── Backend API Sharing Functions ───────────────────────────────────────────────────────────
-
-// export const shareCalendar = (calId: string, email: string, t: string, r: accessRole) => {
-//   return bReq('/share-calendar', 'post', t, {
-//     calId: calId,
-//     email: email,
-//     role: r,
-//   });
-// };
 
 export const shareCalendar = async (calId: string, email: string, t: string, r: accessRole) => {
   const { data, error } = await supabase.functions.invoke('share-calendar', {

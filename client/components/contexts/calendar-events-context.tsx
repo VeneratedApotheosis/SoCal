@@ -118,7 +118,6 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
 
   const reloadCalendar = () => {
     refetchCalendar(fetchStart, fetchEnd);
-    refetchCalendarList();
   };
 
   return (

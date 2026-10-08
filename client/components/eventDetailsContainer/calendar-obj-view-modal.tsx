@@ -6,6 +6,7 @@ import { COLORS } from '@/utility/theme';
 import { calendarObj } from '@/utility/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
+import { useColorCacheContext } from '../contexts/color-cache-context';
 import { useUIContext } from '../contexts/ui-context';
 import { calendarObjModalStyles } from './eventDetailsStyles';
 
@@ -24,7 +25,8 @@ export default function CalendarSelectionModal({
 }: CalendarSelectionModalInterface) {
   const { calendarObjs } = useCalendarObjects();
   const [ownedCalendars, setOwnedCalendars] = useState<calendarObj[]>([]);
-  const { colorCache, theme } = useUIContext();
+  const { theme } = useUIContext();
+  const { colorCache } = useColorCacheContext();
   const styles = calendarObjModalStyles(theme.isDark);
   // Filter owned calendars
   useEffect(() => {

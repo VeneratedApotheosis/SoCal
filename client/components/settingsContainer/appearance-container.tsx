@@ -5,6 +5,7 @@ import { globalStyles } from '@/utility/globalStyles';
 import { colorCache } from '@/utility/types';
 import { useMemo, useState } from 'react';
 import { Modal, Pressable, Text, TouchableOpacity, View } from 'react-native';
+import { useColorCacheContext } from '../contexts/color-cache-context';
 import { useUIContext } from '../contexts/ui-context';
 import AppearanceHourHeight from './appearance/appearance-hour-height';
 import AppearanceTransparency from './appearance/appearance-transparency-slider';
@@ -41,7 +42,9 @@ const lightStyles = getSettingAppearanceStyles(false);
 const darkStyles = getSettingAppearanceStyles(true);
 
 export default function AppearanceContainer() {
-  const { theme, colorCache } = useUIContext();
+  const { theme } = useUIContext();
+
+  const { colorCache } = useColorCacheContext();
   const rootStyles = getSettingBackgroundStyles(theme.isDark);
   const styles = theme.isDark ? darkStyles : lightStyles;
 

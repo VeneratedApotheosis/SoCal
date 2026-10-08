@@ -8,6 +8,7 @@ export interface CalendarObjectsContextType {
   calendarObjs: calendarObj[] | null;
   setCalendarObjs: Dispatch<SetStateAction<calendarObj[]>>;
   refetchCalendarList: () => Promise<void>;
+  isLoading: boolean;
   sharedCalendars: sharedObj[];
   calViewMode: 'default' | 'isolate' | 'transparent';
   setCalViewMode: React.Dispatch<React.SetStateAction<'default' | 'isolate' | 'transparent'>>;
@@ -23,7 +24,7 @@ export const CalendarObjectsContext = createContext<CalendarObjectsContextType>(
 
 export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) => {
   const { familyProfiles } = useProfileContext();
-  const { calendarObjs, setCalendarObjs, sharedObjs, refetch, error } = useCalendarList();
+  const { calendarObjs, setCalendarObjs, sharedObjs, refetch, isLoading, error } = useCalendarList();
 
   const [sharedCalendars, setSharedCalendars] = useState<sharedObj[]>([]);
 
@@ -137,6 +138,7 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
         calendarObjs,
         refetchCalendarList,
         setCalendarObjs,
+        isLoading,
         sharedCalendars,
         calViewMode,
         setCalViewMode,

@@ -2,6 +2,7 @@ import { getPositions } from '@/utility/drawerUtil';
 import { lightenColor } from '@/utility/eventColorUtil';
 import { calendarObj } from '@/utility/types';
 
+import { useColorCacheContext } from '@/components/contexts/color-cache-context';
 import { useHiddenCalendarsContext } from '@/components/contexts/hidden-calendars-context';
 import { useScreenSize } from '@/components/contexts/screen-size-context';
 import { getIconColor } from '@/utility/globalStyles';
@@ -24,7 +25,8 @@ export default function CalendarDrawerList({
   onToggle: (calendarId: string) => void;
   isolated: 'NA' | 'true' | 'false';
 }) {
-  const { colorCache, theme } = useUIContext();
+  const { theme } = useUIContext();
+  const { colorCache } = useColorCacheContext();
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useScreenSize();
   const { hiddenCalendarHook } = useHiddenCalendarsContext();
 

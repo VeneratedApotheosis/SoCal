@@ -47,6 +47,57 @@ const fetchSharingSettings = async (cal: any, token: string): Promise<sharedObj 
   };
 };
 
+//compare array of calendar objects
+const areCalendarObjsEqual = (a: calendarObj[], b: calendarObj[]): boolean => {
+  if (a.length !== b.length) return false;
+
+  return a.every((cal, i) => {
+    const other = b[i];
+
+    return (
+      cal.calendarName === other.calendarName &&
+      cal.calendarId === other.calendarId &&
+      cal.calendarDefaultColor === other.calendarDefaultColor &&
+      cal.owner === other.owner &&
+      cal.dataOwner === other.dataOwner &&
+      cal.shown.displayed === other.shown.displayed &&
+      cal.shown.suppressed === other.shown.suppressed &&
+      cal.visibility === other.visibility &&
+      cal.accessRole === other.accessRole
+    );
+  });
+};
+
+const areSharedIdsEqual = (
+  a: {
+    id: string;
+    accessRole: string;
+  }[],
+  b: {
+    id: string;
+    accessRole: string;
+  }[],
+) => {
+  if (a.length !== b.length) return false;
+
+  return a.every((cal, i) => {
+    const other = b[i];
+
+    return cal.id === other.id && cal.id === other.id && cal.accessRole === other.accessRole;
+  });
+};
+
+//compare array of calendar objects
+const areSharedCalendarObjsEqual = (a: sharedObj[], b: sharedObj[]): boolean => {
+  if (a.length !== b.length) return false;
+
+  return a.every((cal, i) => {
+    const other = b[i];
+
+    return cal.id === other.id && cal.name === other.name && areSharedIdsEqual(cal.sharedIds, other.sharedIds);
+  });
+};
+
 export function useCalendarList() {
   const [calendarObjs, setCalendarObjs] = useState<calendarObj[]>([]);
   const [sharedObjs, setSharedObjs] = useState<sharedObj[]>([]);
@@ -56,23 +107,25 @@ export function useCalendarList() {
   const { getValidJwt } = useAuth();
 
   const fetchUserEvents = useCallback(async () => {
-    const jwtToken = await getValidJwt();
-    if (!jwtToken) {
-      console.log('clearing calendar object data');
-      setCalendarObjs([]);
-      setSharedObjs([]);
-      return;
-    }
-    if (jwtToken == DEMO_JWT) {
-      setCalendarObjs(demoCalendarObjs);
-      setSharedObjs(sharedCalendars);
-      return;
-    }
     setIsLoading(true);
-    setError(null);
-    console.log('[FETCH] calendar objects');
+    await new Promise(requestAnimationFrame);
 
     try {
+      const jwtToken = await getValidJwt();
+      if (!jwtToken) {
+        console.log('clearing calendar object data');
+        setCalendarObjs([]);
+        setSharedObjs([]);
+        return;
+      }
+      if (jwtToken == DEMO_JWT) {
+        setCalendarObjs(demoCalendarObjs);
+        setSharedObjs(sharedCalendars);
+        return;
+      }
+      setError(null);
+      console.log('[FETCH] calendar objects');
+
       const tokens = await getValidAccessToken();
       const accessToken = tokens.accessToken;
       const { items: parentCalendars = [] } = await fetchCalendarList(accessToken);
@@ -85,8 +138,8 @@ export function useCalendarList() {
       const resolvedShared = await Promise.all(sharedPromises);
       const allSharedObjs = resolvedShared.filter((obj): obj is sharedObj => obj !== null);
 
-      setCalendarObjs(parentCalendarObjs);
-      setSharedObjs(allSharedObjs);
+      setCalendarObjs((prev) => (areCalendarObjsEqual(prev, parentCalendarObjs) ? prev : parentCalendarObjs));
+      setSharedObjs((prev) => (areSharedCalendarObjsEqual(prev, allSharedObjs) ? prev : allSharedObjs));
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -95,8 +148,8 @@ export function useCalendarList() {
   }, [getValidJwt]);
 
   useEffect(() => {
-    fetchUserEvents();
-  }, [fetchUserEvents, validJwt]);
+    if (validJwt) fetchUserEvents();
+  }, [validJwt]);
 
   return { calendarObjs, setCalendarObjs, sharedObjs, isLoading, error, refetch: fetchUserEvents };
 }

@@ -2,17 +2,14 @@ import { useAuthContext } from '@/components/contexts/auth-context';
 import { supabase } from '@/lib/supabase';
 import { deleteAccount } from '@/services/api';
 import { DEMO_JWT } from '@/utility/constants';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
-
   const [error, setError] = useState<string | null>(null);
-  const { setValidJwt, demo, setIsDemo } = useAuthContext();
 
-  const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
-  const hasProcessedToken = useRef(false);
+  const { setValidJwt, demo, setIsDemo } = useAuthContext();
 
   const handleLogout = useCallback(async () => {
     if (demo) {
@@ -41,76 +38,6 @@ export const useAuth = () => {
     }
     return session.access_token;
   }, [demo]);
-
-  useEffect(() => {
-    // Initial load check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setValidJwt(true);
-      }
-      setIsLoading(false);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-        setIsLoading(false);
-
-        if (session) {
-          setValidJwt(true);
-
-          // Only update the backend if Google gave us a new refresh token
-          if (session.provider_refresh_token && !hasProcessedToken.current) {
-            hasProcessedToken.current = true;
-
-            const attemptTokenSave = async () => {
-              let success = false;
-              let attempts = 0;
-              const maxAttempts = 5;
-
-              while (!success && attempts < maxAttempts) {
-                attempts++;
-
-                try {
-                  if (!session.provider_refresh_token) {
-                    throw new Error('Invalid session provider refresh token');
-                  }
-
-                  const { data, error } = await supabase.functions.invoke('update-google-token', {
-                    body: {
-                      refreshToken: session.provider_refresh_token,
-                    },
-                  });
-
-                  if (error) throw error;
-
-                  console.log('[EDGE FUNCTION] Token saved successfully. Attempts:', attempts);
-
-                  success = true;
-                } catch (err) {
-                  if (attempts < maxAttempts) {
-                    await delay(2000);
-                  } else {
-                    console.error('[EDGE FUNCTION] Gave up trying to save token after 5 attempts.');
-                  }
-                }
-              }
-            };
-            attemptTokenSave();
-          }
-        }
-      }
-
-      if (event === 'SIGNED_OUT') {
-        setValidJwt(false);
-      }
-    });
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [setValidJwt]);
 
   const promptAsync = async () => {
     setIsLoading(true);

@@ -1,3 +1,4 @@
+import { useColorCacheContext } from '@/components/contexts/color-cache-context';
 import { lightenColor } from '@/utility/eventColorUtil';
 import { calendarObj } from '@/utility/types';
 import { Modal, Pressable, View } from 'react-native';
@@ -19,7 +20,8 @@ export default function CalendarSettingsColorModal({
   top: number;
   left: number;
 }) {
-  const { colorCache, theme } = useUIContext();
+  const { theme } = useUIContext();
+  const { colorCache } = useColorCacheContext();
   const styles = getCalendarColorModal(theme.isDark);
   const thisColor = colorCache.allCaches[colorCache.activeCacheId].colorMap[calendar.calendarId];
 
