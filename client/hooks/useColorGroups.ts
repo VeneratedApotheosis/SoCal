@@ -19,6 +19,7 @@ export function useCalendarPreferences() {
   const [groupsData, setGroupsData] = useState<calendarGroup[]>([]);
   const [hiddenCalendarsData, setHiddenCalendarsData] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true); // Start true to block early overwrites
+  const [hasLoadedPreferences, setHasLoadedPreferences] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { validJwt } = useAuthContext();
   const { getValidJwt } = useAuth();
@@ -26,6 +27,9 @@ export function useCalendarPreferences() {
   // ─── Fetch Data from Backend ───────────────────────────────────────────────────────────
 
   const refreshColorGroups = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    setHasLoadedPreferences(false);
     try {
       console.log('[FETCH] Calendar Preferences');
       const jwtToken = await getValidJwt();
@@ -33,22 +37,25 @@ export function useCalendarPreferences() {
       if (jwtToken == DEMO_JWT) {
         setGroupsData(demoCalendarGroups);
         setHiddenCalendarsData(demoHiddenCalendars);
+        setHasLoadedPreferences(true);
         return;
       }
-      setIsLoading(true);
-      setError(null);
 
       const groupData = await getUserCalendarGroups(jwtToken);
       const colorPaletteData = await getUserColorPalette(jwtToken);
       const hiddenCalendarData = await getUserHiddenCalendars(jwtToken);
 
-      if (groupData) setGroupsData((prev) => (areCalendarGroupsEqual(prev, groupData.groups) ? prev : groupData.groups));
-      if (colorPaletteData)
-        setPaletteData((prev) => (areColorCachesEqual(prev, colorPaletteData.palette) ? prev : colorPaletteData.palette));
-      if (hiddenCalendarData)
-        setHiddenCalendarsData((prev) =>
-          areStringArraysEqual(prev, hiddenCalendarData.hiddenCalendars) ? prev : hiddenCalendarData.hiddenCalendars,
-        );
+      if (!groupData || !colorPaletteData || !hiddenCalendarData) {
+        throw new Error('Incomplete calendar preferences response');
+      }
+
+      setGroupsData((prev) => (areCalendarGroupsEqual(prev, groupData.groups) ? prev : groupData.groups));
+      setPaletteData((prev) => (areColorCachesEqual(prev, colorPaletteData.palette) ? prev : colorPaletteData.palette));
+      setHiddenCalendarsData((prev) =>
+        areStringArraysEqual(prev, hiddenCalendarData.hiddenCalendars) ? prev : hiddenCalendarData.hiddenCalendars,
+      );
+
+      setHasLoadedPreferences(true);
     } catch (err: any) {
       console.error('Fetch calendar preferences error:', err);
       setError(err.message || 'Failed to fetch calendar preferences groups');
@@ -64,7 +71,7 @@ export function useCalendarPreferences() {
   // ─── Save Data To Backend ───────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || !hasLoadedPreferences) return;
     const saveData = async () => {
       console.log('[POST] Saving color palette data');
 
@@ -79,14 +86,14 @@ export function useCalendarPreferences() {
   }, [paletteData]);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || !hasLoadedPreferences) return;
     const saveData = async () => {
       console.log('[POST] Saving group data');
 
       const jwtToken = await getValidJwt();
       if (!jwtToken || !validJwt || jwtToken == DEMO_JWT) return;
 
-      if (validJwt && groupsData && groupsData.length > 0) {
+      if (validJwt && groupsData) {
         await saveGroups(jwtToken, groupsData).catch((err) => console.error('Failed to update backend groups:', err));
       }
     };
@@ -94,14 +101,14 @@ export function useCalendarPreferences() {
   }, [groupsData]);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || !hasLoadedPreferences) return;
     const saveData = async () => {
       console.log('[POST] Saving hidden calendar data');
 
       const jwtToken = await getValidJwt();
       if (!jwtToken || !validJwt || jwtToken == DEMO_JWT) return;
 
-      if (validJwt && hiddenCalendarsData && hiddenCalendarsData.length > 0) {
+      if (validJwt && hiddenCalendarsData) {
         await saveHiddenCalendars(jwtToken, hiddenCalendarsData).catch((err) =>
           console.error('Failed to update backend hidden calendars:', err),
         );
