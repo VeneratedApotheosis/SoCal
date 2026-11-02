@@ -1,4 +1,4 @@
-import { unshareCalendar, unsuscribeCalendar } from '@/services/api';
+import { unshareCalendar, unsubscribeCalendar } from '@/services/api';
 import { useCallback, useState } from 'react';
 
 export const useUnshareCalendar = () => {
@@ -13,7 +13,7 @@ export const useUnshareCalendar = () => {
     setError(null);
 
     try {
-      const response = await unsuscribeCalendar(calId, token);
+      const response = await unsubscribeCalendar(calId, token);
       setIsLoading(false);
       return { success: true, data: response };
     } catch (err: any) {
