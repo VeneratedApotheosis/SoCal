@@ -45,16 +45,16 @@ export function useCalendarPreferences() {
       const colorPaletteData = await getUserColorPalette(jwtToken);
       const hiddenCalendarData = await getUserHiddenCalendars(jwtToken);
 
-      if (!groupData || !colorPaletteData || !hiddenCalendarData) {
+      if (!groupData || !colorPaletteData || !hiddenCalendarData || !hiddenCalendarData.hiddenCalendars) {
         throw new Error('Incomplete calendar preferences response');
       }
 
       setGroupsData((prev) => (areCalendarGroupsEqual(prev, groupData.groups) ? prev : groupData.groups));
       setPaletteData((prev) => (areColorCachesEqual(prev, colorPaletteData.palette) ? prev : colorPaletteData.palette));
-      setHiddenCalendarsData((prev) =>
-        areStringArraysEqual(prev, hiddenCalendarData.hiddenCalendars) ? prev : hiddenCalendarData.hiddenCalendars,
-      );
-
+      setHiddenCalendarsData((prev) => {
+        console.log(prev, hiddenCalendarData.hiddenCalendars);
+        return areStringArraysEqual(prev, hiddenCalendarData.hiddenCalendars) ? prev : hiddenCalendarData.hiddenCalendars;
+      });
       setHasLoadedPreferences(true);
     } catch (err: any) {
       console.error('Fetch calendar preferences error:', err);
