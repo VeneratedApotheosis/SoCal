@@ -41,7 +41,7 @@ const gReq = (path: string, method: string, t: string, b?: any) => req(`https://
 export const fetchPlacesAutocomplete = (t: string, input: string) =>
   bReq(`/places/autocomplete?input=${encodeURIComponent(input)}`, 'GET', t);
 
-export const fetchPlacesDetails = (t: string, placeId: string) => bReq(`/places/details?placeId=${placeId}`, 'GET', t);
+export const fetchPlacesDetails = (t: string, placeId: string) => bReq(`/places/details?placeId=${encodeURIComponent(placeId)}`, 'GET', t);
 
 export const deleteAccount = async (t: string, userId: string) => {
   return bReq('/delete-account', 'delete', t, {
@@ -210,7 +210,7 @@ export const unshareCalendar = async (calId: string, email: string, t: string) =
   return data;
 };
 
-export const unsuscribeCalendar = async (calId: string, t: string) => {
+export const unsubscribeCalendar = async (calId: string, t: string) => {
   const { data, error } = await supabase.functions.invoke('unsubscribe-calendar', {
     body: {
       calId,

@@ -109,7 +109,7 @@ const getAccessToken = async (userId, refreshToken) => {
   tempClient.setCredentials({ refresh_token: refreshToken });
   
   try {
-    await tempClient.getAccessToken();;
+    await tempClient.getAccessToken();
 
     const token = tempClient.credentials.access_token;
     const expiryDate = tempClient.credentials.expiry_date;
@@ -321,7 +321,7 @@ app.get('/api/places/details', authenticate, handleRoute('Details failed', async
   const { placeId } = req.query;
   if (!placeId) return res.status(400).json({ error: 'PlaceId parameter required' });
 
-  const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address&key=${process.env.GOOGLE_PLACES_API_KEY}`;
+  const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=name,formatted_address&key=${process.env.GOOGLE_PLACES_API_KEY}`;
   const response = await fetch(url);
   const data = await response.json();
 
