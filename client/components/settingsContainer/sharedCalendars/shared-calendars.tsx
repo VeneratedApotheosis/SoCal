@@ -51,7 +51,9 @@ export default function SharedCalendars() {
   const [isVisible, setVisible] = useState(false);
 
   const activeCalendars = useMemo(() => {
-    return sharedCalendars.filter((cal) => cal.sharedIds && cal.sharedIds.length > 0);
+    return sharedCalendars
+      .filter((cal) => cal.sharedIds && cal.sharedIds.length > 0)
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
   }, [sharedCalendars]);
 
   // User-centric sharedCal array
@@ -71,7 +73,7 @@ export default function SharedCalendars() {
       });
     });
 
-    return Object.values(userMap);
+    return Object.values(userMap).sort((a, b) => a.id.localeCompare(b.id, undefined, { sensitivity: 'base' }));
   }, [activeCalendars]);
 
   // Helper to toggle accordion

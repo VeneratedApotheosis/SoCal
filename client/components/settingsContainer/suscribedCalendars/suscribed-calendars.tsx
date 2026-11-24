@@ -33,7 +33,7 @@ export default function SuscribedCalendars() {
     return Object.entries(grouped)
       .map(([dataOwner, calendars]) => ({
         dataOwner,
-        calendars,
+        calendars: calendars.sort((a, b) => a.calendarName.localeCompare(b.calendarName, undefined, { sensitivity: 'base' })),
       }))
       .sort((a, b) => {
         const isAOther = a.dataOwner.toLowerCase() === 'other';
@@ -44,7 +44,7 @@ export default function SuscribedCalendars() {
         if (!isAOther && isBOther) return -1;
 
         // Otherwise, sort alphabetically
-        return a.dataOwner.localeCompare(b.dataOwner);
+        return a.dataOwner.localeCompare(b.dataOwner, undefined, { sensitivity: 'base' });
       });
   }, [calendarObjs]);
 
