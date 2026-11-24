@@ -1,6 +1,51 @@
-# Calendar settings performance benchmark
+# SoCal calendar performance benchmark
 
-This report measures alphabetical sorting in PR #30 separately from on-demand sharing in PR #29. The benchmarks ran locally with Node 24.22.1 using synthetic calendar records and responses.
+This report covers historical calendar-fetch optimizations and the recent changes to recurring events, sharing permissions, and settings sorting. Live browser measurements used one signed-in Google account. Controlled benchmarks ran locally with synthetic calendar records and responses.
+
+## May 2026 · Date-window prefetch and token caching
+
+Compared [be6f2c1](https://github.com/VeneratedApotheosis/SoCal/commit/be6f2c1) with [8b331d8](https://github.com/VeneratedApotheosis/SoCal/commit/8b331d8). The newer commit started with a ±20-day window and fetched more dates in 10-day batches as users navigated. It also added an in-memory access-token cache and moved token persistence off the fetch path.
+
+The benchmark ran the historical hooks against fixed responses because both versions depend on the retired Express backend. Three runs per version replayed startup, navigation 30 days forward, and a return to the starting date.
+
+| Controlled metric | Before | After | Change |
+| --- | ---: | ---: | ---: |
+| Calendar API calls at startup | 4 | 4 | 0 |
+| Calendar API calls during navigation after startup | 90 | 6 | −84 (−93.3%) |
+| Total calendar API calls | 94 | 10 | −84 (−89.4%) |
+| Time until the hook published events, median | 169.0 ms | 145.9 ms | −23.1 ms |
+
+The timing is a fixture measurement over three runs. It covers data publication inside the hook.
+
+## October 2026 · Calendar-list reuse and earlier event rendering
+
+Compared [0ee58ac](https://github.com/VeneratedApotheosis/SoCal/commit/0ee58ac) with [9594dc6](https://github.com/VeneratedApotheosis/SoCal/commit/9594dc6). The event loader began reusing the sidebar’s calendar list and publishing expanded events before recurring-series details arrived. Two startup effects could still trigger the same event fetch.
+
+The live comparison used the same Google account across 20 signed-in reloads per build with HTTP asset caching disabled. All 40 showed a visible event. Request counts cover app API calls and exclude static assets and browser preflights.
+
+| Live metric, cache disabled | Before | After | Change |
+| --- | ---: | ---: | ---: |
+| Time to first visible event, median | 2,597.3 ms | 2,167.9 ms | −429.4 ms (−16.5%) |
+| Time to first visible event, p90 | 3,069.5 ms | 2,873.7 ms | −195.8 ms (−6.4%) |
+| Time to last startup API response, median | 2,609.6 ms | 2,763.0 ms | +153.4 ms (+5.9%) |
+| Calendar-list requests per reload | 3 | 1 | −2 (−66.7%) |
+| Expanded event requests per reload | 16 | 32 | +16 (+100%) |
+| Recurring-series requests per reload | 16 | 32 | +16 (+100%) |
+| Total observed API calls per reload | 79 | 92 | +13 (+16.5%) |
+
+Median response latency per call moved from 690.0 to 332.3 ms for the calendar list, from 324.8 to 346.1 ms for expanded events, and from 292.0 to 319.0 ms for recurring series. Showing events sooner improved perceived startup even though duplicate event calls increased total traffic and the final response arrived later.
+
+The smaller cache-enabled sample showed a similar first-event improvement, from 2,690.3 to 2,036.5 ms (24.3%) across eight measured loads per build. One additional baseline reload did not show an event within the observation window. A restart briefly overlapped two tabs before Google began returning HTTP 403. The overlapping runs were excluded. The first six runs used a 30-second observation window. Later runs used eight seconds after the initial startup traffic finished within about 4.2 seconds.
+
+A separate 20-run fixture per build reproduced the tradeoff. Calendar calls moved from four to five while the hook published events after a median of 156.2 ms before and 86.2 ms after.
+
+Two nearby changes were reviewed in the commit history. [b6ea902](https://github.com/VeneratedApotheosis/SoCal/commit/b6ea902) moved backend calls from Express to Supabase, and [4b29e2f](https://github.com/VeneratedApotheosis/SoCal/commit/4b29e2f) prevented premature preference writes during startup. Neither change has a separate latency measurement.
+
+## PR #28 · On-demand recurring-series details
+
+[PR #28](https://github.com/VeneratedApotheosis/SoCal/pull/28) removed the startup sweep for recurring-series details. The editor fetches the series master when an editable recurring event opens and reuses cached data for later reads.
+
+Across five signed-in browser reloads per build against the preceding main branch, total observed startup API calls fell from 43 to 27 (37.2%) and recurring-series calls fell from 16 to zero. Median time to first visible event went from 3.33 s to 3.63 s in that sample.
 
 ## PR #30 · Alphabetical sorting
 
