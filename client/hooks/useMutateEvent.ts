@@ -343,7 +343,7 @@ export const useMutateEvent = (
 
     try {
       // Truncate Old Recursion
-      if (!(await deleteThisAndFollowingEvents(event))) return;
+      if (!(await deleteThisAndFollowingEvents({ ...event, recurrence: originalMaster.recurrence }))) return;
 
       // Create new Recursion
       const newMasterObj = await createEvent(newMasterPayload);

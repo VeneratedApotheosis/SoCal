@@ -33,6 +33,7 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
   const inputColor = theme.isDark ? COLORS.text.subtleDark : COLORS.text.lightGray;
 
   const [event, setEvent] = useState<EventObj>(initialEvent);
+  const [recurrenceEdited, setRecurrenceEdited] = useState(false);
   const creatingEvent = initialEvent.id === '';
   const calendar = calendarObjs?.find((cal) => cal.calendarId === initialEvent.calendarId);
   const editableEvent = !calendar || calendar.accessRole === 'writer' || calendar.accessRole === 'owner';
@@ -44,11 +45,12 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
   const seriesPending = needsSeries && series === undefined;
   const seriesFailed = needsSeries && series === null;
   const baselineRef = useRef<EventObj>(initialEvent);
-  const hasChanges = !eventsAreEqual(event, baselineRef.current);
+  const hasChanges = recurrenceEdited || !eventsAreEqual(event, baselineRef.current);
   const [error, setError] = useState<boolean>(false);
 
   useEffect(() => {
     setEvent(initialEvent);
+    setRecurrenceEdited(false);
     baselineRef.current = initialEvent;
   }, [initialEvent]);
 
@@ -66,9 +68,10 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
     return () => { active = false; };
   }, [initialEvent, loadRecurringMaster, needsSeries, seriesAttempt]);
 
-  const mutationEvent = series ? { ...event, recurrence: series.recurrence } : event;
+  const mutationEvent = series && !recurrenceEdited ? { ...event, recurrence: series.recurrence } : event;
 
   const updateField = (field: keyof EventObj, value: any) => {
+    if (field === 'recurrence') setRecurrenceEdited(true);
     setEvent((prev) => ({ ...prev, [field]: value }));
     if (newEvent) {
       setNewEvent((prev) => {
@@ -151,7 +154,7 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
     } else if (option === 'all') {
       mutateEvent.deleteAllRecurringEvents(mutationEvent);
     } else if (option === 'following') {
-      mutateEvent.deleteThisAndFollowingEvents(mutationEvent);
+      mutateEvent.deleteThisAndFollowingEvents(series ? { ...event, recurrence: series.recurrence } : event);
     }
 
     closeModal();
@@ -207,7 +210,7 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
         </View>
         {/* Time */}
         <View style={[styles.card, { flex: 1 }]}>
-          <EventTimeDatePicker event={event} editable={editableEvent} onUpdate={updateField} setError={setError} />
+          <EventTimeDatePicker event={mutationEvent} editable={editableEvent} onUpdate={updateField} setError={setError} />
         </View>
         {/* Place */}
         <View style={[styles.card, { zIndex: 10, padding: 0 }]}>
