@@ -1,9 +1,10 @@
 // calendar-events-context.tsx
 import { useCalendar } from '@/hooks/APIFetchingHooks/useCalendar';
 import { useCalendarWrite } from '@/hooks/useCalendarWrite';
+import { useRecurringSeries } from '@/hooks/useRecurringSeries';
 import { useMutateEvent } from '@/hooks/useMutateEvent';
 import { BUFFER_INCREMENT } from '@/utility/constants';
-import { CalendarData, EventObj } from '@/utility/types';
+import { EventObj } from '@/utility/types';
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuthContext } from './auth-context';
 import { useCalendarObjects } from './calendar-obj-context';
@@ -20,7 +21,7 @@ export interface EventsContextType {
     editEvent: (event: EventObj) => Promise<any>;
     editAllRecurringEvents: (event: EventObj) => Promise<EventObj | null | undefined>;
     deleteAllRecurringEvents: (event: EventObj) => Promise<void>;
-    deleteThisAndFollowingEvents: (event: EventObj) => Promise<void>;
+    deleteThisAndFollowingEvents: (event: EventObj) => Promise<boolean>;
     editThisAndFollowingEvents: (event: EventObj) => Promise<EventObj | null | undefined>;
   };
   isWriting: boolean;
@@ -28,8 +29,7 @@ export interface EventsContextType {
   fetchForward: (fetchEnd: number, n: number) => void;
   fetchBackward: (fetchEnd: number, n: number) => void;
   reloadCalendar: () => void;
-  uniqueCalendars: CalendarData[];
-  setUniqueCalendars: React.Dispatch<React.SetStateAction<CalendarData[]>>;
+  loadRecurringMaster: (event: EventObj) => Promise<EventObj>;
 }
 
 export const EventsContext = createContext<EventsContextType>({} as EventsContextType);
@@ -55,8 +55,6 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
     setCalendars,
     isLoading,
     error,
-    uniqueCalendars,
-    setUniqueCalendars,
     refetch: refetchCalendar,
   } = useCalendar(timeZone, isTimeZoneLoaded, calendarType);
 
@@ -88,7 +86,8 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   const [fetchEnd, setFetchEnd] = useState<number>(2 * BUFFER_INCREMENT);
   const [fetchStart, setFetchStart] = useState<number>(-2 * BUFFER_INCREMENT);
 
-  const mutateEvent = useMutateEvent(uniqueCalendars, setCalendars, setUniqueCalendars, fetchStart, fetchEnd);
+  const { loadRecurringMaster, invalidateRecurringMaster } = useRecurringSeries(timeZone);
+  const mutateEvent = useMutateEvent(setCalendars, loadRecurringMaster, invalidateRecurringMaster, fetchStart, fetchEnd);
 
   // ─── Fetching ───────────────────────────────────────────────────────────
 
@@ -131,8 +130,7 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
         fetchForward,
         fetchBackward,
         reloadCalendar,
-        uniqueCalendars,
-        setUniqueCalendars,
+        loadRecurringMaster,
       }}
     >
       {children}

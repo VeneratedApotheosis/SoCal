@@ -2,15 +2,15 @@ import { useTimeZoneContext } from '@/components/contexts/time-zone-context';
 import { getEventInstancesFromGoogleCalendar } from '@/services/api';
 import { processEvent } from '@/utility/eventUtils';
 import { getValidAccessToken } from '@/utility/tokenUtils';
-import { CalendarData, EventObj, FamilyCalendarState } from '@/utility/types';
+import { EventObj, FamilyCalendarState } from '@/utility/types';
 import { RRule, rrulestr } from 'rrule';
 import { useAuth } from './useAuth';
 import { useCalendarWrite } from './useCalendarWrite';
 
 export const useMutateEvent = (
-  uniqueCalendars: CalendarData[],
   setCalendars: React.Dispatch<React.SetStateAction<FamilyCalendarState | null>>,
-  setUniqueCalendars: React.Dispatch<React.SetStateAction<CalendarData[]>>,
+  loadRecurringMaster: (event: EventObj) => Promise<EventObj>,
+  invalidateRecurringMaster: (calendarId: string, masterId: string) => void,
   fetchStart: number,
   fetchEnd: number,
 ) => {
@@ -77,19 +77,6 @@ export const useMutateEvent = (
         return { ...prev, parent: updatedParent };
       });
     }
-    if (baseNewEventObj) {
-      setUniqueCalendars((prev) => {
-        if (!prev) return prev;
-
-        const updatedCalendars = prev.map((cal) => {
-          const isMatch = cal.id === targetCalendarId;
-          return isMatch ? { ...cal, events: [...cal.events, baseNewEventObj] } : cal;
-        });
-
-        return updatedCalendars;
-      });
-    }
-
     return baseNewEventObj;
   };
 
@@ -135,8 +122,8 @@ export const useMutateEvent = (
       // Deleting the master event deletes the whole recurrence
       const rawResponse = await apiDeleteEvent({ ...event, id: masterId });
 
-      if (rawResponse?.error) {
-        console.error('Google API rejected the delete request:', rawResponse.error);
+      if (!rawResponse || rawResponse.error) {
+        console.error('Google API rejected the delete request:', rawResponse?.error);
         // TODO: Show user a toast/alert
         return;
       }
@@ -147,6 +134,7 @@ export const useMutateEvent = (
         return;
       }
 
+      invalidateRecurringMaster(targetCalendarId, masterId);
       setCalendars((prev) => {
         if (!prev) return prev;
 
@@ -170,12 +158,13 @@ export const useMutateEvent = (
   const deleteThisAndFollowingEvents = async (event: EventObj) => {
     if (!event || !event.id) {
       console.warn('Event Deletion aborted: Event object is missing a valid ID.');
-      return;
+      return false;
     }
 
     // If it's not a recurring event, just fall back to standard deletion
     if (!event.recurringEventId) {
-      return deleteSingleEvent(event);
+      await deleteSingleEvent(event);
+      return false;
     }
 
     const masterId = event.recurringEventId;
@@ -184,18 +173,18 @@ export const useMutateEvent = (
       const processedEvent = truncateRecurrenceAndSave(event);
       const rawResponse = await apiPatchRecurrenceEvent(processedEvent);
 
-      if (rawResponse?.error) {
-        console.error('Google API rejected the truncate request:', rawResponse.error);
+      if (!rawResponse || rawResponse.error) {
+        console.error('Google API rejected the truncate request:', rawResponse?.error);
         // TODO: Show user a toast/alert
-        return;
+        return false;
       }
 
       const targetCalendarId = event.calendarId || rawResponse?.organizer?.email || rawResponse?.creator?.email;
       if (!targetCalendarId) {
         console.warn('Local state update aborted: Could not determine targetCalendarId.');
-        return;
+        return false;
       }
-      const updatedMasterObj = processEvent(rawResponse, event.organizer, targetCalendarId, timeZone);
+      invalidateRecurringMaster(targetCalendarId, masterId);
 
       setCalendars((prev) => {
         if (!prev) return prev;
@@ -219,25 +208,12 @@ export const useMutateEvent = (
 
         return { ...prev, parent: updatedParent };
       });
-
-      if (updatedMasterObj) {
-        setUniqueCalendars((prev) => {
-          if (!prev) return prev;
-
-          return prev.map((cal) => {
-            if (cal.id !== targetCalendarId) return cal;
-
-            return {
-              ...cal,
-              events: cal.events.map((e) => (e.id === masterId ? updatedMasterObj : e)),
-            };
-          });
-        });
-      }
+      return true;
     } catch (error) {
       console.error('Exception thrown while trying to delete future events:', error);
       // TODO: Show user a toast/alert
     }
+    return false;
   };
 
   const editEvent = async (event: EventObj) => {
@@ -273,7 +249,7 @@ export const useMutateEvent = (
       const masterId = event.recurringEventId || event.id;
       const rawResponse = await apiEditEvent({ ...event, id: masterId });
       if (rawResponse?.error) {
-        console.error('Google API rejected the delete request:', rawResponse.error);
+        console.error('Google API rejected the delete request:', rawResponse?.error);
         // TODO: Show user a toast/alert that the deletion failed
         return;
       }
@@ -281,6 +257,7 @@ export const useMutateEvent = (
       const googleOwnerEmail = rawResponse?.organizer?.email || rawResponse?.creator?.email;
       const targetCalendarId = event.calendarId || googleOwnerEmail;
 
+      invalidateRecurringMaster(targetCalendarId, masterId);
       const updatedMasterEventObj = processEvent(rawResponse, event.organizer, targetCalendarId, timeZone);
 
       if (updatedMasterEventObj) {
@@ -331,15 +308,8 @@ export const useMutateEvent = (
     }
     if (!event.recurringEventId) return editEvent(event);
 
-    const masterId = event.recurringEventId;
-
-    const targetCalendar = uniqueCalendars.find((cal) => cal.id === event.calendarId);
-    const originalMaster = targetCalendar?.events.find((e) => e.id === masterId);
-
-    if (!originalMaster || !originalMaster.recurrence) {
-      console.warn('Event Edit aborted: Could not find original master event or its recurrence rule.');
-      return;
-    }
+    const originalMaster = await loadRecurringMaster(event).catch(() => null);
+    if (!originalMaster?.recurrence) return;
 
     // RECALCULATE RECURRENCE (Handle COUNT reduction)
     const recalculatedRecurrence = originalMaster.recurrence.map((ruleStr) => {
@@ -373,7 +343,7 @@ export const useMutateEvent = (
 
     try {
       // Truncate Old Recursion
-      await deleteThisAndFollowingEvents(event);
+      if (!(await deleteThisAndFollowingEvents({ ...event, recurrence: originalMaster.recurrence }))) return;
 
       // Create new Recursion
       const newMasterObj = await createEvent(newMasterPayload);

@@ -2,7 +2,7 @@ import { COLORS } from '@/utility/theme';
 import { EventObj } from '@/utility/types';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import React, { useEffect, useRef, useState } from 'react';
-import { Platform, TextInput, View } from 'react-native';
+import { Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { useCalendarEvents } from '../contexts/calendar-events-context';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
 import { useUIContext } from '../contexts/ui-context';
@@ -26,52 +26,52 @@ export function eventsAreEqual(a: EventObj, b: EventObj): boolean {
 }
 
 export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, setNewEvent, newEvent }: ExpandedViewProps) => {
-  const { mutateEvent, uniqueCalendars } = useCalendarEvents();
+  const { mutateEvent, loadRecurringMaster } = useCalendarEvents();
   const { theme } = useUIContext();
   const { calendarObjs } = useCalendarObjects();
   const styles = eventViewStyles(theme.isDark);
   const inputColor = theme.isDark ? COLORS.text.subtleDark : COLORS.text.lightGray;
 
   const [event, setEvent] = useState<EventObj>(initialEvent);
-  const [creatingEvent, setCreatingEvent] = useState<boolean>(initialEvent.id === '');
-  const [editableEvent, setEditableEvent] = useState<boolean>(false);
-  const [recurringEvent, setRecurringEvent] = useState<boolean>(false);
-  const [firstRecurringEvent, setFirstRecurringEvent] = useState<boolean>(false);
+  const [recurrenceEdited, setRecurrenceEdited] = useState(false);
+  const creatingEvent = initialEvent.id === '';
+  const calendar = calendarObjs?.find((cal) => cal.calendarId === initialEvent.calendarId);
+  const editableEvent = !calendar || calendar.accessRole === 'writer' || calendar.accessRole === 'owner';
+  const recurringEvent = !!initialEvent.recurringEventId;
+  const needsSeries = recurringEvent && editableEvent;
+  const [seriesResult, setSeriesResult] = useState<{ event: EventObj; loader: typeof loadRecurringMaster; master: EventObj | null }>();
+  const [seriesAttempt, setSeriesAttempt] = useState(0);
+  const series = seriesResult?.event === initialEvent && seriesResult.loader === loadRecurringMaster ? seriesResult.master : undefined;
+  const seriesPending = needsSeries && series === undefined;
+  const seriesFailed = needsSeries && series === null;
   const baselineRef = useRef<EventObj>(initialEvent);
-  const hasChanges = !eventsAreEqual(event, baselineRef.current);
+  const hasChanges = recurrenceEdited || !eventsAreEqual(event, baselineRef.current);
   const [error, setError] = useState<boolean>(false);
 
-  // Update Local event
   useEffect(() => {
-    if (initialEvent.recurringEventId) {
-      const targetCalendar = uniqueCalendars.find((cal) => cal.id === initialEvent.calendarId);
-      const foundEvent = targetCalendar?.events.find((e) => e.id === initialEvent.recurringEventId);
-
-      if (foundEvent?.recurrence) {
-        initialEvent.recurrence = foundEvent.recurrence;
-        setRecurringEvent(true);
-        if (foundEvent.startDate.getTime() === initialEvent.startDate.getTime()) {
-          setFirstRecurringEvent(true);
-        } else setFirstRecurringEvent(false);
-      } else {
-        setRecurringEvent(false);
-        setFirstRecurringEvent(false);
-      }
-    } else {
-      setRecurringEvent(false);
-      setFirstRecurringEvent(false);
-    }
-
     setEvent(initialEvent);
+    setRecurrenceEdited(false);
     baselineRef.current = initialEvent;
-    setCreatingEvent(initialEvent.id === '');
+  }, [initialEvent]);
 
-    const cal = calendarObjs?.find((c) => c.calendarId === initialEvent.calendarId);
-    if (!cal) setEditableEvent(true);
-    else setEditableEvent(cal.accessRole === 'writer' || cal.accessRole === 'owner');
-  }, [initialEvent, uniqueCalendars]);
+  useEffect(() => {
+    if (!needsSeries) return;
+    let active = true;
+    loadRecurringMaster(initialEvent).then(
+      (master) => {
+        if (active) setSeriesResult({ event: initialEvent, loader: loadRecurringMaster, master });
+      },
+      () => {
+        if (active) setSeriesResult({ event: initialEvent, loader: loadRecurringMaster, master: null });
+      },
+    );
+    return () => { active = false; };
+  }, [initialEvent, loadRecurringMaster, needsSeries, seriesAttempt]);
+
+  const mutationEvent = series && !recurrenceEdited ? { ...event, recurrence: series.recurrence } : event;
 
   const updateField = (field: keyof EventObj, value: any) => {
+    if (field === 'recurrence') setRecurrenceEdited(true);
     setEvent((prev) => ({ ...prev, [field]: value }));
     if (newEvent) {
       setNewEvent((prev) => {
@@ -81,14 +81,7 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
     }
   };
 
-  const closeModal = () => {
-    initialEvent = { sequence: -1 } as EventObj;
-    setCreatingEvent(false);
-    setEditableEvent(false);
-    setRecurringEvent(false);
-    setFirstRecurringEvent(false);
-    onClose();
-  };
+  const closeModal = onClose;
 
   const handleLocationSelect = ({ address }: { address: string }) => {
     updateField('location', address);
@@ -157,11 +150,11 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
 
   const handleDelete = (option: 'this' | 'following' | 'all') => {
     if (option === 'this') {
-      mutateEvent.deleteSingleEvent(event);
+      mutateEvent.deleteSingleEvent(mutationEvent);
     } else if (option === 'all') {
-      mutateEvent.deleteAllRecurringEvents(event);
+      mutateEvent.deleteAllRecurringEvents(mutationEvent);
     } else if (option === 'following') {
-      mutateEvent.deleteThisAndFollowingEvents(event);
+      mutateEvent.deleteThisAndFollowingEvents(series ? { ...event, recurrence: series.recurrence } : event);
     }
 
     closeModal();
@@ -169,6 +162,7 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
 
   const handleDeleteModal = () => {
     if (recurringEvent) {
+      if (!series) return;
       setMutateRecurrenceType('delete');
       setMutateModalVisible(true);
     } else handleDelete('this');
@@ -176,11 +170,11 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
 
   const handleEdit = (option: 'this' | 'following' | 'all') => {
     if (option === 'this') {
-      mutateEvent.editEvent(event);
+      mutateEvent.editEvent(recurringEvent ? { ...event, recurrence: undefined } : event);
     } else if (option === 'all') {
-      mutateEvent.editAllRecurringEvents(event);
+      mutateEvent.editAllRecurringEvents(mutationEvent);
     } else if (option === 'following') {
-      mutateEvent.editThisAndFollowingEvents(event);
+      mutateEvent.editThisAndFollowingEvents(mutationEvent);
     }
 
     closeModal();
@@ -188,6 +182,7 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
 
   const handleEditModal = () => {
     if (recurringEvent) {
+      if (!series) return;
       setMutateRecurrenceType('edit');
       setMutateModalVisible(true);
     } else handleEdit('this');
@@ -215,7 +210,7 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
         </View>
         {/* Time */}
         <View style={[styles.card, { flex: 1 }]}>
-          <EventTimeDatePicker event={event} editable={editableEvent} onUpdate={updateField} setError={setError} />
+          <EventTimeDatePicker event={mutationEvent} editable={editableEvent} onUpdate={updateField} setError={setError} />
         </View>
         {/* Place */}
         <View style={[styles.card, { zIndex: 10, padding: 0 }]}>
@@ -254,11 +249,21 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
           />
         </View>
         {/* Mutate Buttons */}
+        {seriesPending && <Text accessibilityLiveRegion="polite" style={{ color: inputColor }}>Loading recurring series?</Text>}
+        {seriesFailed && (
+          <Pressable accessibilityRole="button" onPress={() => {
+            setSeriesResult(undefined);
+            setSeriesAttempt((attempt) => attempt + 1);
+          }}>
+            <Text style={{ color: inputColor }}>Could not load recurring series. Retry</Text>
+          </Pressable>
+        )}
         <MutateButtons
           editableEvent={editableEvent}
           creatingEvent={creatingEvent}
           hasChanges={hasChanges}
-          event={event}
+          event={mutationEvent}
+          seriesUnavailable={seriesPending || seriesFailed}
           closeModal={closeModal}
           handleEditModal={handleEditModal}
           handleDeleteModal={handleDeleteModal}
@@ -270,19 +275,11 @@ export const EventExpandedView = ({ initialEvent, bottomSheetModalRef, onClose, 
         setVisible={setMutateModalVisible}
         handleDelete={handleDelete}
         handleEdit={handleEdit}
-        options={
-          firstRecurringEvent
-            ? [
-                { value: 'this', label: 'This event' },
-                { value: 'following', label: 'This and following events' },
-                { value: 'all', label: 'All events' },
-              ]
-            : [
-                { value: 'this', label: 'This event' },
-                { value: 'following', label: 'This and following events' },
-                { value: 'all', label: 'All events' },
-              ]
-        }
+        options={[
+          { value: 'this', label: 'This event' },
+          { value: 'following', label: 'This and following events' },
+          { value: 'all', label: 'All events' },
+        ]}
         type={mutateRecurrenceType}
       />
     </View>

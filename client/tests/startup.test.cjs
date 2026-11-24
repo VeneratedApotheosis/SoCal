@@ -251,3 +251,67 @@ test('Google token requests wait for registration and cannot reuse a previous ac
   await tokens.getValidAccessToken('account-b');
   assert.deepEqual(calls, ['update-google-token', 'google-access-token', 'google-access-token']);
 });
+
+test('calendar startup requests expanded events without requesting recurring masters', async () => {
+  const calls = [];
+  const app = hookHarness('hooks/APIFetchingHooks/useCalendar.ts', 'useCalendar', {
+    ...signedIn,
+    '@/components/contexts/calendar-obj-context': {
+      useCalendarObjects: () => ({
+        hasLoadedList: true,
+        calendarObjs: [{ calendarId: 'calendar', calendarName: 'Calendar' }],
+      }),
+    },
+    '@/services/api': {
+      fetchGivenCalendarRange: async (_token, id) => {
+        calls.push(id);
+        return [{ id: 'instance', recurringEventId: 'master' }];
+      },
+      fetchMultiGivenCalendarRange: async () => {
+        calls.push('unexpected series request');
+        return [];
+      },
+    },
+    '@/utility/constants': { BUFFER_INCREMENT: 14 },
+    '@/utility/demoEvents/demoEvents0': { demoEvents: [] },
+    '@/utility/eventUtils': { processCalendar: (events) => events },
+    '@/utility/tokenUtils': { getValidAccessToken: async () => ({ accessToken: 'google-token' }) },
+    'date-fns': require('date-fns'),
+  });
+  const render = () => app.render('UTC', true, { type: 'D' });
+  render();
+  app.effect(0);
+  await settle();
+  assert.deepEqual(calls, ['calendar']);
+  assert.equal(render().calendars.parent[0].events[0].recurringEventId, 'master');
+});
+
+test('recurring masters are fetched once per calendar and series, invalidated, and retryable', async () => {
+  let calls = 0;
+  const app = hookHarness('hooks/useRecurringSeries.ts', 'useRecurringSeries', {
+    ...signedIn,
+    '@/services/api': {
+      async fetchGivenEvent(_token, key) {
+        calls++;
+        if (calls === 3) throw new Error('temporary failure');
+        return { ...key, recurrence: ['RRULE:FREQ=WEEKLY'] };
+      },
+    },
+    '@/utility/eventUtils': { processEvent: (raw) => raw },
+    '@/utility/tokenUtils': { getValidAccessToken: async () => ({ accessToken: 'google-token' }) },
+  });
+  const event = { calendarId: 'calendar', recurringEventId: 'master' };
+  const { loadRecurringMaster, invalidateRecurringMaster } = app.render('UTC');
+  assert.equal(calls, 0);
+  const first = loadRecurringMaster(event);
+  assert.equal(first, loadRecurringMaster(event));
+  assert.equal((await first).id, 'master');
+  assert.equal(await loadRecurringMaster(event), await first);
+  await loadRecurringMaster({ ...event, calendarId: 'other' });
+  assert.equal(calls, 2);
+
+  invalidateRecurringMaster('calendar', 'master');
+  await assert.rejects(loadRecurringMaster(event), /temporary failure/);
+  assert.equal((await loadRecurringMaster(event)).id, 'master');
+  assert.equal(calls, 4);
+});

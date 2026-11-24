@@ -1,7 +1,7 @@
 // useCalendar.ts
 import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
 import { useAuthContext } from '@/components/contexts/auth-context';
-import { fetchGivenCalendarRange, fetchMultiGivenCalendarRange } from '@/services/api';
+import { fetchGivenCalendarRange } from '@/services/api';
 import { BUFFER_INCREMENT } from '@/utility/constants';
 import { demoEvents } from '@/utility/demoEvents/demoEvents0';
 import { processCalendar } from '@/utility/eventUtils';
@@ -32,7 +32,6 @@ const mergeCalendarArrays = (existing: CalendarData[], incoming: CalendarData[])
 
 export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calendarType: CalendarView) {
   const [calendars, setCalendars] = useState<FamilyCalendarState | null>(null);
-  const [uniqueCalendars, setUniqueCalendars] = useState<CalendarData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [localTimeZone, setLocalTimeZone] = useState<string | null>(null);
@@ -42,7 +41,6 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
 
   const clearCalendarEvents = () => {
     setCalendars(null);
-    setUniqueCalendars([]);
     console.log('Cleared Calendar Events');
   };
 
@@ -103,27 +101,6 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
           };
         });
 
-        setIsLoading(false);
-        await new Promise<void>((resolve) => setTimeout(resolve, 0));
-
-        // fetching logic and calendar reconstruction for UNIQUE events
-        const uniqueParentCalendarPromises = calendarObjs.map(async (cal: calendarObj) => {
-          const uniqueEvents = await fetchMultiGivenCalendarRange(tokens.accessToken, cal.calendarId, rfcStart, rfcEnd, timeZone);
-
-          const proccessedUnique = processCalendar(uniqueEvents, cal.calendarId, cal.calendarName, timeZone);
-          const recurringEvents: EventObj[] = proccessedUnique.filter((event) => event.recurrence != null);
-
-          return {
-            id: cal.calendarId,
-            owner: cal.dataOwner,
-            name: cal.calendarName,
-            color: cal.calendarDefaultColor,
-            events: recurringEvents,
-          };
-        });
-
-        const uniqueResults = await Promise.all(uniqueParentCalendarPromises);
-        setUniqueCalendars((prev) => mergeCalendarArrays(prev, uniqueResults));
       } catch (err: any) {
         setError(err.status || 'UNKOWN');
       } finally {
@@ -151,5 +128,5 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
     checkThenFetch();
   }, [timeZone, isTimeZoneLoaded, fetchUserEvents, calendarObjs]);
 
-  return { calendars, setCalendars, isLoading, error, uniqueCalendars, setUniqueCalendars, refetch: fetchUserEvents };
+  return { calendars, setCalendars, isLoading, error, refetch: fetchUserEvents };
 }
