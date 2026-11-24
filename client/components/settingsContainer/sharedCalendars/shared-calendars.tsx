@@ -3,14 +3,16 @@ import { useUIContext } from '@/components/contexts/ui-context';
 import { getIconColor } from '@/utility/globalStyles';
 import { COLORS } from '@/utility/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, LayoutAnimation, Pressable, Text, View } from 'react-native';
 import { getColorPaletteStyles, getSettingCardStyles, getSharedCalStyles } from '../settingsContainerStyles';
 import ShareModal from './share-modal';
 import SharedCalendarIndividual from './shared-calendar-individual';
 
+const compareNames = new Intl.Collator(undefined, { sensitivity: 'base' }).compare;
+
 export default function SharedCalendars() {
-  const { sharedCalendars = [] } = useCalendarObjects();
+  const { sharedCalendars = [], loadSharingSettings, isSharingLoading, hasSharingError } = useCalendarObjects();
 
   // -------------------------------------------
   // Card Themes and Toggle
@@ -22,6 +24,9 @@ export default function SharedCalendars() {
 
   const iconColor = getIconColor(uiTheme.isDark);
   const [isExpanded, setIsExpanded] = useState(true);
+  useEffect(() => {
+    if (isExpanded) void loadSharingSettings();
+  }, [isExpanded, loadSharingSettings]);
   const animatedController = useRef(new Animated.Value(0)).current;
 
   const toggleSection = () => {
@@ -48,7 +53,9 @@ export default function SharedCalendars() {
   const [isVisible, setVisible] = useState(false);
 
   const activeCalendars = useMemo(() => {
-    return sharedCalendars.filter((cal) => cal.sharedIds && cal.sharedIds.length > 0);
+    return sharedCalendars
+      .filter((cal) => cal.sharedIds && cal.sharedIds.length > 0)
+      .sort((a, b) => compareNames(a.name, b.name));
   }, [sharedCalendars]);
 
   // User-centric sharedCal array
@@ -68,7 +75,7 @@ export default function SharedCalendars() {
       });
     });
 
-    return Object.values(userMap);
+    return Object.values(userMap).sort((a, b) => compareNames(a.id, b.id));
   }, [activeCalendars]);
 
   // Helper to toggle accordion
@@ -116,6 +123,12 @@ export default function SharedCalendars() {
       {/* --- Content --- */}
       {isExpanded && (
         <View style={cardStyles.content}>
+          {isSharingLoading && <Text accessibilityLiveRegion="polite" style={{ color: iconColor }}>Loading sharing permissions?</Text>}
+          {hasSharingError && (
+            <Pressable accessibilityRole="button" onPress={() => void loadSharingSettings()}>
+              <Text style={{ color: iconColor }}>Some sharing permissions could not load. Retry</Text>
+            </Pressable>
+          )}
           {/* Toggle Controls */}
           <View style={styles.toggleButtonContainer}>
             <Pressable

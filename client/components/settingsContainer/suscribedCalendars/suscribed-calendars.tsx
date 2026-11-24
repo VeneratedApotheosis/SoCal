@@ -7,6 +7,8 @@ import { Pressable, Text, View } from 'react-native';
 import { getSharedCalStyles, getSubscribedCalStyles } from '../settingsContainerStyles';
 import SuscribedCalendarIndividual from './suscribed-calendar-individual';
 
+const compareNames = new Intl.Collator(undefined, { sensitivity: 'base' }).compare;
+
 export default function SuscribedCalendars() {
   const { calendarObjs } = useCalendarObjects();
   const { theme: uiTheme } = useUIContext();
@@ -33,7 +35,7 @@ export default function SuscribedCalendars() {
     return Object.entries(grouped)
       .map(([dataOwner, calendars]) => ({
         dataOwner,
-        calendars,
+        calendars: calendars.sort((a, b) => compareNames(a.calendarName, b.calendarName)),
       }))
       .sort((a, b) => {
         const isAOther = a.dataOwner.toLowerCase() === 'other';
@@ -44,7 +46,7 @@ export default function SuscribedCalendars() {
         if (!isAOther && isBOther) return -1;
 
         // Otherwise, sort alphabetically
-        return a.dataOwner.localeCompare(b.dataOwner);
+        return compareNames(a.dataOwner, b.dataOwner);
       });
   }, [calendarObjs]);
 

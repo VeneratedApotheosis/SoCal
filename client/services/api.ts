@@ -168,6 +168,7 @@ export const shareCalendar = async (calId: string, email: string, t: string, r: 
       role: r,
     },
   });
+  if (error) throw error;
   return data;
 };
 
@@ -185,6 +186,7 @@ export const unshareCalendar = async (calId: string, email: string, t: string) =
   }
 
   console.log('Unshare successful:', data);
+  if (error) throw error;
   return data;
 };
 

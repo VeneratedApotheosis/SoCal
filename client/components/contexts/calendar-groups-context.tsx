@@ -10,6 +10,7 @@ export interface GroupsContextType {
   calendarGroups: {
     groupedCalendars: calendarGroup[];
     canEdit: boolean;
+    hasGroups: boolean;
     updateSingleGroup: (groupId: string, newCalendars: calendarObj[]) => void;
     updateMultipleGroups: (updates: calendarGroup[]) => void;
     addGroup: (groupName: string | null) => void;

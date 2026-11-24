@@ -1,7 +1,7 @@
 // calendar-events-context.tsx
 import { useCalendarList } from '@/hooks/APIFetchingHooks/useCalendarList';
 import { calendarObj, sharedObj, visibility } from '@/utility/types';
-import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useMemo, useState } from 'react';
 import { useProfileContext } from './profile-context';
 
 export interface CalendarObjectsContextType {
@@ -12,6 +12,10 @@ export interface CalendarObjectsContextType {
   hasLoadedList: boolean;
   error: string | null;
   sharedCalendars: sharedObj[];
+  loadSharingSettings: () => Promise<void>;
+  refreshSharingSettings: (calendarId: string) => Promise<void> | undefined;
+  isSharingLoading: boolean;
+  hasSharingError: boolean;
   calViewMode: 'default' | 'isolate' | 'transparent';
   setCalViewMode: React.Dispatch<React.SetStateAction<'default' | 'isolate' | 'transparent'>>;
   toggleTransparent: (id: string) => void;
@@ -26,9 +30,10 @@ export const CalendarObjectsContext = createContext<CalendarObjectsContextType>(
 
 export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) => {
   const { familyProfiles } = useProfileContext();
-  const { calendarObjs, setCalendarObjs, sharedObjs, refetch, isLoading, hasLoadedList, error } = useCalendarList();
-
-  const [sharedCalendars, setSharedCalendars] = useState<sharedObj[]>([]);
+  const {
+    calendarObjs, setCalendarObjs, sharedObjs, refetch, isLoading, hasLoadedList, error,
+    loadSharingSettings, refreshSharingSettings, isSharingLoading, hasSharingError,
+  } = useCalendarList();
 
   const [calViewMode, setCalViewMode] = useState<'default' | 'isolate' | 'transparent'>('default');
 
@@ -38,12 +43,12 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
 
   // ─── Shared Calendars ───────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    if (!sharedObjs || !familyProfiles?.parent?.email) return;
+  const sharedCalendars = useMemo(() => {
+    if (!sharedObjs || !familyProfiles?.parent?.email) return [];
 
     const ownerEmail = familyProfiles.parent.email;
 
-    const processedCalendars = sharedObjs.map((calendar) => {
+    return sharedObjs.map((calendar) => {
       const filteredSharedIds = calendar.sharedIds.filter((sharedIdObj) => {
         if (sharedIdObj.accessRole === 'freeBusyReader' || sharedIdObj.accessRole === 'freeReader') {
           return false;
@@ -61,7 +66,6 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
         sharedIds: filteredSharedIds,
       };
     });
-    setSharedCalendars(processedCalendars);
   }, [sharedObjs, familyProfiles]);
 
   // ─── Shown Mutators ───────────────────────────────────────────────────────────
@@ -144,6 +148,10 @@ export const CalendarObjectsProvider = ({ children }: { children: ReactNode }) =
         hasLoadedList,
         error,
         sharedCalendars,
+        loadSharingSettings,
+        refreshSharingSettings,
+        isSharingLoading,
+        hasSharingError,
         calViewMode,
         setCalViewMode,
         toggleTransparent,
