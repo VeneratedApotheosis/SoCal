@@ -9,6 +9,8 @@ import { getColorPaletteStyles, getSettingCardStyles, getSharedCalStyles } from 
 import ShareModal from './share-modal';
 import SharedCalendarIndividual from './shared-calendar-individual';
 
+const compareNames = new Intl.Collator(undefined, { sensitivity: 'base' }).compare;
+
 export default function SharedCalendars() {
   const { sharedCalendars = [], loadSharingSettings, isSharingLoading, hasSharingError } = useCalendarObjects();
 
@@ -53,7 +55,7 @@ export default function SharedCalendars() {
   const activeCalendars = useMemo(() => {
     return sharedCalendars
       .filter((cal) => cal.sharedIds && cal.sharedIds.length > 0)
-      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+      .sort((a, b) => compareNames(a.name, b.name));
   }, [sharedCalendars]);
 
   // User-centric sharedCal array
@@ -73,7 +75,7 @@ export default function SharedCalendars() {
       });
     });
 
-    return Object.values(userMap).sort((a, b) => a.id.localeCompare(b.id, undefined, { sensitivity: 'base' }));
+    return Object.values(userMap).sort((a, b) => compareNames(a.id, b.id));
   }, [activeCalendars]);
 
   // Helper to toggle accordion
