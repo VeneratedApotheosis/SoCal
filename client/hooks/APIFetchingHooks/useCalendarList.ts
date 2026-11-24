@@ -1,11 +1,9 @@
 import { useAuthContext } from '@/components/contexts/auth-context';
 import { fetchCalendarList, getCalendarSharingSettings } from '@/services/api';
-import { DEMO_JWT } from '@/utility/constants';
 import { demoCalendarObjs, sharedCalendars } from '@/utility/demoData';
 import { getValidAccessToken } from '@/utility/tokenUtils';
 import { calendarObj, sharedObj } from '@/utility/types';
-import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '../useAuth';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 // 1. Abstracted synchronous formatter
 const formatCalendar = (cal: any): calendarObj => {
@@ -99,57 +97,69 @@ const areSharedCalendarObjsEqual = (a: sharedObj[], b: sharedObj[]): boolean => 
 };
 
 export function useCalendarList() {
+  const { session, demo } = useAuthContext();
+  const userId = session?.user.id;
   const [calendarObjs, setCalendarObjs] = useState<calendarObj[]>([]);
   const [sharedObjs, setSharedObjs] = useState<sharedObj[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { validJwt } = useAuthContext();
+  const [isLoading, setIsLoading] = useState(!!userId || demo);
+  const [hasLoadedList, setHasLoadedList] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { getValidJwt } = useAuth();
+  const request = useRef(0);
 
-  const fetchUserEvents = useCallback(async () => {
-    setIsLoading(true);
-    await new Promise(requestAnimationFrame);
-
-    try {
-      const jwtToken = await getValidJwt();
-      if (!jwtToken) {
-        console.log('clearing calendar object data');
-        setCalendarObjs([]);
-        setSharedObjs([]);
-        return;
-      }
-      if (jwtToken == DEMO_JWT) {
-        setCalendarObjs(demoCalendarObjs);
-        setSharedObjs(sharedCalendars);
-        return;
-      }
-      setError(null);
-      console.log('[FETCH] calendar objects');
-
-      const tokens = await getValidAccessToken();
-      const accessToken = tokens.accessToken;
-      const { items: parentCalendars = [] } = await fetchCalendarList(accessToken);
-
-      // Map synchronously without mutation
-      const parentCalendarObjs = parentCalendars.map(formatCalendar);
-
-      // Map async requests and filter nulls, preserving index order natively
-      const sharedPromises = parentCalendars.map((cal: any) => fetchSharingSettings(cal, accessToken));
-      const resolvedShared = await Promise.all(sharedPromises);
-      const allSharedObjs = resolvedShared.filter((obj): obj is sharedObj => obj !== null);
-
-      setCalendarObjs((prev) => (areCalendarObjsEqual(prev, parentCalendarObjs) ? prev : parentCalendarObjs));
-      setSharedObjs((prev) => (areSharedCalendarObjsEqual(prev, allSharedObjs) ? prev : allSharedObjs));
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
+  const refetch = useCallback(async () => {
+    if (demo) {
+      setCalendarObjs(demoCalendarObjs);
+      setSharedObjs(sharedCalendars);
+      setHasLoadedList(true);
       setIsLoading(false);
+      return;
     }
-  }, [getValidJwt]);
+    if (!userId) return;
+
+    const id = ++request.current;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { accessToken } = await getValidAccessToken(userId);
+      const { items } = await fetchCalendarList(accessToken);
+      if (id !== request.current) return;
+
+      const calendars = items.map(formatCalendar);
+      setCalendarObjs((prev) => {
+        const existing = new Map(prev.map((cal) => [cal.calendarId, cal]));
+        const next = calendars.map((cal) => {
+          const previous = existing.get(cal.calendarId);
+          return previous ? { ...cal, shown: previous.shown, visibility: previous.visibility } : cal;
+        });
+        return areCalendarObjsEqual(prev, next) ? prev : next;
+      });
+      setHasLoadedList(true);
+      setIsLoading(false);
+
+      const owners = items.filter((cal) => cal.accessRole === 'owner');
+      const sharing = await Promise.allSettled(owners.map((cal) => fetchSharingSettings(cal, accessToken)));
+      if (id !== request.current) return;
+
+      setSharedObjs((prev) => {
+        const existing = new Map(prev.map((cal) => [cal.id, cal]));
+        const next = sharing.flatMap((result, index) => {
+          const details = result.status === 'fulfilled' ? result.value : existing.get(owners[index].id);
+          return details ? [details] : [];
+        });
+        return areSharedCalendarObjsEqual(prev, next) ? prev : next;
+      });
+      if (sharing.some((result) => result.status === 'rejected')) setError('Some calendar sharing settings could not be loaded');
+    } catch (error) {
+      if (id === request.current) setError((error as Error).message || 'Failed to load calendar list');
+    } finally {
+      if (id === request.current) setIsLoading(false);
+    }
+  }, [demo, userId]);
 
   useEffect(() => {
-    if (validJwt) fetchUserEvents();
-  }, [validJwt]);
+    void refetch();
+    return () => { request.current++; };
+  }, [refetch]);
 
-  return { calendarObjs, setCalendarObjs, sharedObjs, isLoading, error, refetch: fetchUserEvents };
+  return { calendarObjs, setCalendarObjs, sharedObjs, isLoading, hasLoadedList, error, refetch };
 }

@@ -47,7 +47,7 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
   // ─── Calendar Object and Events Hooks ───────────────────────────────────────────────────────────
 
   // Calendar Object Hook
-  const { calendarObjs, calViewMode, suppressOther, refetchCalendarList } = useCalendarObjects();
+  const { calendarObjs, calViewMode, suppressOther } = useCalendarObjects();
   const { hiddenCalendarHook: hiddenCalendar } = useHiddenCalendarsContext();
   // Calendar Event Hook
   const {
@@ -60,13 +60,12 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
     refetch: refetchCalendar,
   } = useCalendar(timeZone, isTimeZoneLoaded, calendarType);
 
-  const isDisplayed = (calendarId: string) => {
-    return !hiddenCalendar.hiddenCalendars.includes(calendarId || '');
-  };
+  const hiddenCalendarIds = hiddenCalendar.hiddenCalendars;
 
   // Visible Events
   const allEvents = useMemo(() => {
     if (!calendars || !calendarObjs) return [];
+    const isDisplayed = (id: string) => !hiddenCalendarIds.includes(id);
     if (calViewMode === 'default') {
       const visibleIds = new Set(calendarObjs.filter((c) => isDisplayed(c.calendarId) && !c.shown.suppressed).map((c) => c.calendarId));
       return (calendars.parent || []).filter((cal) => visibleIds.has(cal.id)).flatMap((cal) => cal.events);
@@ -81,7 +80,7 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
 
     const visibleIds = new Set(calendarObjs.filter((c) => isDisplayed(c.calendarId) && !c.shown.suppressed).map((c) => c.calendarId));
     return (calendars.parent || []).filter((cal) => visibleIds.has(cal.id)).flatMap((cal) => cal.events);
-  }, [calendars, calendarObjs, calViewMode, suppressOther]);
+  }, [calendars, calendarObjs, calViewMode, suppressOther, hiddenCalendarIds]);
 
   // ─── Event Mutation Hook ───────────────────────────────────────────────────────────
 

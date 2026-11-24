@@ -2,7 +2,7 @@ import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
 import { useUIContext } from '@/components/contexts/ui-context';
 import { useUnshareCalendar } from '@/hooks/sharingCalendars/useUnshareCalendar';
 import { useAuth } from '@/hooks/useAuth';
-import { unsuscribeCalendar } from '@/services/api';
+import { unsubscribeCalendar } from '@/services/api';
 import { getModalStyles, globalStyles } from '@/utility/globalStyles';
 import { Keyboard, Modal, Pressable, Text, View } from 'react-native';
 
@@ -27,7 +27,7 @@ export default function SuscribedSettingsModal({ isVisible, setVisible, top, lef
     try {
       const jwtToken = await getValidJwt();
       if (!calId || !jwtToken) return;
-      const result = await unsuscribeCalendar(calId, jwtToken);
+      await unsubscribeCalendar(calId, jwtToken);
       setTimeout(() => {
         refetchCalendarList();
       }, 1000);

@@ -1,7 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { convertToGoogleEvent } from '@/utility/eventUtils';
-import { upsertUserColorPalette, upsertUserGroups, upsertUserHiddenCalendars } from '@/utility/supabaseFunctions';
-import { EventObj, accessRole, calendarGroup, colorCache } from '@/utility/types';
+import { EventObj, accessRole } from '@/utility/types';
 
 const req = async (url: string, method: string = 'GET', token?: string, body?: any) => {
   try {
@@ -90,7 +89,17 @@ export const fetchMultiGivenCalendarRange = async (t: string, calId = 'primary',
   return events;
 };
 
-export const fetchCalendarList = (t: string) => gReq('/users/me/calendarList', 'GET', t);
+export const fetchCalendarList = async (token: string) => {
+  const items: any[] = [];
+  let pageToken: string | undefined;
+  do {
+    const query = pageToken ? `?${new URLSearchParams({ pageToken })}` : '';
+    const page = await gReq(`/users/me/calendarList${query}`, 'GET', token);
+    items.push(...(page.items ?? []));
+    pageToken = page.nextPageToken;
+  } while (pageToken);
+  return { items };
+};
 
 export const getCalendarSharingSettings = (calId: string, t: string) => gReq(`/calendars/${calId}/acl`, 'GET', t);
 
@@ -98,18 +107,6 @@ export const getCalendarSharingSettings = (calId: string, t: string) => gReq(`/c
 
 export const fetchColorGroups = (t: string) => {
   return t;
-};
-
-export const saveColorPalette = (t: string, palette?: colorCache[]) => {
-  return upsertUserColorPalette(t, palette);
-};
-
-export const saveGroups = (t: string, groups?: calendarGroup[]) => {
-  return upsertUserGroups(t, groups);
-};
-
-export const saveHiddenCalendars = (t: string, hiddenCalendars?: string[]) => {
-  return upsertUserHiddenCalendars(t, hiddenCalendars);
 };
 
 export const deleteColorGroups = (t: string) => bReq('/delete-color-groups', 'DELETE', t);

@@ -6,29 +6,23 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 import { useCalendarEvents } from '../contexts/calendar-events-context';
 import { useCalendarObjects } from '../contexts/calendar-obj-context';
 import { useCalendarPreferencesContext } from '../contexts/calendar-preferences-context';
+import { useProfileContext } from '../contexts/profile-context';
 import { useUIContext } from '../contexts/ui-context';
 
 export const FetchStatusIcon = () => {
-  const { isLoading, error, reloadCalendar } = useCalendarEvents();
-  const { refreshColorGroups } = useCalendarPreferencesContext();
-  const { refetchCalendarList, isLoading: listLoading } = useCalendarObjects();
+  const { isLoading, error: eventError, reloadCalendar } = useCalendarEvents();
+  const { refreshColorGroups, error: preferenceError, isLoading: preferencesLoading } = useCalendarPreferencesContext();
+  const { refetchCalendarList, isLoading: listLoading, error: listError } = useCalendarObjects();
+  const { refetch: refetchProfile, error: profileError } = useProfileContext();
   const { theme } = useUIContext();
   const iconColor = theme.isDark ? COLORS.border.mutedLight : COLORS.border.mutedDark;
 
-  const localLoading = listLoading || isLoading;
+  const error = eventError ?? listError ?? preferenceError ?? profileError;
+  const localLoading = listLoading || isLoading || preferencesLoading;
 
   const refetchUserData = () => {
-    if (!listLoading && !isLoading) {
-      const fetching = async () => {
-        await refetchCalendarList();
-        await reloadCalendar();
-
-        await new Promise<void>((resolve) => setTimeout(resolve, 0));
-
-        await refreshColorGroups();
-      };
-      fetching();
-    }
+    if (localLoading) return;
+    void Promise.all([refetchCalendarList(), refetchProfile(), refreshColorGroups(), reloadCalendar()]);
   };
 
   // 1. Loading State: Show the spinning circle

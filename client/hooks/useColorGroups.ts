@@ -1,132 +1,103 @@
 import { useAuthContext } from '@/components/contexts/auth-context';
-import { DEFAULT_COLORS, DEMO_JWT } from '@/utility/constants';
+import { useProfileContext } from '@/components/contexts/profile-context';
+import { DEFAULT_COLORS } from '@/utility/constants';
 import { demoCalendarGroups, demoHiddenCalendars } from '@/utility/demoData';
-import { getUserCalendarGroups, getUserColorPalette, getUserHiddenCalendars } from '@/utility/supabaseFunctions';
+import { CalendarPreferences, readCalendarPreferences, writeCalendarPreferences } from '@/utility/supabaseFunctions';
 import { calendarGroup, colorCache } from '@/utility/types';
-import { useCallback, useEffect, useState } from 'react';
-import { saveColorPalette, saveGroups, saveHiddenCalendars } from '../services/api';
-import { useAuth } from './useAuth';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+const defaultPalette: colorCache[] = [{ paletteId: 0, name: 'Default Palette', palette: DEFAULT_COLORS, colorMap: {} }];
 
 export function useCalendarPreferences() {
-  const [paletteData, setPaletteData] = useState<colorCache[]>([
-    {
-      paletteId: 0,
-      name: 'Default Palette',
-      palette: DEFAULT_COLORS,
-      colorMap: {},
-    } as colorCache,
-  ]);
+  const { session, demo } = useAuthContext();
+  const userId = session?.user.id;
+  const { familyProfiles } = useProfileContext();
+  const googleId = familyProfiles?.parent.id || undefined;
+  const [paletteData, setPaletteData] = useState(defaultPalette);
   const [groupsData, setGroupsData] = useState<calendarGroup[]>([]);
   const [hiddenCalendarsData, setHiddenCalendarsData] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // Start true to block early overwrites
+  const [isLoading, setIsLoading] = useState(!!userId || demo);
   const [hasLoadedPreferences, setHasLoadedPreferences] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { validJwt } = useAuthContext();
-  const { getValidJwt } = useAuth();
-
-  // ─── Fetch Data from Backend ───────────────────────────────────────────────────────────
+  const baseline = useRef<CalendarPreferences | null>(null);
+  const rowExists = useRef(false);
+  const writes = useRef(Promise.resolve());
+  const request = useRef(0);
+  const mounted = useRef(false);
 
   const refreshColorGroups = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    setHasLoadedPreferences(false);
-    try {
-      console.log('[FETCH] Calendar Preferences');
-      const jwtToken = await getValidJwt();
-      if (!jwtToken || !validJwt) return;
-      if (jwtToken == DEMO_JWT) {
-        setGroupsData(demoCalendarGroups);
-        setHiddenCalendarsData(demoHiddenCalendars);
-        setHasLoadedPreferences(true);
-        return;
-      }
-
-      const groupData = await getUserCalendarGroups(jwtToken);
-      const colorPaletteData = await getUserColorPalette(jwtToken);
-      const hiddenCalendarData = await getUserHiddenCalendars(jwtToken);
-
-      if (!groupData || !colorPaletteData || !hiddenCalendarData || !hiddenCalendarData.hiddenCalendars) {
-        throw new Error('Incomplete calendar preferences response');
-      }
-
-      setGroupsData((prev) => (areCalendarGroupsEqual(prev, groupData.groups) ? prev : groupData.groups));
-      setPaletteData((prev) => (areColorCachesEqual(prev, colorPaletteData.palette) ? prev : colorPaletteData.palette));
-      setHiddenCalendarsData((prev) => {
-        console.log(prev, hiddenCalendarData.hiddenCalendars);
-        return areStringArraysEqual(prev, hiddenCalendarData.hiddenCalendars) ? prev : hiddenCalendarData.hiddenCalendars;
-      });
+    if (demo) {
+      setGroupsData(demoCalendarGroups);
+      setHiddenCalendarsData(demoHiddenCalendars);
       setHasLoadedPreferences(true);
-    } catch (err: any) {
-      console.error('Fetch calendar preferences error:', err);
-      setError(err.message || 'Failed to fetch calendar preferences groups');
-    } finally {
       setIsLoading(false);
+      return;
     }
-  }, [validJwt, demoCalendarGroups]);
+    if (!userId) return;
+
+    const id = ++request.current;
+    setIsLoading(true);
+    setHasLoadedPreferences(false);
+    setError(null);
+    try {
+      await writes.current;
+      if (id !== request.current) return;
+      const row = await readCalendarPreferences(userId);
+      if (id !== request.current) return;
+      const loaded = {
+        palette: row?.palette?.length ? row.palette : defaultPalette,
+        groups: row?.groups ?? [],
+        hiddenCalendars: row?.hiddenCalendars ?? [],
+      };
+      rowExists.current = !!row;
+      baseline.current = loaded;
+      setPaletteData(loaded.palette);
+      setGroupsData(loaded.groups);
+      setHiddenCalendarsData(loaded.hiddenCalendars);
+      setHasLoadedPreferences(true);
+    } catch (error) {
+      if (id === request.current) setError((error as Error).message || 'Failed to load calendar preferences');
+    } finally {
+      if (id === request.current) setIsLoading(false);
+    }
+  }, [demo, userId]);
 
   useEffect(() => {
-    if (validJwt) refreshColorGroups();
-  }, [validJwt, refreshColorGroups]);
-
-  // ─── Save Data To Backend ───────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (isLoading || !hasLoadedPreferences) return;
-    const saveData = async () => {
-      console.log('[POST] Saving color palette data');
-
-      const jwtToken = await getValidJwt();
-      if (!jwtToken || !validJwt || jwtToken == DEMO_JWT) return;
-
-      if (validJwt) {
-        await saveColorPalette(jwtToken, paletteData).catch((err) => console.error('Failed to update backend colors palette:', err));
-      }
+    mounted.current = true;
+    void refreshColorGroups();
+    return () => {
+      mounted.current = false;
+      request.current++;
     };
-    saveData();
-  }, [paletteData]);
+  }, [refreshColorGroups]);
 
   useEffect(() => {
-    if (isLoading || !hasLoadedPreferences) return;
-    const saveData = async () => {
-      console.log('[POST] Saving group data');
+    if (!userId || demo || isLoading || !hasLoadedPreferences) return;
 
-      const jwtToken = await getValidJwt();
-      if (!jwtToken || !validJwt || jwtToken == DEMO_JWT) return;
+    const id = request.current;
+    writes.current = writes.current.then(async () => {
+      const saved = baseline.current;
+      if (!mounted.current || !saved) return;
+      const changes: Partial<CalendarPreferences> = {};
+      if (!areColorCachesEqual(saved.palette, paletteData)) changes.palette = paletteData;
+      if (!areCalendarGroupsEqual(saved.groups, groupsData)) changes.groups = groupsData;
+      if (!areStringArraysEqual(saved.hiddenCalendars, hiddenCalendarsData)) changes.hiddenCalendars = hiddenCalendarsData;
+      if (!Object.keys(changes).length) return;
 
-      if (validJwt && groupsData) {
-        await saveGroups(jwtToken, groupsData).catch((err) => console.error('Failed to update backend groups:', err));
+      try {
+        await writeCalendarPreferences(userId, changes, rowExists.current, googleId);
+        baseline.current = { ...saved, ...changes };
+        rowExists.current = true;
+        if (id === request.current) setError(null);
+      } catch (error) {
+        if (id === request.current) setError((error as Error).message || 'Failed to save calendar preferences');
       }
-    };
-    saveData();
-  }, [groupsData]);
-
-  useEffect(() => {
-    if (isLoading || !hasLoadedPreferences) return;
-    const saveData = async () => {
-      console.log('[POST] Saving hidden calendar data');
-
-      const jwtToken = await getValidJwt();
-      if (!jwtToken || !validJwt || jwtToken == DEMO_JWT) return;
-
-      if (validJwt && hiddenCalendarsData) {
-        await saveHiddenCalendars(jwtToken, hiddenCalendarsData).catch((err) =>
-          console.error('Failed to update backend hidden calendars:', err),
-        );
-      }
-    };
-    saveData();
-  }, [hiddenCalendarsData]);
+    });
+  }, [demo, userId, googleId, isLoading, hasLoadedPreferences, paletteData, groupsData, hiddenCalendarsData]);
 
   return {
-    paletteData,
-    groupsData,
-    hiddenCalendarsData,
-    isLoading,
-    setPaletteData,
-    setGroupsData,
-    setHiddenCalendarsData,
-    error,
-    refreshColorGroups,
+    paletteData, groupsData, hiddenCalendarsData, isLoading, hasLoadedPreferences,
+    setPaletteData, setGroupsData, setHiddenCalendarsData, error, refreshColorGroups,
   };
 }
 
@@ -182,6 +153,7 @@ export const areCalendarGroupsEqual = (a: calendarGroup[], b: calendarGroup[]): 
 
       return (
         calendar.calendarId === otherCalendar.calendarId &&
+        calendar.isActive === otherCalendar.isActive &&
         calendar.calendarName === otherCalendar.calendarName &&
         calendar.calendarDefaultColor === otherCalendar.calendarDefaultColor &&
         calendar.owner === otherCalendar.owner &&

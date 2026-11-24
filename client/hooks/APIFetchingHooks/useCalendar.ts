@@ -1,14 +1,14 @@
 // useCalendar.ts
 import { useCalendarObjects } from '@/components/contexts/calendar-obj-context';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/components/contexts/auth-context';
 import { fetchGivenCalendarRange, fetchMultiGivenCalendarRange } from '@/services/api';
-import { BUFFER_INCREMENT, DEMO_JWT } from '@/utility/constants';
+import { BUFFER_INCREMENT } from '@/utility/constants';
 import { demoEvents } from '@/utility/demoEvents/demoEvents0';
 import { processCalendar } from '@/utility/eventUtils';
 import { getValidAccessToken } from '@/utility/tokenUtils';
 import { CalendarData, calendarObj, CalendarView, EventObj, FamilyCalendarState } from '@/utility/types';
 import { addDays } from 'date-fns';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const mergeCalendarArrays = (existing: CalendarData[], incoming: CalendarData[]) => {
   const incomingMap = new Map(incoming.map((c) => [c.id, c]));
@@ -36,10 +36,9 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [localTimeZone, setLocalTimeZone] = useState<string | null>(null);
-  const { getValidJwt } = useAuth();
-  const { calendarObjs } = useCalendarObjects();
-
-  const hasProcessedC = useRef(false);
+  const { session, demo } = useAuthContext();
+  const userId = session?.user.id;
+  const { calendarObjs, hasLoadedList } = useCalendarObjects();
 
   const clearCalendarEvents = () => {
     setCalendars(null);
@@ -49,18 +48,19 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
 
   const fetchUserEvents = useCallback(
     async (fetchStart: number, fetchEnd: number) => {
-      const jwtToken = await getValidJwt();
-      if (!jwtToken || !isTimeZoneLoaded || !timeZone) {
-        clearCalendarEvents();
-        return;
-      }
-      if (jwtToken == DEMO_JWT) {
+      if (!isTimeZoneLoaded || !timeZone) return;
+      if (demo) {
         setCalendars({
           parent: demoEvents,
           children: [],
         });
+        return;
       }
-      if (!calendarObjs) return;
+      if (!userId || !hasLoadedList || !calendarObjs) return;
+      if (!calendarObjs.length) {
+        clearCalendarEvents();
+        return;
+      }
 
       //Fetching Start and End Date Calculation
       let fetchStartDate: Date = new Date();
@@ -73,7 +73,7 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
       setError(null);
 
       try {
-        const tokens = await getValidAccessToken(); // get access token to fetch
+        const tokens = await getValidAccessToken(userId);
 
         //ranges to fetch (newly loaded in ranges)
         const rfcStart = fetchStartDate.toISOString();
@@ -130,7 +130,7 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
         setIsLoading(false);
       }
     },
-    [isTimeZoneLoaded, timeZone, calendarObjs],
+    [demo, userId, isTimeZoneLoaded, timeZone, calendarObjs, hasLoadedList],
   );
 
   const checkThenFetch = () => {
@@ -150,14 +150,6 @@ export function useCalendar(timeZone: string, isTimeZoneLoaded: boolean, calenda
   useEffect(() => {
     checkThenFetch();
   }, [timeZone, isTimeZoneLoaded, fetchUserEvents, calendarObjs]);
-
-  useEffect(() => {
-    if (!calendarObjs || calendarObjs.length === 0 || hasProcessedC.current === true) {
-      return;
-    }
-    hasProcessedC.current = true;
-    checkThenFetch();
-  }, [calendarObjs]);
 
   return { calendars, setCalendars, isLoading, error, uniqueCalendars, setUniqueCalendars, refetch: fetchUserEvents };
 }

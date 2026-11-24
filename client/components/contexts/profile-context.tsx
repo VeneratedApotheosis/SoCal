@@ -4,18 +4,18 @@ import { createContext, ReactNode, useContext } from 'react';
 
 export interface ProfileContextType {
   familyProfiles: FamilyProfileObjs | null;
+  error: string | null;
+  refetch: () => Promise<void>;
 }
 
 export const ProfileContext = createContext<ProfileContextType>({} as ProfileContextType);
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
-  const { familyProfiles } = useProfiles();
+  const profile = useProfiles();
 
   return (
     <ProfileContext.Provider
-      value={{
-        familyProfiles,
-      }}
+      value={profile}
     >
       {children}
     </ProfileContext.Provider>
