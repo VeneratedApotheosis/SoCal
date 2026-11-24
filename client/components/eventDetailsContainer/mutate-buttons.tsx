@@ -12,6 +12,7 @@ export interface MutateButtonProps {
   creatingEvent: boolean;
   hasChanges: boolean;
   timeError: boolean;
+  seriesUnavailable: boolean;
   event: EventObj;
   closeModal: () => void;
   handleEditModal: () => void;
@@ -23,6 +24,7 @@ export const MutateButtons = ({
   creatingEvent,
   hasChanges,
   timeError,
+  seriesUnavailable,
   event,
   closeModal,
   handleEditModal,
@@ -35,7 +37,7 @@ export const MutateButtons = ({
   const { mutateEvent } = useCalendarEvents();
 
   const blueText =
-    hasChanges && event.title !== '' && !timeError
+    !seriesUnavailable && hasChanges && event.title !== '' && !timeError
       ? theme.isDark
         ? COLORS.text.light
         : COLORS.text.light
@@ -44,7 +46,7 @@ export const MutateButtons = ({
         : COLORS.primaryy.mutedTextDark;
 
   const blueBackgorund =
-    hasChanges && event.title !== '' && !timeError
+    !seriesUnavailable && hasChanges && event.title !== '' && !timeError
       ? theme.isDark
         ? COLORS.primaryy.light
         : COLORS.primaryy.dark
@@ -82,6 +84,7 @@ export const MutateButtons = ({
       {editableEvent && !creatingEvent && (
         <>
           <Pressable
+            disabled={seriesUnavailable}
             style={[styles.mutateButtons, { backgroundColor: blueBackgorund }]}
             onPress={() => {
               if (hasChanges && !timeError) handleEditModal();
@@ -104,10 +107,11 @@ export const MutateButtons = ({
                 closeModal();
                 mutateEvent.createEvent(event);
               }}
+              disabled={seriesUnavailable}
             >
               <Ionicons name={'copy-outline'} size={16} color={iconColor} />
             </Pressable>
-            <Pressable style={styles.mutateButtons} onPress={handleDeleteModal}>
+            <Pressable style={styles.mutateButtons} onPress={handleDeleteModal} disabled={seriesUnavailable}>
               <Ionicons name={'trash-outline'} size={16} color={iconColor} />
             </Pressable>
           </View>

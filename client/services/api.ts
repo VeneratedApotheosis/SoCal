@@ -70,25 +70,6 @@ export const fetchGivenCalendarRange = async (t: string, calId = 'primary', time
   return events;
 };
 
-export const fetchMultiGivenCalendarRange = async (t: string, calId = 'primary', timeMin?: string, timeMax?: string, timeZone?: string) => {
-  let events: any[] = [],
-    pageToken: string | undefined;
-  do {
-    const p = new URLSearchParams({
-      showDeleted: 'false',
-      singleEvents: 'false',
-      ...(timeMin && { timeMin }),
-      ...(timeMax && { timeMax }),
-      ...(timeZone && { timeZone }),
-      ...(pageToken && { pageToken }),
-    });
-    const data = await gReq(`/calendars/${encodeURIComponent(calId)}/events?${p}`, 'GET', t);
-    if (data.items) events.push(...data.items);
-    pageToken = data.nextPageToken;
-  } while (pageToken);
-  return events;
-};
-
 export const fetchCalendarList = async (token: string) => {
   const items: any[] = [];
   let pageToken: string | undefined;
@@ -113,7 +94,7 @@ export const deleteColorGroups = (t: string) => bReq('/delete-color-groups', 'DE
 
 // ─── Google API Specific Event Fetches ───────────────────────────────────────────────────────────
 
-export const fetchGivenEvent = (t: string, e: EventObj) => {
+export const fetchGivenEvent = (t: string, e: Pick<EventObj, 'id' | 'calendarId'>) => {
   if (!e.id) throw new Error('Event ID is required to fetch an event.');
   if (!e.calendarId) throw new Error('Calendar ID is required to edit an event.');
   return gReq(`/calendars/${encodeURIComponent(e.calendarId)}/events/${encodeURIComponent(e.id)}`, 'GET', t);
