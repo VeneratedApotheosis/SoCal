@@ -1,11 +1,21 @@
 import { useCalendarPreferencesContext } from '@/components/contexts/calendar-preferences-context';
 import { findClosestColor } from '@/utility/colorCacheUtil';
 import { calendarObj, colorCache } from '@/utility/types';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 export const useColorCache = (calendarObjs: calendarObj[] | null) => {
-  const { paletteData: allCaches, isLoading: isStorageLoaded, setPaletteData: setAllCaches } = useCalendarPreferencesContext();
+  const { paletteData: savedCaches, isLoading: isStorageLoaded, setPaletteData: setAllCaches } = useCalendarPreferencesContext();
   const [activeCacheId, setActiveCacheId] = useState<number>(0);
+
+  // Resolve missing colors for display without writing automatic defaults to Supabase.
+  const allCaches = useMemo(() => savedCaches.map((cache) => {
+    if (!calendarObjs?.length || cache.paletteId !== activeCacheId) return cache;
+    const colorMap = { ...cache.colorMap };
+    for (const cal of calendarObjs) {
+      colorMap[cal.calendarId] ??= findClosestColor(cal.calendarDefaultColor, cache.palette);
+    }
+    return { ...cache, colorMap };
+  }), [savedCaches, calendarObjs, activeCacheId]);
 
   // ─── Helper Functions ───────────────────────────────────────────────────────────
 
@@ -103,35 +113,6 @@ export const useColorCache = (calendarObjs: calendarObj[] | null) => {
     },
     [activeCacheId, calendarObjs, allCaches, setAllCaches],
   );
-
-  // -------------------------------------------
-  // Update Function
-  // -------------------------------------------
-  useEffect(() => {
-    if (!calendarObjs?.length) return;
-
-    setAllCaches((prevCaches) => {
-      return prevCaches.map((cache) => {
-        //ignore other caches
-        if (cache.paletteId !== activeCacheId) return cache;
-
-        const existingIds = Object.keys(cache.colorMap);
-        const missingCalendars = calendarObjs.filter((cal) => !existingIds.includes(cal.calendarId));
-
-        // If no new calendars are found, return the cache as-is (prevents re-renders)
-        if (missingCalendars.length === 0) return cache;
-
-        // Create a copy of the map and add the missing ones
-        const nextMap = { ...cache.colorMap };
-
-        missingCalendars.forEach((newCal) => {
-          nextMap[newCal.calendarId] = findClosestColor(newCal.calendarDefaultColor, cache.palette);
-        });
-
-        return { ...cache, colorMap: nextMap };
-      });
-    });
-  }, [calendarObjs, activeCacheId, isStorageLoaded, setAllCaches]);
 
   return {
     allCaches,

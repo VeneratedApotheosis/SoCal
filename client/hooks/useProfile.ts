@@ -1,72 +1,61 @@
 import { useAuthContext } from '@/components/contexts/auth-context';
 import { supabase } from '@/lib/supabase';
-import { DEMO_JWT } from '@/utility/constants';
 import { demoProfile } from '@/utility/demoData';
 import { FamilyProfileObjs } from '@/utility/types';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useAuth } from './useAuth';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function useProfiles() {
-  const [familyProfiles, setFamilyProfiles] = useState<FamilyProfileObjs | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { session, demo } = useAuthContext();
+  const user = session?.user;
+  const userId = user?.id;
+  const [profile, setProfile] = useState<FamilyProfileObjs | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { getValidJwt } = useAuth();
-  const { validJwt } = useAuthContext();
+  const request = useRef(0);
 
-  // ─── Fetch from Backend ───────────────────────────────────────────────────────────
-
-  const fetchProfiles = useCallback(async () => {
-    const jwtToken = await getValidJwt();
-    if (!jwtToken) return;
-    if (jwtToken == DEMO_JWT) {
-      setFamilyProfiles({ parent: demoProfile, children: [] });
-      return;
-    }
-
-    setIsLoading(true);
+  const refetch = useCallback(async () => {
+    if (!userId || demo) return;
+    const id = ++request.current;
     setError(null);
 
     try {
-      //Fetch from Backend
-      const { data, error } = await supabase.from('user_info').select('id, google_id, email, name, picture').single();
-      if (error) {
-        console.error('Backend Profile Fetch Error:', error);
-        setError(JSON.stringify(error) || 'big error in profiles');
-        return;
+      const { data, error } = await supabase.from('user_info')
+        .select('google_id, email, name, picture').eq('id', userId).maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error('Profile is not available yet');
+      if (id === request.current) {
+        setProfile({ parent: { id: data.google_id, name: data.name, email: data.email, picture: data.picture }, children: [] });
       }
-
-      //Update State
-      setFamilyProfiles({
-        parent: {
-          id: data.google_id,
-          email: data.email,
-          name: data.name,
-          picture: data.picture,
-        },
-        children: [],
-      });
-    } catch (err: any) {
-      console.error('Backend Profile Fetch Error:', err);
-      setError(err.message || 'big error in profiles');
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      if (id === request.current) setError((error as Error).message || 'Failed to load profile');
     }
-  }, [setFamilyProfiles, getValidJwt, supabase]);
+  }, [userId, demo]);
 
-  // Automatically fetch when the token changes
   useEffect(() => {
-    if (validJwt) fetchProfiles();
-  }, [validJwt]);
+    void refetch();
+    return () => { request.current++; };
+  }, [refetch]);
 
-  const value = useMemo(
-    () => ({
-      familyProfiles,
-      isLoading,
-      error,
-      refetch: fetchProfiles,
-    }),
-    [familyProfiles, isLoading, error, fetchProfiles],
-  );
+  const googleIdentity = user?.identities?.find((identity) => identity.provider === 'google');
+  const googleId = googleIdentity?.identity_data?.sub;
+  const fallback = user ? {
+    parent: {
+      id: typeof googleId === 'string' ? googleId : '',
+      name: user.user_metadata.full_name ?? user.user_metadata.name ?? '',
+      email: user.email ?? '',
+      picture: user.user_metadata.avatar_url ?? user.user_metadata.picture ?? '',
+    },
+    children: [],
+  } : null;
 
-  return value;
+  const resolved = profile && fallback ? {
+    parent: {
+      id: profile.parent.id || fallback.parent.id,
+      name: profile.parent.name || fallback.parent.name,
+      email: profile.parent.email || fallback.parent.email,
+      picture: profile.parent.picture || fallback.parent.picture,
+    },
+    children: profile.children,
+  } : profile ?? fallback;
+
+  return { familyProfiles: demo ? { parent: demoProfile, children: [] } : resolved, error, refetch };
 }

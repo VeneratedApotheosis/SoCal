@@ -9,11 +9,10 @@ export const useAuth = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { setValidJwt, demo, setIsDemo } = useAuthContext();
+  const { demo, setIsDemo } = useAuthContext();
 
   const handleLogout = useCallback(async () => {
     if (demo) {
-      setValidJwt(false);
       setIsDemo(false);
       return;
     }
@@ -22,9 +21,7 @@ export const useAuth = () => {
     if (error) {
       console.error('Error logging out:', error.message);
     }
-    if (setValidJwt) setValidJwt(false);
-    //await storage.clearAll();
-  }, [setValidJwt, setIsDemo, demo]);
+  }, [setIsDemo, demo]);
 
   const getValidJwt = useCallback(async (): Promise<string | null> => {
     if (demo) return DEMO_JWT;

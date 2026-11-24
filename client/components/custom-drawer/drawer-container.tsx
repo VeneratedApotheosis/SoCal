@@ -23,11 +23,11 @@ import { getDrawerStyles } from './customDrawer';
 import DraggableCalendar from './drawer-draggable-calendar';
 
 export default function CustomDrawerContent(props: any) {
-  const { validJwt, calendarType, setCalendarType } = useAuthContext();
+  const { validJwt, calendarType, setCalendarType, demo } = useAuthContext();
   const { familyProfiles } = useProfileContext();
   const userId = familyProfiles && familyProfiles.parent ? familyProfiles.parent.id : null;
   const { fixedSidebar, isWeb } = useScreenSize();
-  const { calViewMode: viewMode, resetViewMode, suppressOther, toggleSuppress } = useCalendarObjects();
+  const { calendarObjs, calViewMode: viewMode, resetViewMode, suppressOther, toggleSuppress } = useCalendarObjects();
   const { hiddenCalendarHook } = useHiddenCalendarsContext();
   const { calendarGroups } = useCalendarGroupsContext();
 
@@ -43,12 +43,11 @@ export default function CustomDrawerContent(props: any) {
 
   //Both Folders and Calendars are mapped to Draggable Flatlist in flatData
   const flatData = useMemo(() => {
-    if (calendarGroups.groupedCalendars.length === 0)
-      return [] as {
-        id: string;
-        folder: boolean;
-        calendar: calendarObj | null;
-      }[];
+    if (!calendarGroups.canEdit && !demo) {
+      return (calendarObjs ?? [])
+        .filter((calendar) => !calendar.shown.suppressed)
+        .map((calendar) => ({ id: calendar.calendarId, folder: false, calendar }));
+    }
 
     const filtered = calendarGroups.groupedCalendars.map((group) => {
       const filteredCals = group.calendars.filter((c) => !c.shown.suppressed);
@@ -65,7 +64,7 @@ export default function CustomDrawerContent(props: any) {
         return { id: group.id, folder: false, calendar: cal as calendarObj | null };
       }),
     ]);
-  }, [calendarGroups.groupedCalendars, suppressOther]);
+  }, [calendarGroups.groupedCalendars, calendarGroups.canEdit, calendarObjs, demo]);
 
   const getButtonStyle = (option: CalendarView, pressed: boolean) => [
     styles.viewButton,
@@ -84,6 +83,7 @@ export default function CustomDrawerContent(props: any) {
   // ─── Math to Calculate where to put Calendar Object ───────────────────────────────────────────────────────────
 
   const handleDrop = (thisIndex: number, newIndex: number): void => {
+    if (!calendarGroups.canEdit) return;
     const movingItem = flatData[thisIndex];
     if (!movingItem || movingItem.folder || !movingItem.calendar) return;
 
@@ -307,6 +307,7 @@ export default function CustomDrawerContent(props: any) {
                   calendarGroups.addGroup(null);
                 }
               }}
+              disabled={!calendarGroups.canEdit}
             >
               <Plus size={16} color={uiTheme.isDark ? COLORS.blueAccentLight : COLORS.blueAccentDark} style={themeStyles.plusIcon} />
             </Pressable>

@@ -17,7 +17,7 @@ export default function Hero() {
   const { isWeb } = useScreenSize();
 
   const { promptAsync, isLoading } = useAuth();
-  const { setIsDemo, setValidJwt } = useAuthContext();
+  const { setIsDemo } = useAuthContext();
 
   // ─── Get Width of Mock Container ───────────────────────────────────────────────────────────
 
@@ -44,7 +44,6 @@ export default function Hero() {
             style={styles.betaPill}
             onPress={() => {
               setIsDemo(true);
-              setValidJwt(true);
             }}
           >
             <Ionicons name="arrow-forward-outline" color={'#2e75df'} size={16} />

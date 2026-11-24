@@ -1,69 +1,48 @@
 import { useAuthContext } from '@/components/contexts/auth-context';
 import { useCalendarPreferencesContext } from '@/components/contexts/calendar-preferences-context';
 import { calendarGroup, calendarObj } from '@/utility/types';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: string | null) => {
-  const { groupsData: groupedCalendars, isLoading, setGroupsData: setGroupedCalendars } = useCalendarPreferencesContext();
+  const { groupsData: groupedCalendars, hasLoadedPreferences, setGroupsData } = useCalendarPreferencesContext();
   const { demo } = useAuthContext();
+
+  const canEdit = !!userId && !!calendarObjs && hasLoadedPreferences;
+  const reconcileGroups = useCallback((groups: calendarGroup[]) => {
+    if (demo || !userId || !calendarObjs) return groups;
+
+    const byId = new Map(calendarObjs.map((cal) => [cal.calendarId, cal]));
+    const updated = groups.map((group) => {
+      if (group.userId !== userId) return group;
+      return {
+        ...group,
+        calendars: group.calendars.map((cal) => {
+          const current = byId.get(cal.calendarId);
+          byId.delete(cal.calendarId);
+          return current ? { ...current, isActive: true } : { ...cal, isActive: false };
+        }),
+      };
+    });
+    for (const cal of byId.values()) {
+      const id = cal.owner ? 'owner' : 'other';
+      const group = updated.find((entry) => entry.id === id && entry.userId === userId);
+      if (group) group.calendars.push({ ...cal, isActive: true });
+      else updated.push({ id, userId, calendars: [{ ...cal, isActive: true }] });
+    }
+    return updated;
+  }, [demo, userId, calendarObjs]);
 
   const currentUserGroups = useMemo(() => {
     if (demo) return groupedCalendars;
-    if (!userId) return [];
+    if (!canEdit) return [];
+    return reconcileGroups(groupedCalendars)
+      .filter((group) => group.userId === userId)
+      .map((group) => ({ ...group, calendars: group.calendars.filter((cal) => cal.isActive) }));
+  }, [groupedCalendars, userId, reconcileGroups, canEdit, demo]);
 
-    return groupedCalendars
-      .filter((g) => g.userId === userId)
-      .map((g) => ({
-        ...g,
-        calendars: g.calendars.filter((c) => c.isActive === true),
-      }));
-  }, [groupedCalendars, userId]);
-
-  // ─── Update Function ───────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (isLoading || !calendarObjs || !userId) return;
-
-    setGroupedCalendars((prevGroups) => {
-      const userGroups = prevGroups.filter((g) => g.userId === userId);
-
-      const latestCalsMap = new Map(calendarObjs.map((c) => [c.calendarId, c]));
-
-      //update groups, marking missing calendars as inactive
-      const updatedUserGroups = userGroups.map((group) => ({
-        ...group,
-        calendars: group.calendars.map((c) => {
-          if (latestCalsMap.has(c.calendarId)) {
-            return { ...latestCalsMap.get(c.calendarId)!, isActive: true };
-          }
-          return { ...c, isActive: false };
-        }),
-      }));
-
-      const alreadyGroupedIds = new Set(updatedUserGroups.flatMap((g) => g.calendars.map((c) => c.calendarId)));
-
-      //add new calendars
-      const newCalendars = calendarObjs.filter((cal) => !alreadyGroupedIds.has(cal.calendarId));
-      newCalendars.forEach((cal) => {
-        const type = cal.owner ? 'owner' : 'other';
-        let group = updatedUserGroups.find((g) => g.id === type);
-
-        if (!group) {
-          group = { id: type, userId, calendars: [] };
-          updatedUserGroups.push(group);
-        }
-
-        group.calendars.push({ ...cal, isActive: true });
-      });
-
-      const sortedUserGroups = [...updatedUserGroups];
-
-      // Merge the active user's groups back with the rest of the users
-      return [...sortedUserGroups];
-    });
-  }, [calendarObjs, userId, isLoading]);
-
-  // ─── Helper Functions ───────────────────────────────────────────────────────────
+  const setGroupedCalendars = (update: (groups: calendarGroup[]) => calendarGroup[]) => {
+    if (canEdit) setGroupsData((previous) => update(reconcileGroups(previous)));
+  };
 
   const updateSingleGroup = (groupId: string, newCalendars: calendarObj[]) => {
     if (!userId) return;
@@ -97,7 +76,7 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
     if (!userId) return;
     const name = groupName ?? 'Group';
 
-    const containsGroupName = groupedCalendars.find((g) => g.id === name);
+    const containsGroupName = currentUserGroups.find((g) => g.id === name);
     if (containsGroupName) {
       addGroup(name + ' (1)');
       return;
@@ -181,6 +160,7 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
 
   return {
     groupedCalendars: currentUserGroups,
+    canEdit,
     updateSingleGroup,
     updateMultipleGroups,
     addGroup,
