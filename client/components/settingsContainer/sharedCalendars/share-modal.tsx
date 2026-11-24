@@ -23,7 +23,7 @@ export interface ShareModalProps {
 
 export default function ShareModal({ isVisible, setVisible }: ShareModalProps) {
   const { familyProfiles } = useProfileContext();
-  const { calendarObjs = [] } = useCalendarObjects();
+  const { calendarObjs = [], refreshSharingSettings } = useCalendarObjects();
   const { share, isLoading } = useShareCalendar();
   const { getValidJwt } = useAuth();
 
@@ -78,7 +78,8 @@ export default function ShareModal({ isVisible, setVisible }: ShareModalProps) {
     for (const id of selectedIds) {
       const result = await share(id, email, jwtToken, accessRole);
 
-      if (!result.success) allSuccess = false;
+      if (result.success) void refreshSharingSettings(id);
+      else allSuccess = false;
     }
 
     if (allSuccess) {

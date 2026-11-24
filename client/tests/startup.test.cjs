@@ -163,8 +163,9 @@ test('a failed preference read blocks writes and a successful missing row allows
   assert.deepEqual(writes, [['supabase-user', { hiddenCalendars: ['hidden'] }, false, undefined]]);
 });
 
-test('calendar metadata appears before ACLs finish and survives individual failures', async () => {
-  const acl = deferred();
+test('sharing loads on demand and refreshes only the changed calendar', async () => {
+  const calls = [];
+  let fail = true;
   const hook = hookHarness('hooks/APIFetchingHooks/useCalendarList.ts', 'useCalendarList', {
     ...signedIn,
     '@/utility/demoData': {},
@@ -173,24 +174,31 @@ test('calendar metadata appears before ACLs finish and survives individual failu
       fetchCalendarList: async () => ({ items: [
         { id: 'pending', accessRole: 'owner' },
         { id: 'available', accessRole: 'owner' },
+        { id: 'reader', accessRole: 'reader' },
       ] }),
       getCalendarSharingSettings: async (id) => {
-        if (id === 'pending') {
-          await acl.promise;
-          throw new Error('ACL denied');
-        }
-        return { items: [] };
+        calls.push(id);
+        if (id === 'pending' && fail) throw new Error('ACL denied');
+        return { items: [{ id: 'user:guest@example.test', role: 'reader' }] };
       },
     },
   });
-  const loading = hook.render().refetch();
-  await settle();
-  assert.deepEqual(hook.render().calendarObjs.map((cal) => cal.calendarId), ['pending', 'available']);
+  await hook.render().refetch();
+  assert.deepEqual(calls, []);
   assert.equal(hook.render().hasLoadedList, true);
-  acl.resolve();
-  await loading;
+  const panel = hook.render();
+  await Promise.all([panel.loadSharingSettings(), panel.loadSharingSettings()]);
+  assert.deepEqual(calls, ['available', 'pending']);
   assert.deepEqual(hook.render().sharedObjs.map((cal) => cal.id), ['available']);
-  assert.equal(hook.render().calendarObjs.length, 2);
+  assert.equal(hook.render().hasSharingError, true);
+  assert.equal(hook.render().error, null);
+  assert.equal(hook.render().calendarObjs.length, 3);
+
+  fail = false;
+  await hook.render().refreshSharingSettings('pending');
+  assert.deepEqual(calls, ['available', 'pending', 'pending']);
+  assert.equal(hook.render().hasSharingError, false);
+  assert.equal(hook.render().sharedObjs.length, 2);
 });
 
 test('profile uses session metadata and ignores a response after cleanup', async () => {
@@ -220,6 +228,7 @@ test('group reconciliation does not write during startup or when the list confir
     '@/components/contexts/calendar-preferences-context': { useCalendarPreferencesContext: () => ({
       groupsData: saved,
       hasLoadedPreferences: true,
+      hasHydratedPreferences: true,
       setGroupsData: () => assert.fail('group reconciliation wrote preferences'),
     }) },
   });
@@ -227,6 +236,25 @@ test('group reconciliation does not write during startup or when the list confir
   const groups = hook.render([{ calendarId: 'added', owner: true }], 'google-user').groupedCalendars;
   assert.deepEqual(groups[0].calendars.map((cal) => cal.calendarId), ['added']);
   assert.deepEqual(saved[0].calendars, [{ calendarId: 'removed', isActive: true }]);
+});
+
+test('the sidebar keeps its saved groups until refreshed preferences arrive', () => {
+  const calendar = { calendarId: 'cal', owner: true };
+  const group = (id) => [{ id, userId: 'google-user', calendars: [{ ...calendar, isActive: true }] }];
+  let preferences = { groupsData: group('Previous'), hasLoadedPreferences: true, hasHydratedPreferences: true };
+  const hook = hookHarness('hooks/useCalendarGroup.ts', 'useCalendarGroup', {
+    ...signedIn,
+    '@/components/contexts/calendar-preferences-context': { useCalendarPreferencesContext: () => preferences },
+  });
+  const render = () => hook.render([calendar], 'google-user');
+  assert.equal(render().groupedCalendars[0].id, 'Previous');
+  preferences = { ...preferences, hasLoadedPreferences: false };
+  const refreshing = render();
+  assert.equal(refreshing.hasGroups, true);
+  assert.equal(refreshing.canEdit, false);
+  assert.equal(refreshing.groupedCalendars[0].id, 'Previous');
+  preferences = { ...preferences, hasLoadedPreferences: true, groupsData: group('Updated') };
+  assert.equal(render().groupedCalendars[0].id, 'Updated');
 });
 
 test('Google token requests wait for registration and cannot reuse a previous account token', async () => {

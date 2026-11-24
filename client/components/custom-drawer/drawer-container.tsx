@@ -43,7 +43,7 @@ export default function CustomDrawerContent(props: any) {
 
   //Both Folders and Calendars are mapped to Draggable Flatlist in flatData
   const flatData = useMemo(() => {
-    if (!calendarGroups.canEdit && !demo) {
+    if (!calendarGroups.hasGroups && !demo) {
       return (calendarObjs ?? [])
         .filter((calendar) => !calendar.shown.suppressed)
         .map((calendar) => ({ id: calendar.calendarId, folder: false, calendar }));
@@ -64,7 +64,7 @@ export default function CustomDrawerContent(props: any) {
         return { id: group.id, folder: false, calendar: cal as calendarObj | null };
       }),
     ]);
-  }, [calendarGroups.groupedCalendars, calendarGroups.canEdit, calendarObjs, demo]);
+  }, [calendarGroups.groupedCalendars, calendarGroups.hasGroups, calendarObjs, demo]);
 
   const getButtonStyle = (option: CalendarView, pressed: boolean) => [
     styles.viewButton,

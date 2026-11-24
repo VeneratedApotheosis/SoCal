@@ -18,7 +18,7 @@ export interface ShareCalendarSettingsModalProps {
 
 export default function SharedCalendarSettingsModal({ isVisible, setVisible, top, left, calId, email }: ShareCalendarSettingsModalProps) {
   const { unshare, isLoading, error, clearError } = useUnshareCalendar();
-  const { refetchCalendarList } = useCalendarObjects();
+  const { refreshSharingSettings } = useCalendarObjects();
   const { theme } = useUIContext();
   const styles = getModalStyles(theme.isDark, sharedSettingsModalWidth, sharedSettingsModalHeight);
   const { getValidJwt } = useAuth();
@@ -28,7 +28,7 @@ export default function SharedCalendarSettingsModal({ isVisible, setVisible, top
     if (!email || !calId || !jwtToken) return;
     const result = await unshare(calId, email, jwtToken);
     if (result.success) {
-      refetchCalendarList();
+      void refreshSharingSettings(calId);
     }
     setVisible(false);
   };

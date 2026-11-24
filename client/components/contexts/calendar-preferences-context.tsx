@@ -9,6 +9,7 @@ export interface calendarPreferencesContextType {
   hiddenCalendarsData: string[];
   isLoading: boolean;
   hasLoadedPreferences: boolean;
+  hasHydratedPreferences: boolean;
   setPaletteData: React.Dispatch<React.SetStateAction<colorCache[]>>;
   setGroupsData: React.Dispatch<React.SetStateAction<calendarGroup[]>>;
   setHiddenCalendarsData: React.Dispatch<React.SetStateAction<string[]>>;
@@ -24,6 +25,7 @@ export const CalendarPreferencesProvider = ({ children }: { children: ReactNode 
     groupsData,
     isLoading,
     hasLoadedPreferences,
+    hasHydratedPreferences,
     setPaletteData,
     setGroupsData,
     hiddenCalendarsData,
@@ -40,6 +42,7 @@ export const CalendarPreferencesProvider = ({ children }: { children: ReactNode 
         hiddenCalendarsData,
         isLoading,
         hasLoadedPreferences,
+        hasHydratedPreferences,
         setPaletteData,
         setGroupsData,
         setHiddenCalendarsData,

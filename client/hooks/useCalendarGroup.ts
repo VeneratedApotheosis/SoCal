@@ -4,10 +4,11 @@ import { calendarGroup, calendarObj } from '@/utility/types';
 import { useCallback, useMemo } from 'react';
 
 export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: string | null) => {
-  const { groupsData: groupedCalendars, hasLoadedPreferences, setGroupsData } = useCalendarPreferencesContext();
+  const { groupsData: groupedCalendars, hasLoadedPreferences, hasHydratedPreferences, setGroupsData } = useCalendarPreferencesContext();
   const { demo } = useAuthContext();
 
-  const canEdit = !!userId && !!calendarObjs && hasLoadedPreferences;
+  const hasGroups = !!userId && !!calendarObjs && hasHydratedPreferences;
+  const canEdit = hasGroups && hasLoadedPreferences;
   const reconcileGroups = useCallback((groups: calendarGroup[]) => {
     if (demo || !userId || !calendarObjs) return groups;
 
@@ -34,11 +35,11 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
 
   const currentUserGroups = useMemo(() => {
     if (demo) return groupedCalendars;
-    if (!canEdit) return [];
+    if (!hasGroups) return [];
     return reconcileGroups(groupedCalendars)
       .filter((group) => group.userId === userId)
       .map((group) => ({ ...group, calendars: group.calendars.filter((cal) => cal.isActive) }));
-  }, [groupedCalendars, userId, reconcileGroups, canEdit, demo]);
+  }, [groupedCalendars, userId, reconcileGroups, hasGroups, demo]);
 
   const setGroupedCalendars = (update: (groups: calendarGroup[]) => calendarGroup[]) => {
     if (canEdit) setGroupsData((previous) => update(reconcileGroups(previous)));
@@ -161,6 +162,7 @@ export const useCalendarGroup = (calendarObjs: calendarObj[] | null, userId: str
   return {
     groupedCalendars: currentUserGroups,
     canEdit,
+    hasGroups,
     updateSingleGroup,
     updateMultipleGroups,
     addGroup,

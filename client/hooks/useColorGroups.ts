@@ -17,6 +17,7 @@ export function useCalendarPreferences() {
   const [groupsData, setGroupsData] = useState<calendarGroup[]>([]);
   const [hiddenCalendarsData, setHiddenCalendarsData] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(!!userId || demo);
+  const [hasHydratedPreferences, setHasHydratedPreferences] = useState(false);
   const [hasLoadedPreferences, setHasLoadedPreferences] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const baseline = useRef<CalendarPreferences | null>(null);
@@ -29,6 +30,7 @@ export function useCalendarPreferences() {
     if (demo) {
       setGroupsData(demoCalendarGroups);
       setHiddenCalendarsData(demoHiddenCalendars);
+      setHasHydratedPreferences(true);
       setHasLoadedPreferences(true);
       setIsLoading(false);
       return;
@@ -54,6 +56,7 @@ export function useCalendarPreferences() {
       setPaletteData(loaded.palette);
       setGroupsData(loaded.groups);
       setHiddenCalendarsData(loaded.hiddenCalendars);
+      setHasHydratedPreferences(true);
       setHasLoadedPreferences(true);
     } catch (error) {
       if (id === request.current) setError((error as Error).message || 'Failed to load calendar preferences');
@@ -96,7 +99,7 @@ export function useCalendarPreferences() {
   }, [demo, userId, googleId, isLoading, hasLoadedPreferences, paletteData, groupsData, hiddenCalendarsData]);
 
   return {
-    paletteData, groupsData, hiddenCalendarsData, isLoading, hasLoadedPreferences,
+    paletteData, groupsData, hiddenCalendarsData, isLoading, hasLoadedPreferences, hasHydratedPreferences,
     setPaletteData, setGroupsData, setHiddenCalendarsData, error, refreshColorGroups,
   };
 }

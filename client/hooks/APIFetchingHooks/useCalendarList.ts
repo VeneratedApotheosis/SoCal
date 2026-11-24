@@ -29,22 +29,6 @@ const formatCalendar = (cal: any): calendarObj => {
   };
 };
 
-// 2. Abstracted async fetcher
-const fetchSharingSettings = async (cal: any, token: string): Promise<sharedObj | null> => {
-  if (cal.accessRole !== 'owner') return null;
-
-  const res = await getCalendarSharingSettings(cal.id, token);
-  return {
-    id: cal.id,
-    name: cal.summary,
-    sharedIds:
-      res.items?.map((i: any) => ({
-        id: i.id.replace(/^(user:|group:|domain:|default:)/, ''),
-        accessRole: i.role,
-      })) || [],
-  };
-};
-
 //compare array of calendar objects
 const areCalendarObjsEqual = (a: calendarObj[], b: calendarObj[]): boolean => {
   if (a.length !== b.length) return false;
@@ -66,41 +50,16 @@ const areCalendarObjsEqual = (a: calendarObj[], b: calendarObj[]): boolean => {
   });
 };
 
-const areSharedIdsEqual = (
-  a: {
-    id: string;
-    accessRole: string;
-  }[],
-  b: {
-    id: string;
-    accessRole: string;
-  }[],
-) => {
-  if (a.length !== b.length) return false;
-
-  return a.every((cal, i) => {
-    const other = b[i];
-
-    return cal.id === other.id && cal.id === other.id && cal.accessRole === other.accessRole;
-  });
-};
-
-//compare array of calendar objects
-const areSharedCalendarObjsEqual = (a: sharedObj[], b: sharedObj[]): boolean => {
-  if (a.length !== b.length) return false;
-
-  return a.every((cal, i) => {
-    const other = b[i];
-
-    return cal.id === other.id && cal.name === other.name && areSharedIdsEqual(cal.sharedIds, other.sharedIds);
-  });
-};
-
 export function useCalendarList() {
   const { session, demo } = useAuthContext();
   const userId = session?.user.id;
   const [calendarObjs, setCalendarObjs] = useState<calendarObj[]>([]);
-  const [sharedObjs, setSharedObjs] = useState<sharedObj[]>([]);
+  const [permissions, setPermissions] = useState<Record<string, {
+    sharedIds?: sharedObj['sharedIds'];
+    status: 'loading' | 'loaded' | 'error';
+  }>>({});
+  const sharingRequests = useRef(new Map<string, Promise<void>>());
+  const ownedIds = JSON.stringify(calendarObjs.filter((cal) => cal.owner).map((cal) => cal.calendarId).sort());
   const [isLoading, setIsLoading] = useState(!!userId || demo);
   const [hasLoadedList, setHasLoadedList] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -109,7 +68,6 @@ export function useCalendarList() {
   const refetch = useCallback(async () => {
     if (demo) {
       setCalendarObjs(demoCalendarObjs);
-      setSharedObjs(sharedCalendars);
       setHasLoadedList(true);
       setIsLoading(false);
       return;
@@ -135,20 +93,6 @@ export function useCalendarList() {
       });
       setHasLoadedList(true);
       setIsLoading(false);
-
-      const owners = items.filter((cal) => cal.accessRole === 'owner');
-      const sharing = await Promise.allSettled(owners.map((cal) => fetchSharingSettings(cal, accessToken)));
-      if (id !== request.current) return;
-
-      setSharedObjs((prev) => {
-        const existing = new Map(prev.map((cal) => [cal.id, cal]));
-        const next = sharing.flatMap((result, index) => {
-          const details = result.status === 'fulfilled' ? result.value : existing.get(owners[index].id);
-          return details ? [details] : [];
-        });
-        return areSharedCalendarObjsEqual(prev, next) ? prev : next;
-      });
-      if (sharing.some((result) => result.status === 'rejected')) setError('Some calendar sharing settings could not be loaded');
     } catch (error) {
       if (id === request.current) setError((error as Error).message || 'Failed to load calendar list');
     } finally {
@@ -158,8 +102,53 @@ export function useCalendarList() {
 
   useEffect(() => {
     void refetch();
-    return () => { request.current++; };
+    const pendingSharing = sharingRequests.current;
+    return () => { request.current++; pendingSharing.clear(); };
   }, [refetch]);
 
-  return { calendarObjs, setCalendarObjs, sharedObjs, isLoading, hasLoadedList, error, refetch };
+  const refreshSharingSettings = useCallback((calendarId: string, force = true) => {
+    if (!userId || demo || !(JSON.parse(ownedIds) as string[]).includes(calendarId)) return;
+    const pending = sharingRequests.current;
+    const existing = pending.get(calendarId);
+    if (existing && !force) return existing;
+
+    setPermissions((prev) => ({ ...prev, [calendarId]: { ...prev[calendarId], status: 'loading' } }));
+    const next = getValidAccessToken(userId)
+      .then(({ accessToken }) => getCalendarSharingSettings(calendarId, accessToken))
+      .then(({ items }) => {
+        if (pending.get(calendarId) !== next) return;
+        const sharedIds = (items ?? []).map((rule: { id: string; role: string }) => ({
+          id: rule.id.replace(/^(user:|group:|domain:|default:)/, ''),
+          accessRole: rule.role,
+        }));
+        setPermissions((prev) => ({ ...prev, [calendarId]: { sharedIds, status: 'loaded' } }));
+      })
+      .catch(() => {
+        if (pending.get(calendarId) !== next) return;
+        setPermissions((prev) => ({ ...prev, [calendarId]: { ...prev[calendarId], status: 'error' } }));
+      })
+      .finally(() => {
+        if (pending.get(calendarId) === next) pending.delete(calendarId);
+      });
+    pending.set(calendarId, next);
+    return next;
+  }, [demo, ownedIds, userId]);
+
+  const loadSharingSettings = useCallback(async () => {
+    const ids = JSON.parse(ownedIds) as string[];
+    await Promise.all(ids.map((id) => refreshSharingSettings(id, false)));
+  }, [ownedIds, refreshSharingSettings]);
+
+  const owners = calendarObjs.filter((cal) => cal.owner);
+  const sharedObjs = demo ? sharedCalendars : owners.flatMap((cal) => {
+    const sharedIds = permissions[cal.calendarId]?.sharedIds;
+    return sharedIds ? [{ id: cal.calendarId, name: cal.calendarName, sharedIds }] : [];
+  });
+  const isSharingLoading = owners.some((cal) => permissions[cal.calendarId]?.status === 'loading');
+  const hasSharingError = owners.some((cal) => permissions[cal.calendarId]?.status === 'error');
+
+  return {
+    calendarObjs, setCalendarObjs, sharedObjs, isLoading, hasLoadedList, error, refetch,
+    loadSharingSettings, refreshSharingSettings, isSharingLoading, hasSharingError,
+  };
 }
