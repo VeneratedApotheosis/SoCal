@@ -1,6 +1,28 @@
 # SoCal calendar performance benchmark
 
-This report covers historical calendar-fetch optimizations and the recent changes to recurring events, sharing permissions, and settings sorting. Live browser measurements used one signed-in Google account. Controlled benchmarks ran locally with synthetic calendar records and responses.
+This report covers historical calendar-fetch optimizations and the recent changes to recurring events and sharing permissions. Live browser measurements used one signed-in Google account. Controlled benchmarks ran locally with synthetic calendar records and responses.
+
+## Timing comparison
+
+Times are medians in milliseconds. Each row compares two versions within the same benchmark. The live browser rows measure visible events or API completion. The controlled rows measure hook execution with fixture responses.
+
+| Change | Benchmark | Timing metric | Before | After | Difference |
+| --- | --- | --- | ---: | ---: | ---: |
+| May date-window prefetch | Controlled hooks | First event data published | 169.0 | 145.9 | −23.1 |
+| October calendar-list reuse | Live browser, cache disabled | First visible event | 2,597.3 | 2,167.9 | −429.4 |
+| October calendar-list reuse | Live browser, cache disabled | Last startup API response | 2,609.6 | 2,763.0 | +153.4 |
+| October calendar-list reuse | Live browser, cache disabled | Calendar-list response per call | 690.0 | 332.3 | −357.7 |
+| October calendar-list reuse | Live browser, cache disabled | Expanded-event response per call | 324.8 | 346.1 | +21.3 |
+| October calendar-list reuse | Live browser, cache disabled | Recurring-series response per call | 292.0 | 319.0 | +27.0 |
+| October calendar-list reuse | Live browser, cache enabled | First visible event | 2,690.3 | 2,036.5 | −653.8 |
+| October calendar-list reuse | Controlled hooks | First event data published | 156.2 | 86.2 | −70.0 |
+| PR #28 on-demand recurring series | Live browser | First visible event | 3,328.7 | 3,630.1 | +301.4 |
+| PR #29 on-demand sharing | Controlled hooks | Calendar metadata available | 32.375 | 31.720 | −0.655 |
+| PR #29 on-demand sharing | Controlled hooks | Startup calendar-list work complete | 84.092 | 31.723 | −52.369 |
+| PR #29 on-demand sharing | Controlled hooks | First panel open to permissions ready | 0.000 | 51.815 | +51.815 |
+| PR #29 on-demand sharing | Controlled hooks | Follow-up read after one permissions change | 84.004 | 55.425 | −28.579 |
+
+The Supabase migration and the premature preference-write fix have no separate timing measurements.
 
 ## May 2026 · Date-window prefetch and token caching
 
@@ -47,21 +69,6 @@ Two nearby changes were reviewed in the commit history. [b6ea902](https://github
 
 Across five signed-in browser reloads per build against the preceding main branch, total observed startup API calls fell from 43 to 27 (37.2%) and recurring-series calls fell from 16 to zero. Median time to first visible event went from 3.33 s to 3.63 s in that sample.
 
-## PR #30 · Alphabetical sorting
-
-Compared the sorting changes with PR #29 at commit 15f8c1e. Shared Calendars sorts calendar names and user IDs. Subscribed Calendars sorts calendar names within each owner group and keeps Other at the bottom.
-
-**API request change was zero.** Sorting uses the calendar and permissions data already in memory. The request hooks and panel loading behavior are identical on both sides of this comparison.
-
-The table reports time to derive the shared calendar list, By User view, and subscribed owner groups together. Each fixture used mixed-case names, four owner groups, and eight users. I verified alphabetical ordering and alternated baseline and updated runs for 1,000 samples each after warmup.
-
-| Calendars | Baseline median / p95 | Sorted median / p95 | Median change |
-| --- | ---: | ---: | ---: |
-| 16 | 0.002 / 0.006 ms | 0.005 / 0.012 ms | +0.003 ms |
-| 500 | 0.028 / 0.044 ms | 0.081 / 0.124 ms | +0.053 ms |
-
-The final implementation reuses a case-insensitive collator for each list. These timings cover list derivation. Browser rendering and interaction latency remain unmeasured.
-
 ## PR #29 · On-demand sharing permissions
 
 Compared merged PR #28 at 87603d4 with PR #29 at 15f8c1e. The actual calendar-list hooks ran against the same 16-calendar fixture, with six owned calendars. The fixture scheduled calendar-list responses after 25 ms and permissions responses after 50 ms, with permissions requests running concurrently. Each version ran 20 times.
@@ -80,4 +87,4 @@ Compared merged PR #28 at 87603d4 with PR #29 at 15f8c1e. The actual calendar-li
 | First panel open to permissions ready | 0.000 / 0.001 ms | 51.815 / 64.418 ms |
 | Follow-up read after one permissions change | 84.004 / 97.668 ms | 55.425 / 65.247 ms |
 
-The earlier build could publish calendar metadata before permissions finished, so moving ACL calls out of startup saved background traffic while metadata availability stayed similar. The cost moves to the first panel open for users who visit it. The 85.7% reduction applies to the calendar-list workflow in this fixture. Signed-in network latency, full-page load time, and total app request counts remain unmeasured for PR #29 and PR #30.
+The earlier build could publish calendar metadata before permissions finished, so moving ACL calls out of startup saved background traffic while metadata availability stayed similar. The cost moves to the first panel open for users who visit it. The 85.7% reduction applies to the calendar-list workflow in this fixture. Signed-in network latency, full-page load time, and total app request counts remain unmeasured for PR #29.
